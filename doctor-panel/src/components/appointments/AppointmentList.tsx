@@ -1,0 +1,1 @@
+// AppointmentList - Randevu listesi bileşeni

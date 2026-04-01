@@ -1,0 +1,1 @@
+// Firebase yapılandırması (React Native)

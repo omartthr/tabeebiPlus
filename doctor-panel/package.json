@@ -1,0 +1,13 @@
+{
+  "name": "tabeebi-doctor-panel",
+  "version": "1.0.0",
+  "description": "Tabeebi+ Doktor Yönetim Paneli - Next.js + TypeScript + Tailwind",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

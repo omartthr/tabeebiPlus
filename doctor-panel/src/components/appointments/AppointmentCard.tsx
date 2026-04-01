@@ -1,0 +1,1 @@
+// AppointmentCard - Randevu kartı bileşeni

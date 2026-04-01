@@ -1,0 +1,1 @@
+// ProfileScreen - Hasta profil yönetimi

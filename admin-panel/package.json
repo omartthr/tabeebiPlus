@@ -1,0 +1,13 @@
+{
+  "name": "tabeebi-admin-panel",
+  "version": "1.0.0",
+  "description": "Tabeebi+ SuperAdmin Yönetim Paneli",
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

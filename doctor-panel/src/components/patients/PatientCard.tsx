@@ -1,0 +1,1 @@
+// PatientCard - Hasta kartı bileşeni
