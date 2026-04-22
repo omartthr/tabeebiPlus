@@ -1,1 +1,0 @@
-// AppointmentDetailScreen - Randevu detayı

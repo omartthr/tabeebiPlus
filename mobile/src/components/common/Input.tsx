@@ -1,1 +1,0 @@
-// Input - Ortak input bileşeni

@@ -1,4 +1,17 @@
 {
-  "name": "Tabeebi+",
-  "displayName": "Tabeebi+"
+  "expo": {
+    "name": "Tabeebi",
+    "slug": "tabeebi-mobile",
+    "version": "1.0.0",
+    "main": "./index.js",
+    "sdkVersion": "54.0.0",
+    "newArchEnabled": true,
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.tabeebi.mobile"
+    }
+  }
 }

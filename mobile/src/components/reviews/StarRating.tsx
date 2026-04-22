@@ -1,1 +1,0 @@
-// StarRating - Yıldız puanlama bileşeni
