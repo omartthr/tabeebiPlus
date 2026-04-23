@@ -77,6 +77,14 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 6. OTP CODES (geçici, Edge Function tarafından yönetilir)
+CREATE TABLE IF NOT EXISTS public.phone_otps (
+  phone TEXT PRIMARY KEY,
+  otp TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================
 -- ROW LEVEL SECURITY (RLS)
 -- =============================================

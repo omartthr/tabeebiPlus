@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
 import TopBar from '../../components/TopBar';
 import { colors } from '../../theme';
+import { supabase } from '../../lib/supabase';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'>;
 
@@ -19,9 +20,14 @@ export default function OTPScreen({ route, navigation }: Props) {
   const { t } = useTranslation();
 
   const [digits, setDigits] = useState(['', '', '', '']);
-  const [seconds, setSeconds] = useState(32);
+  const [seconds, setSeconds] = useState(60);
   const [submitting, setSubmitting] = useState(false);
+  const [sending, setSending] = useState(false);
   const refs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    sendOtp();
+  }, []);
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -29,23 +35,62 @@ export default function OTPScreen({ route, navigation }: Props) {
     return () => clearTimeout(timer);
   }, [seconds]);
 
+  const sendOtp = async () => {
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-otp', {
+        body: { phone },
+      });
+      if (error) Alert.alert('Hata', 'WhatsApp kodu gönderilemedi. Tekrar dene.');
+    } catch {
+      Alert.alert('Hata', 'Bağlantı hatası.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleResend = () => {
+    setSeconds(60);
+    setDigits(['', '', '', '']);
+    refs.current[0]?.focus();
+    sendOtp();
+  };
+
   const full = digits.join('');
   const valid = full.length === 4;
 
-  const handleSignIn = async () => {
+  const handleVerify = async () => {
     if (submitting) return;
     setSubmitting(true);
-    const success = await signIn({ name, phone, isLogin });
-    if (!success) {
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: { phone, code: full },
+      });
+
+      if (error || !data?.valid) {
+        Alert.alert('Hatalı Kod', 'Girdiğin kod yanlış veya süresi dolmuş.');
+        setDigits(['', '', '', '']);
+        refs.current[0]?.focus();
+        setSubmitting(false);
+        return;
+      }
+
+      const success = await signIn({ name, phone, isLogin });
+      if (!success) {
+        setSubmitting(false);
+        setDigits(['', '', '', '']);
+        refs.current[0]?.focus();
+      }
+    } catch {
+      Alert.alert('Hata', 'Doğrulama sırasında bir hata oluştu.');
       setSubmitting(false);
-      setDigits(['', '', '', '']); // Reset digits so they can try again
-      refs.current[0]?.focus();
     }
   };
 
   useEffect(() => {
     if (valid && !submitting) {
-      const timer = setTimeout(() => handleSignIn(), 500);
+      const timer = setTimeout(() => handleVerify(), 500);
       return () => clearTimeout(timer);
     }
   }, [valid]);
@@ -58,8 +103,6 @@ export default function OTPScreen({ route, navigation }: Props) {
     if (c && i < 3) refs.current[i + 1]?.focus();
   };
 
-  const autoFill = () => setDigits(['1', '2', '3', '4']);
-
   return (
     <SafeAreaView style={styles.screen}>
       <TopBar title={t('verify_number')} onBack={() => navigation.goBack()} />
@@ -68,9 +111,13 @@ export default function OTPScreen({ route, navigation }: Props) {
           <View style={styles.header}>
             <Text style={styles.title}>{t('check_messages')}</Text>
             <Text style={styles.subtitle}>
-              {t('otp_subtitle')}{' '}
+              WhatsApp üzerinden{' '}
               <Text style={styles.phone}>+964 {phone}</Text>
+              {'\n'}numarasına 4 haneli kod gönderdik.
             </Text>
+            {sending && (
+              <Text style={styles.sendingText}>Kod gönderiliyor...</Text>
+            )}
           </View>
 
           <View style={styles.pinRow}>
@@ -101,22 +148,18 @@ export default function OTPScreen({ route, navigation }: Props) {
                 </Text>
               </Text>
             ) : (
-              <TouchableOpacity onPress={() => setSeconds(32)}>
+              <TouchableOpacity onPress={handleResend}>
                 <Text style={styles.resendBtn}>{t('resend_code')}</Text>
               </TouchableOpacity>
             )}
           </View>
-
-          <TouchableOpacity onPress={autoFill} style={styles.demoBtn}>
-            <Text style={styles.demoBtnText}>{t('demo_autofill')}</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.btnPrimary, (!valid || submitting) && styles.btnDisabled]}
             disabled={!valid || submitting}
-            onPress={handleSignIn}
+            onPress={handleVerify}
             activeOpacity={0.85}
           >
             <Text style={styles.btnText}>{t('verify_continue')}</Text>
@@ -134,6 +177,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '700', color: colors.ink900, letterSpacing: -0.5 },
   subtitle: { fontSize: 15, lineHeight: 22, fontWeight: '500', color: colors.ink700 },
   phone: { fontWeight: '700', color: colors.ink900 },
+  sendingText: { fontSize: 13, color: colors.teal700, fontWeight: '500' },
   pinRow: {
     flexDirection: 'row',
     gap: 12,
@@ -160,8 +204,6 @@ const styles = StyleSheet.create({
   resendTimer: { fontSize: 13, fontWeight: '500', color: colors.ink500 },
   resendSec: { color: colors.ink700, fontWeight: '700' },
   resendBtn: { fontSize: 14, fontWeight: '700', color: colors.teal700 },
-  demoBtn: { alignItems: 'center' },
-  demoBtnText: { fontSize: 13, fontWeight: '600', color: colors.ink500 },
   footer: { padding: 20, paddingBottom: 24, backgroundColor: colors.bg },
   btnPrimary: {
     height: 54,
