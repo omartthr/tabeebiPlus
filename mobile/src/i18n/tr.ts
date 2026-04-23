@@ -5,17 +5,36 @@ export default {
   results: 'Sonuçlar',
   alerts: 'Bildirimler',
   profile: 'Profil',
-  
+
   // Welcome Screen
   welcome_title: 'Güvenilir doktorunuz\nbir tık uzağınızda.',
   welcome_subtitle: 'Bağdat genelindeki uzmanlardan randevu alın — onaylı doktorlar, şeffaf fiyatlar, aynı gün randevu.',
   feature_verified: 'Sadece onaylı uzmanlar',
   feature_private: 'Kayıtlarınız gizli tutulur',
-  feature_same_day: 'Aynı gün randevu imkanı',
+  feature_same_day: 'Aynı gün randevu imkânı',
   btn_start: 'Hemen başla',
   btn_login: 'Zaten hesabım var',
   terms_agree: 'Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul etmiş olursunuz',
-  
+
+  // Register Screen
+  create_account: 'Hesap oluştur',
+  lets_know_you: 'Sizi tanıyalım',
+  register_subtitle: 'Numaranızı doğrulama ve randevu hatırlatmaları için kullanıyoruz.',
+  full_name: 'Ad Soyad',
+  name_placeholder: 'örn. Ahmed Al-Rubaie',
+  phone_number: 'Telefon numarası',
+  privacy_notice: 'Numaranız yalnızca doğrulama ve randevu hatırlatmaları için kullanılır. Asla paylaşmayız.',
+  continue_btn: 'Devam et',
+
+  // OTP Screen
+  verify_number: 'Numarayı doğrula',
+  check_messages: 'Mesajlarınızı kontrol edin',
+  otp_subtitle: '4 haneli kodu şu numaraya gönderdik:',
+  resend_code_in: 'Kodu tekrar gönder:',
+  resend_code: 'Kodu tekrar gönder',
+  demo_autofill: 'Demo: kodu otomatik doldur',
+  verify_continue: 'Doğrula ve devam et',
+
   // Home Screen
   good_morning: 'Günaydın',
   good_afternoon: 'Tünaydın',
@@ -25,12 +44,52 @@ export default {
   areas_count: '10 alan',
   trust_title: 'Her doktor onaylıdır',
   trust_sub: 'Lisanslar ekibimiz tarafından üç ayda bir kontrol edilir',
-  
+
+  // Appointments Screen
+  my_bookings: 'Randevularım',
+  tab_upcoming: 'Yaklaşan',
+  tab_past: 'Geçmiş',
+  no_appointments: 'Henüz {{tab}} randevunuz yok.',
+  reschedule: 'Yeniden planla',
+  cancel: 'İptal et',
+  view_result: 'Sonucu gör',
+  book_again: 'Tekrar randevu al',
+
+  // Booking Screen
+  book_appointment: 'Randevu al',
+  choose_day: 'Gün seç',
+  available_time: 'Müsait saatler',
+  legend_selected: 'Seçili',
+  legend_available: 'Müsait',
+  legend_unavailable: 'Dolu',
+  payment_method: 'Ödeme yöntemi',
+  pay_online: 'Online öde',
+  pay_online_sub: 'Visa, Mastercard, Zain Cash',
+  instant_confirm: 'Anında onay',
+  pay_clinic: 'Klinikte öde',
+  pay_clinic_sub: 'Gelişte nakit · onay bekliyor',
+  summary: 'ÖZET',
+  consultation: 'Muayene',
+  service_fee: 'Hizmet ücreti',
+  total: 'Toplam',
+  confirm_booking: 'Randevuyu onayla',
+
+  // Confirmed Screen
+  youre_booked: 'Randevunuz alındı!',
+  booking_confirmed_sub: 'Telefonunuza onay gönderdik. Lütfen 10 dakika erken gelin.',
+  ticket_date: 'TARİH',
+  ticket_time: 'SAAT',
+  ticket_location: 'KONUM',
+  ticket_payment: 'ÖDEME',
+  paid_online: 'Online ödendi',
+  pay_at_clinic: 'Klinikte öde',
+  view_my_bookings: 'Randevularımı gör',
+  back_to_home: 'Ana sayfaya dön',
+
   // Profile Screen
   profile_title: 'Profil',
   visits: 'Ziyaretler',
   your_rating: 'Puanınız',
-  my_bookings: 'Randevularım',
   my_results: 'Sonuçlarım',
   notifications: 'Bildirimler',
   upcoming: 'yaklaşan',
@@ -42,4 +101,60 @@ export default {
   english: 'İngilizce',
   turkish: 'Türkçe',
   logout: 'Çıkış yap',
+
+  // Notifications Screen
+  notif_title: 'Bildirimler',
+  new_alerts: '{{count}} yeni bildirim',
+  mark_all_read: 'Tümünü okundu işaretle',
+
+  // Results Screen
+  my_results_title: 'Sonuçlarım',
+  results_subtitle: 'Tüm tıbbi geçmişiniz tek bir yerde',
+  clinical_notes: 'KLİNİK NOTLAR',
+  medications: 'İLAÇLAR',
+  next_steps: 'SONRAKİ ADIMLAR',
+
+  // Doctor List Screen
+  all_doctors: 'Tüm doktorlar',
+  available_today: 'Bugün müsait',
+  top_rated: 'En yüksek puanlı',
+  nearby: 'Yakınımdakiler',
+  doctors_count: '{{count}} doktor',
+
+  // Doctor Detail Screen
+  doctor_title: 'Doktor',
+  experience_suffix: 'deneyim',
+  about: 'HAKKINDA',
+  about_text: '{{exp}} klinik deneyime sahip uzman. Irak Diş Hekimleri Birliği üyesi. Modern, ağrı minimize eden yaklaşımlar ve hasta eğitimine odaklanır.',
+  working_hours: 'ÇALIŞMA SAATLERİ',
+  hours_sat_thu: 'Cmt – Per',
+  hours_fri: 'Cuma',
+  hours_closed: 'Kapalı',
+  next_available: 'SONRAKİ MÜSAIT',
+  see_all: 'Tümünü gör',
+  today_badge: 'Bugün',
+  consultation_label: 'MUAYENE',
+  book_appointment_btn: 'Randevu al',
+
+  // Help Screen
+  help_center_title: 'Yardım merkezi',
+  new_ticket: 'YENİ BİLET',
+  category: 'Kategori',
+  cat_booking: 'Randevu',
+  cat_payment: 'Ödeme',
+  cat_results: 'Sonuçlar',
+  cat_other: 'Diğer',
+  subject_placeholder: 'Konu',
+  message_placeholder: 'Sorununuzu açıklayın...',
+  submit_ticket: 'Bileti gönder',
+  ticket_submitted: '✓ Bilet gönderildi',
+  your_tickets: 'BİLETLERİNİZ',
+
+  // Status Badge
+  status_confirmed: 'Onaylandı',
+  status_pending: 'Beklemede',
+  status_completed: 'Tamamlandı',
+  status_cancelled: 'İptal edildi',
+  status_open: 'Açık',
+  status_resolved: 'Çözüldü',
 };

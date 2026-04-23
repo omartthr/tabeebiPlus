@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
 import TopBar from '../../components/TopBar';
@@ -13,26 +14,39 @@ import { colors } from '../../theme';
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'>;
 
 export default function OTPScreen({ route, navigation }: Props) {
-  const { name, phone } = route.params;
+  const { name, phone, isLogin } = route.params;
   const { signIn } = useAuth();
+  const { t } = useTranslation();
 
   const [digits, setDigits] = useState(['', '', '', '']);
   const [seconds, setSeconds] = useState(32);
+  const [submitting, setSubmitting] = useState(false);
   const refs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     if (seconds <= 0) return;
-    const t = setTimeout(() => setSeconds(s => s - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setSeconds(s => s - 1), 1000);
+    return () => clearTimeout(timer);
   }, [seconds]);
 
   const full = digits.join('');
   const valid = full.length === 4;
 
+  const handleSignIn = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    const success = await signIn({ name, phone, isLogin });
+    if (!success) {
+      setSubmitting(false);
+      setDigits(['', '', '', '']); // Reset digits so they can try again
+      refs.current[0]?.focus();
+    }
+  };
+
   useEffect(() => {
-    if (valid) {
-      const t = setTimeout(() => signIn({ name, phone }), 500);
-      return () => clearTimeout(t);
+    if (valid && !submitting) {
+      const timer = setTimeout(() => handleSignIn(), 500);
+      return () => clearTimeout(timer);
     }
   }, [valid]);
 
@@ -48,13 +62,13 @@ export default function OTPScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <TopBar title="Verify number" onBack={() => navigation.goBack()} />
+      <TopBar title={t('verify_number')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Check your messages</Text>
+            <Text style={styles.title}>{t('check_messages')}</Text>
             <Text style={styles.subtitle}>
-              We sent a 4-digit code to{' '}
+              {t('otp_subtitle')}{' '}
               <Text style={styles.phone}>+964 {phone}</Text>
             </Text>
           </View>
@@ -81,31 +95,31 @@ export default function OTPScreen({ route, navigation }: Props) {
           <View style={styles.resendRow}>
             {seconds > 0 ? (
               <Text style={styles.resendTimer}>
-                Resend code in{' '}
+                {t('resend_code_in')}{' '}
                 <Text style={styles.resendSec}>
                   0:{seconds.toString().padStart(2, '0')}
                 </Text>
               </Text>
             ) : (
               <TouchableOpacity onPress={() => setSeconds(32)}>
-                <Text style={styles.resendBtn}>Resend code</Text>
+                <Text style={styles.resendBtn}>{t('resend_code')}</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <TouchableOpacity onPress={autoFill} style={styles.demoBtn}>
-            <Text style={styles.demoBtnText}>Demo: auto-fill code</Text>
+            <Text style={styles.demoBtnText}>{t('demo_autofill')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.btnPrimary, !valid && styles.btnDisabled]}
-            disabled={!valid}
-            onPress={() => signIn({ name, phone })}
+            style={[styles.btnPrimary, (!valid || submitting) && styles.btnDisabled]}
+            disabled={!valid || submitting}
+            onPress={handleSignIn}
             activeOpacity={0.85}
           >
-            <Text style={styles.btnText}>Verify & continue</Text>
+            <Text style={styles.btnText}>{t('verify_continue')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -45,19 +45,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          {[
-            { n: '12', l: t('visits') },
-            { n: '3',  l: t('results') },
-            { n: '4.9', l: t('your_rating') },
-          ].map((s, i) => (
-            <View key={i} style={styles.statCard}>
-              <Text style={styles.statNum}>{s.n}</Text>
-              <Text style={styles.statLabel}>{s.l}</Text>
-            </View>
-          ))}
-        </View>
 
         {/* Menu group 1 */}
         <View style={styles.menuCard}>

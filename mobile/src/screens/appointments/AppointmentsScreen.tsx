@@ -4,35 +4,37 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
 import { APPOINTMENTS_UPCOMING, APPOINTMENTS_PAST } from '../../data';
 import DocAvatar from '../../components/DocAvatar';
 import StatusBadge from '../../components/StatusBadge';
 
 export default function AppointmentsScreen() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const list = tab === 'upcoming' ? APPOINTMENTS_UPCOMING : APPOINTMENTS_PAST;
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.title}>My bookings</Text>
+        <Text style={styles.title}>{t('my_bookings')}</Text>
       </View>
 
       {/* Tabs */}
       <View style={styles.tabsWrap}>
         <View style={styles.tabs}>
           {[
-            { id: 'upcoming' as const, label: `Upcoming (${APPOINTMENTS_UPCOMING.length})` },
-            { id: 'past' as const,    label: `Past (${APPOINTMENTS_PAST.length})` },
-          ].map(t => (
+            { id: 'upcoming' as const, label: `${t('tab_upcoming')} (${APPOINTMENTS_UPCOMING.length})` },
+            { id: 'past' as const,    label: `${t('tab_past')} (${APPOINTMENTS_PAST.length})` },
+          ].map(tabItem => (
             <TouchableOpacity
-              key={t.id}
-              onPress={() => setTab(t.id)}
-              style={[styles.tabBtn, tab === t.id && styles.tabBtnActive]}
+              key={tabItem.id}
+              onPress={() => setTab(tabItem.id)}
+              style={[styles.tabBtn, tab === tabItem.id && styles.tabBtnActive]}
             >
-              <Text style={[styles.tabText, tab === t.id && styles.tabTextActive]}>
-                {t.label}
+              <Text style={[styles.tabText, tab === tabItem.id && styles.tabTextActive]}>
+                {tabItem.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -42,7 +44,9 @@ export default function AppointmentsScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {list.length === 0 && (
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No {tab} appointments yet.</Text>
+            <Text style={styles.emptyText}>
+              {t('no_appointments', { tab: tab === 'upcoming' ? t('tab_upcoming').toLowerCase() : t('tab_past').toLowerCase() })}
+            </Text>
           </View>
         )}
         {list.map(a => (
@@ -67,20 +71,20 @@ export default function AppointmentsScreen() {
             {tab === 'upcoming' && (
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>Reschedule</Text>
+                  <Text style={styles.actionBtnText}>{t('reschedule')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]}>
-                  <Text style={[styles.actionBtnText, styles.cancelText]}>Cancel</Text>
+                  <Text style={[styles.actionBtnText, styles.cancelText]}>{t('cancel')}</Text>
                 </TouchableOpacity>
               </View>
             )}
             {tab === 'past' && a.status === 'completed' && (
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>View result</Text>
+                  <Text style={styles.actionBtnText}>{t('view_result')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>Book again</Text>
+                  <Text style={styles.actionBtnText}>{t('book_again')}</Text>
                 </TouchableOpacity>
               </View>
             )}

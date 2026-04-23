@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import DocAvatar from './DocAvatar';
 import Rating from './Rating';
 import { colors, shadows } from '../theme';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function DoctorCard({ doctor, onPress }: Props) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <DocAvatar initials={doctor.initials} hue={doctor.hue} size={72} rounded={14} />
@@ -29,7 +31,7 @@ export default function DoctorCard({ doctor, onPress }: Props) {
         {doctor.today && (
           <View style={styles.availableBadge}>
             <View style={[styles.badgeDot, { backgroundColor: '#17a673' }]} />
-            <Text style={styles.availableText}>Available today</Text>
+            <Text style={styles.availableText}>{t('available_today')}</Text>
           </View>
         )}
       </View>

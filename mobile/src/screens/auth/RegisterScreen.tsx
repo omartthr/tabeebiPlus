@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { User, Shield } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../types/navigation';
 import TopBar from '../../components/TopBar';
 import { colors } from '../../theme';
@@ -13,13 +14,14 @@ import { colors } from '../../theme';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const valid = name.trim().length >= 2 && phone.replace(/\D/g, '').length >= 10;
 
   return (
     <SafeAreaView style={styles.screen}>
-      <TopBar title="Create account" onBack={() => navigation.goBack()} />
+      <TopBar title={t('create_account')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -30,20 +32,18 @@ export default function RegisterScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Let's get to know you</Text>
-            <Text style={styles.subtitle}>
-              We use your number to verify and remind you about appointments.
-            </Text>
+            <Text style={styles.title}>{t('lets_know_you')}</Text>
+            <Text style={styles.subtitle}>{t('register_subtitle')}</Text>
           </View>
 
           <View style={styles.fields}>
             <View>
-              <Text style={styles.label}>Full name</Text>
+              <Text style={styles.label}>{t('full_name')}</Text>
               <View style={styles.inputWrap}>
                 <User size={20} color={colors.ink400} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Ahmed Al-Rubaie"
+                  placeholder={t('name_placeholder')}
                   placeholderTextColor={colors.ink400}
                   value={name}
                   onChangeText={setName}
@@ -52,7 +52,7 @@ export default function RegisterScreen({ navigation }: Props) {
             </View>
 
             <View>
-              <Text style={styles.label}>Phone number</Text>
+              <Text style={styles.label}>{t('phone_number')}</Text>
               <View style={styles.inputWrap}>
                 <View style={styles.prefixRow}>
                   <Text style={styles.flag}>🇮🇶</Text>
@@ -72,9 +72,7 @@ export default function RegisterScreen({ navigation }: Props) {
 
             <View style={styles.notice}>
               <Shield size={18} color={colors.teal700} />
-              <Text style={styles.noticeText}>
-                Your number is only used for verification and appointment reminders. We never share it.
-              </Text>
+              <Text style={styles.noticeText}>{t('privacy_notice')}</Text>
             </View>
           </View>
         </ScrollView>
@@ -86,7 +84,7 @@ export default function RegisterScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('OTP', { name, phone })}
             activeOpacity={0.85}
           >
-            <Text style={styles.btnText}>Continue</Text>
+            <Text style={styles.btnText}>{t('continue_btn')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -5,7 +5,7 @@ export default {
   results: 'Results',
   alerts: 'Alerts',
   profile: 'Profile',
-  
+
   // Welcome Screen
   welcome_title: 'Your trusted\ndoctor, one tap away.',
   welcome_subtitle: 'Book specialists across Baghdad — see verified doctors, transparent prices, same-day slots.',
@@ -15,7 +15,26 @@ export default {
   btn_start: 'Get started',
   btn_login: 'I already have an account',
   terms_agree: 'By continuing you agree to our Terms and Privacy Policy',
-  
+
+  // Register Screen
+  create_account: 'Create account',
+  lets_know_you: "Let's get to know you",
+  register_subtitle: 'We use your number to verify and remind you about appointments.',
+  full_name: 'Full name',
+  name_placeholder: 'e.g. Ahmed Al-Rubaie',
+  phone_number: 'Phone number',
+  privacy_notice: 'Your number is only used for verification and appointment reminders. We never share it.',
+  continue_btn: 'Continue',
+
+  // OTP Screen
+  verify_number: 'Verify number',
+  check_messages: 'Check your messages',
+  otp_subtitle: 'We sent a 4-digit code to',
+  resend_code_in: 'Resend code in',
+  resend_code: 'Resend code',
+  demo_autofill: 'Demo: auto-fill code',
+  verify_continue: 'Verify & continue',
+
   // Home Screen
   good_morning: 'Good morning',
   good_afternoon: 'Good afternoon',
@@ -25,12 +44,52 @@ export default {
   areas_count: '10 areas',
   trust_title: 'Every doctor verified',
   trust_sub: 'Licenses checked quarterly by our team',
-  
+
+  // Appointments Screen
+  my_bookings: 'My bookings',
+  tab_upcoming: 'Upcoming',
+  tab_past: 'Past',
+  no_appointments: 'No {{tab}} appointments yet.',
+  reschedule: 'Reschedule',
+  cancel: 'Cancel',
+  view_result: 'View result',
+  book_again: 'Book again',
+
+  // Booking Screen
+  book_appointment: 'Book appointment',
+  choose_day: 'Choose day',
+  available_time: 'Available time',
+  legend_selected: 'Selected',
+  legend_available: 'Available',
+  legend_unavailable: 'Unavailable',
+  payment_method: 'Payment method',
+  pay_online: 'Pay online',
+  pay_online_sub: 'Visa, Mastercard, Zain Cash',
+  instant_confirm: 'Instant confirm',
+  pay_clinic: 'Pay at clinic',
+  pay_clinic_sub: 'Cash on arrival · pending confirm',
+  summary: 'SUMMARY',
+  consultation: 'Consultation',
+  service_fee: 'Service fee',
+  total: 'Total',
+  confirm_booking: 'Confirm booking',
+
+  // Confirmed Screen
+  youre_booked: "You're booked!",
+  booking_confirmed_sub: 'We sent a confirmation to your phone. Please arrive 10 minutes early.',
+  ticket_date: 'DATE',
+  ticket_time: 'TIME',
+  ticket_location: 'LOCATION',
+  ticket_payment: 'PAYMENT',
+  paid_online: 'Paid online',
+  pay_at_clinic: 'Pay at clinic',
+  view_my_bookings: 'View my bookings',
+  back_to_home: 'Back to home',
+
   // Profile Screen
   profile_title: 'Profile',
   visits: 'Visits',
   your_rating: 'Your rating',
-  my_bookings: 'My bookings',
   my_results: 'My results',
   notifications: 'Notifications',
   upcoming: 'upcoming',
@@ -42,4 +101,60 @@ export default {
   english: 'English',
   turkish: 'Turkish',
   logout: 'Log out',
+
+  // Notifications Screen
+  notif_title: 'Notifications',
+  new_alerts: '{{count}} new alerts',
+  mark_all_read: 'Mark all read',
+
+  // Results Screen
+  my_results_title: 'My results',
+  results_subtitle: 'Your full medical history in one place',
+  clinical_notes: 'CLINICAL NOTES',
+  medications: 'MEDICATIONS',
+  next_steps: 'NEXT STEPS',
+
+  // Doctor List Screen
+  all_doctors: 'All doctors',
+  available_today: 'Available today',
+  top_rated: 'Top rated',
+  nearby: 'Nearby',
+  doctors_count: '{{count}} doctors',
+
+  // Doctor Detail Screen
+  doctor_title: 'Doctor',
+  experience_suffix: 'experience',
+  about: 'ABOUT',
+  about_text: 'Specialist with over {{exp}} of clinical practice. Member of the Iraqi Dental Association. Focus on modern, pain-minimizing approaches and patient education.',
+  working_hours: 'WORKING HOURS',
+  hours_sat_thu: 'Sat – Thu',
+  hours_fri: 'Friday',
+  hours_closed: 'Closed',
+  next_available: 'NEXT AVAILABLE',
+  see_all: 'See all',
+  today_badge: 'Today',
+  consultation_label: 'CONSULTATION',
+  book_appointment_btn: 'Book appointment',
+
+  // Help Screen
+  help_center_title: 'Help center',
+  new_ticket: 'NEW TICKET',
+  category: 'Category',
+  cat_booking: 'Booking',
+  cat_payment: 'Payment',
+  cat_results: 'Results',
+  cat_other: 'Other',
+  subject_placeholder: 'Subject',
+  message_placeholder: 'Describe your issue...',
+  submit_ticket: 'Submit ticket',
+  ticket_submitted: '✓ Ticket submitted',
+  your_tickets: 'YOUR TICKETS',
+
+  // Status Badge
+  status_confirmed: 'Confirmed',
+  status_pending: 'Pending',
+  status_completed: 'Completed',
+  status_cancelled: 'Cancelled',
+  status_open: 'Open',
+  status_resolved: 'Resolved',
 };

@@ -63,7 +63,7 @@ export default function WelcomeScreen({ navigation }: Props) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.btnGhost}
-            onPress={() => navigation.navigate('OTP', { name: 'Ahmed Al-Rubaie', phone: '750 123 4567' })}
+            onPress={() => navigation.navigate('Login')}
             activeOpacity={0.7}
           >
             <Text style={styles.btnGhostText}>{t('btn_login')}</Text>

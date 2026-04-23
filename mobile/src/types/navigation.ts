@@ -3,7 +3,8 @@ import { Doctor, Specialty } from '../data';
 export type AuthStackParamList = {
   Welcome: undefined;
   Register: undefined;
-  OTP: { name: string; phone: string };
+  Login: undefined;
+  OTP: { name?: string; phone: string; isLogin?: boolean };
 };
 
 export type MainStackParamList = {
@@ -31,6 +32,7 @@ export interface BookingData {
 }
 
 export interface UserData {
-  name: string;
+  name?: string;
   phone: string;
+  isLogin?: boolean;
 }
