@@ -47,31 +47,6 @@ tabeebi+/
 
 ---
 
-## ⚙️ Kurulum
-
-1. Depoyu klonlayın:
-   ```bash
-   git clone https://github.com/omartthr/tabeebiPlus.git
-   ```
-
-2. Bağımlılıkları yükleyin:
-   ```bash
-   # Web için
-   cd doctor-panel && npm install
-   # Mobil için
-   cd mobile && npm install
-   ```
-
-3. Çevresel değişkenleri ayarlayın:
-   `.env.local` ve `.env` dosyalarını oluşturup Supabase ve Twilio anahtarlarınızı ekleyin.
-
-4. Uygulamayı başlatın:
-   ```bash
-   npm run dev
-   ```
-
----
-
 ## 📄 Lisans
 
 Bu proje **omartthr** tarafından geliştirilmiştir. Tüm hakları saklıdır.
