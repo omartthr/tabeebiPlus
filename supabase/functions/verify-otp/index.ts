@@ -37,6 +37,18 @@ serve(async (req) => {
     if (valid) {
       // Kullanılan kodu sil
       await supabase.from('phone_otps').delete().eq('phone', cleanPhone)
+
+      // GÜVENLİK: Doktor verisini backend'den döndürüyoruz
+      const { data: doc } = await supabase
+        .from('doctor_registrations')
+        .select('id, name, surname, specialty, status')
+        .eq('phone', cleanPhone)
+        .maybeSingle()
+
+      return new Response(
+        JSON.stringify({ valid, doctor: doc }),
+        { headers: { ...cors, 'Content-Type': 'application/json' } }
+      )
     }
 
     return new Response(

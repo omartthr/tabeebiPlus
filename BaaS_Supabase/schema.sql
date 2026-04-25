@@ -77,7 +77,44 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. OTP CODES (geçici, Edge Function tarafından yönetilir)
+-- 6. DOCTOR REGISTRATIONS (web panel kayıt başvuruları)
+CREATE TABLE IF NOT EXISTS public.doctor_registrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  surname TEXT NOT NULL,
+  age INTEGER,
+  specialty TEXT NOT NULL,
+  clinic_name TEXT,
+  location_address TEXT,
+  location_lat DOUBLE PRECISION,
+  location_lng DOUBLE PRECISION,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  approved_at TIMESTAMPTZ
+);
+
+ALTER TABLE public.doctor_registrations ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can register (phone OTP is the auth layer)
+CREATE POLICY "Allow doctor registration"
+  ON public.doctor_registrations FOR INSERT
+  WITH CHECK (true);
+
+-- Doctor can read their own record (now handled via Edge Functions for better security)
+CREATE POLICY "Doctor can read own registration"
+  ON public.doctor_registrations FOR SELECT
+  USING (true); -- Note: Move to more restrictive policy (e.g. by phone check in JWT) in production
+
+-- Only service_role (admin) can approve/reject
+-- (no UPDATE policy for anon — admin uses service_role key)
+
+GRANT ALL ON public.doctor_registrations TO service_role;
+GRANT INSERT ON public.doctor_registrations TO anon;
+GRANT SELECT ON public.doctor_registrations TO anon; -- Required for current useRequireDoctor hook
+
+-- 7. OTP CODES (geçici, Edge Function tarafından yönetilir)
 CREATE TABLE IF NOT EXISTS public.phone_otps (
   phone TEXT PRIMARY KEY,
   otp TEXT NOT NULL,
