@@ -4,10 +4,15 @@ import { supabase } from '@/lib/supabase';
 
 export type DoctorSession = {
   id: string;
+  doctors_id?: string | null;
   phone: string;
   name: string;
   surname: string;
   specialty: string;
+  clinic_name: string | null;
+  location_address: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
   status: 'pending' | 'approved' | 'rejected';
 };
 
@@ -45,24 +50,27 @@ export function useRequireDoctor() {
     // Validate session against DB — catches deleted/changed registrations
     supabase
       .from('doctor_registrations')
-      .select('id, name, surname, specialty, status')
+      .select('id, name, surname, specialty, clinic_name, status, doctors_id, location_address, location_lat, location_lng')
       .eq('id', s.id)
       .maybeSingle()
       .then(({ data: doc }) => {
         if (!doc) {
-          // Row deleted or not found — clear stale session
           clearDoctorSession();
           window.location.replace('/auth/login');
           return;
         }
 
-        // Refresh session with latest DB values
         const fresh: DoctorSession = {
           id: doc.id,
+          doctors_id: doc.doctors_id,
           phone: s.phone,
           name: doc.name,
           surname: doc.surname,
           specialty: doc.specialty,
+          clinic_name: doc.clinic_name ?? null,
+          location_address: doc.location_address,
+          location_lat: doc.location_lat,
+          location_lng: doc.location_lng,
           status: doc.status,
         };
         setDoctorSession(fresh);

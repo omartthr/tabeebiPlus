@@ -1,19 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet,
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
-import { APPOINTMENTS_UPCOMING, APPOINTMENTS_PAST } from '../../data';
 import DocAvatar from '../../components/DocAvatar';
 import StatusBadge from '../../components/StatusBadge';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../navigation/AppNavigator';
+import { Appointment, DAYS } from '../../data';
 
 export default function AppointmentsScreen() {
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
-  const list = tab === 'upcoming' ? APPOINTMENTS_UPCOMING : APPOINTMENTS_PAST;
+  const [apts, setApts] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchApts = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          doctors (
+            name,
+            specialty,
+            initials,
+            hue
+          )
+        `)
+        .eq('patient_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Fetch appointments error:', error);
+      } else {
+        const mapped: Appointment[] = (data ?? []).map(a => {
+          // Find a nice label for the date if it's in our DAYS array
+          const dayMatch = DAYS.find(d => d.key === a.date);
+          const dateLabel = dayMatch ? dayMatch.full : a.date;
+
+          return {
+            id: a.id,
+            doctor: a.doctors?.name || 'Unknown',
+            specialty: a.doctors?.specialty || '-',
+            date: dateLabel,
+            time: a.time,
+            status: a.status,
+            initials: a.doctors?.initials || '??',
+            hue: a.doctors?.hue || 175,
+            price: a.price,
+          };
+        });
+        setApts(mapped);
+      }
+      setLoading(false);
+    };
+
+    fetchApts();
+  }, [user?.id]);
+
+  const upcoming = apts.filter(a => a.status === 'pending' || a.status === 'confirmed');
+  const past = apts.filter(a => a.status === 'completed' || a.status === 'cancelled');
+  const list = tab === 'upcoming' ? upcoming : past;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -25,8 +80,8 @@ export default function AppointmentsScreen() {
       <View style={styles.tabsWrap}>
         <View style={styles.tabs}>
           {[
-            { id: 'upcoming' as const, label: `${t('tab_upcoming')} (${APPOINTMENTS_UPCOMING.length})` },
-            { id: 'past' as const,    label: `${t('tab_past')} (${APPOINTMENTS_PAST.length})` },
+            { id: 'upcoming' as const, label: `${t('tab_upcoming')} (${upcoming.length})` },
+            { id: 'past' as const,    label: `${t('tab_past')} (${past.length})` },
           ].map(tabItem => (
             <TouchableOpacity
               key={tabItem.id}
@@ -42,7 +97,11 @@ export default function AppointmentsScreen() {
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {list.length === 0 && (
+        {loading ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator color={colors.teal700} />
+          </View>
+        ) : list.length === 0 && (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
               {t('no_appointments', { tab: tab === 'upcoming' ? t('tab_upcoming').toLowerCase() : t('tab_past').toLowerCase() })}

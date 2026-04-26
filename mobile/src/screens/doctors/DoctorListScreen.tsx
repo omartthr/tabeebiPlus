@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Filter } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
-import { DOCTORS } from '../../data';
+import { Doctor } from '../../data';
+import { supabase } from '../../lib/supabase';
 import TopBar from '../../components/TopBar';
 import DoctorCard from '../../components/DoctorCard';
 
@@ -16,6 +17,37 @@ export default function DoctorListScreen({ route, navigation }: Props) {
   const { specialty } = route.params;
   const { t } = useTranslation();
   const [filter, setFilter] = useState('all');
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('doctors')
+      .select('*')
+      .eq('is_active', true)
+      .in('specialty', specialty.dbNames)
+      .then(({ data }) => {
+        const mapped: Doctor[] = (data ?? []).map(d => ({
+          id: d.id,
+          name: d.name,
+          specialty: d.specialty,
+          rating: Number(d.rating) || 0,
+          reviews: d.reviews || 0,
+          price: d.price || 0,
+          today: d.today ?? false,
+          exp: d.exp || '1 yrs',
+          loc: d.loc || '',
+          initials: d.initials || d.name.slice(0, 2).toUpperCase(),
+          hue: d.hue || 175,
+          registration_id: d.registration_id || null,
+          location_address: d.location_address || null,
+          location_lat: d.location_lat || null,
+          location_lng: d.location_lng || null,
+        }));
+        setDoctors(mapped);
+        setLoading(false);
+      });
+  }, []);
 
   const FILTERS = [
     { id: 'all',   label: t('all_doctors') },
@@ -24,7 +56,7 @@ export default function DoctorListScreen({ route, navigation }: Props) {
     { id: 'near',  label: t('nearby') },
   ];
 
-  const filtered = filter === 'today' ? DOCTORS.filter(d => d.today) : DOCTORS;
+  const filtered = filter === 'today' ? doctors.filter(d => d.today) : doctors;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -46,12 +78,21 @@ export default function DoctorListScreen({ route, navigation }: Props) {
         ))}
       </ScrollView>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.count}>{t('doctors_count', { count: filtered.length })}</Text>
-        {filtered.map(d => (
-          <DoctorCard key={d.id} doctor={d} onPress={() => navigation.navigate('DoctorDetail', { doctor: d })} />
-        ))}
-      </ScrollView>
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={colors.teal700} size="large" />
+        </View>
+      ) : (
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={styles.count}>{t('doctors_count', { count: filtered.length })}</Text>
+          {filtered.map(d => (
+            <DoctorCard key={d.id} doctor={d} onPress={() => navigation.navigate('DoctorDetail', { doctor: d })} />
+          ))}
+          {filtered.length === 0 && (
+            <Text style={{ textAlign: 'center', color: colors.ink400, marginTop: 40 }}>Henüz kayıtlı doktor yok.</Text>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

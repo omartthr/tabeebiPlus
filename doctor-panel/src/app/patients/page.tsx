@@ -1,31 +1,66 @@
 'use client';
 import { useRequireDoctor } from '@/hooks/useDoctor';
-import { PATIENTS, APPOINTMENTS, type Appointment } from '@/data';
-import { ISearch, IPlus, IPhone, ICal, IChevR, Avatar } from '@/components/ui/icons';
-import { useState, useMemo } from 'react';
+import { supabase } from '@/lib/supabase';
+import { ISearch, IPhone, IChevR, Avatar } from '@/components/ui/icons';
+import { useState, useEffect, useMemo } from 'react';
+
+interface Patient {
+  id: string;
+  name: string;
+  phone: string;
+  avatar_hue: number;
+  lastComplaint: string;
+  lastDate: string;
+}
+
+function toInitials(name: string) {
+  return name.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase();
+}
 
 export default function PatientsPage() {
   const { doctor, loading } = useRequireDoctor();
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [fetching, setFetching] = useState(true);
   const [search, setSearch] = useState('');
 
-  const patientData = useMemo(() => {
-    return PATIENTS.map(p => {
-      // Find latest appointment for this patient
-      const latest = [...APPOINTMENTS]
-        .filter(a => a.patient.id === p.id)
-        .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
-      
-      return {
-        ...p,
-        lastComplaint: latest?.reason || 'Kayıtlı randevu yok',
-        lastDate: latest?.date ? latest.date.toLocaleDateString('tr-TR') : '-'
-      };
-    }).filter(p => 
-      p.name.toLowerCase().includes(search.toLowerCase()) || 
-      p.phone.includes(search) ||
-      (p as any).patientId.replace('#', '').includes(search)
-    );
-  }, [search]);
+  useEffect(() => {
+    if (!doctor) return;
+
+    supabase
+      .from('appointments')
+      .select('reason, date, time, patient_name, patient_phone, patients(id, name, phone, avatar_hue)')
+      .eq('doctor_registration_id', doctor.id)
+      .order('date', { ascending: false })
+      .then(({ data }) => {
+        if (!data) { setFetching(false); return; }
+
+        // Deduplicate patients — keep latest appointment per patient
+        const seen = new Map<string, Patient>();
+        for (const row of data) {
+          const p = row.patients as any;
+          const key = p?.id ?? row.patient_phone ?? row.patient_name ?? 'unknown';
+          if (!seen.has(key)) {
+            seen.set(key, {
+              id: key,
+              name: p?.name ?? row.patient_name ?? 'Bilinmeyen',
+              phone: p?.phone ?? row.patient_phone ?? '-',
+              avatar_hue: p?.avatar_hue ?? 175,
+              lastComplaint: row.reason ?? '-',
+              lastDate: row.date ?? '-',
+            });
+          }
+        }
+        setPatients(Array.from(seen.values()));
+        setFetching(false);
+      });
+  }, [doctor]);
+
+  const filtered = useMemo(() =>
+    patients.filter(p =>
+      !search ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone.includes(search)
+    ), [patients, search]);
 
   if (loading || !doctor) return null;
 
@@ -34,14 +69,14 @@ export default function PatientsPage() {
       <div className="topbar">
         <div className="greet">
           <h1>Hastalar</h1>
-          <div className="sub">Toplam {PATIENTS.length} kayıtlı hasta</div>
+          <div className="sub">Toplam {patients.length} kayıtlı hasta</div>
         </div>
         <div className="topbar-actions">
           <div className="search-wrap">
             <span className="search-icon"><ISearch size={16} /></span>
             <input
               className="search-input"
-              placeholder="İsim, telefon veya ID ile ara…"
+              placeholder="İsim veya telefon ile ara…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -49,68 +84,50 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      <div className="panel fade-up" style={{ padding: '0' }}>
+      <div className="panel fade-up" style={{ padding: 0 }}>
         <div className="patient-list">
-          <div className="list-header" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1.2fr 1.2fr 1.5fr 1.2fr 1fr 40px',
+          <div className="list-header" style={{
+            display: 'grid',
+            gridTemplateColumns: '1.5fr 1.5fr 1.5fr 1.2fr 40px',
             padding: '16px 24px',
             borderBottom: '1px solid var(--ink-100)',
-            fontSize: '13px',
-            fontWeight: '700',
-            color: 'var(--ink-500)',
-            letterSpacing: '0.5px'
+            fontSize: 13, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: '0.5px',
           }}>
-            <div>KİMLİK</div>
             <div>HASTA</div>
             <div>İLETİŞİM</div>
             <div>SON ŞİKAYET</div>
-            <div>SONUÇLAR</div>
+            <div>SON TARİH</div>
             <div />
           </div>
 
-          {patientData.map(p => (
+          {fetching && (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-400)' }}>Yükleniyor…</div>
+          )}
+
+          {!fetching && filtered.map(p => (
             <div key={p.id} className="patient-row" style={{
               display: 'grid',
-              gridTemplateColumns: '1.2fr 1.2fr 1.5fr 1.2fr 1fr 40px',
+              gridTemplateColumns: '1.5fr 1.5fr 1.5fr 1.2fr 40px',
               alignItems: 'center',
               padding: '16px 24px',
               borderBottom: '1px solid var(--ink-50)',
               cursor: 'pointer',
-              transition: 'background 0.2s'
+              transition: 'background 0.2s',
             }}>
-              <div style={{ color: 'var(--teal-700)', fontWeight: '700', fontSize: '14px' }}>
-                {(p as any).patientId}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Avatar initials={toInitials(p.name)} hue={p.avatar_hue} size={40} rounded={12} />
+                <div style={{ fontWeight: 700, color: 'var(--ink-900)' }}>{p.name}</div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Avatar initials={p.initials} hue={p.hue} size={40} rounded={12} />
-                <div style={{ fontWeight: '700', color: 'var(--ink-900)' }}>{p.name}</div>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--ink-600)', fontSize: '14px', fontWeight: '500' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--ink-50)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--ink-400)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ink-600)', fontSize: 14, fontWeight: 500 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--ink-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-400)' }}>
                   <IPhone size={14} />
                 </div>
                 {p.phone}
               </div>
 
-              <div style={{ color: 'var(--ink-700)', fontSize: '14px', fontWeight: '600' }}>
-                {p.lastComplaint}
-              </div>
-
-              <div>
-                <span style={{ 
-                  padding: '4px 10px', 
-                  borderRadius: '100px', 
-                  background: 'var(--teal-50)', 
-                  color: 'var(--teal-700)', 
-                  fontSize: '12px', 
-                  fontWeight: '700' 
-                }}>
-                  3 Sonuç
-                </span>
-              </div>
+              <div style={{ color: 'var(--ink-700)', fontSize: 14, fontWeight: 600 }}>{p.lastComplaint}</div>
+              <div style={{ color: 'var(--ink-500)', fontSize: 13 }}>{p.lastDate}</div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', color: 'var(--ink-300)' }}>
                 <IChevR size={18} />
@@ -118,21 +135,17 @@ export default function PatientsPage() {
             </div>
           ))}
 
-          {patientData.length === 0 && (
-            <div style={{ padding: '60px', textAlign: 'center', color: 'var(--ink-400)' }}>
-              Arama kriterlerine uygun hasta bulunamadı.
+          {!fetching && filtered.length === 0 && (
+            <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-400)' }}>
+              {search ? 'Arama kriterlerine uygun hasta bulunamadı.' : 'Henüz hasta kaydı yok.'}
             </div>
           )}
         </div>
       </div>
 
       <style jsx>{`
-        .patient-row:hover {
-          background-color: var(--ink-50);
-        }
-        .patient-row:last-child {
-          border-bottom: none;
-        }
+        .patient-row:hover { background-color: var(--ink-50); }
+        .patient-row:last-child { border-bottom: none; }
       `}</style>
     </div>
   );

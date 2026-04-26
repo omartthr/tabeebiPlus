@@ -16,15 +16,67 @@ import SpecialtyIcon from '../../components/SpecialtyIcon';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
+import { supabase } from '../../lib/supabase';
+import { Appointment, DAYS } from '../../data';
+
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const [nextAppt, setNextAppt] = React.useState<Appointment | null>(null);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchNext = async () => {
+      const now = new Date();
+      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      const { data } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          doctors (
+            name,
+            specialty,
+            initials,
+            hue,
+            loc
+          )
+        `)
+        .eq('patient_id', user.id)
+        .in('status', ['pending', 'confirmed'])
+        .gte('date', localDate)
+        .order('date', { ascending: true })
+        .order('time', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        const dayMatch = DAYS.find(d => d.key === data.date);
+        const dateLabel = dayMatch ? dayMatch.full : data.date;
+
+        setNextAppt({
+          id: data.id,
+          doctor: data.doctors?.name || 'Unknown',
+          specialty: data.doctors?.specialty || '-',
+          date: dateLabel,
+          time: data.time,
+          status: data.status,
+          initials: data.doctors?.initials || '??',
+          hue: data.doctors?.hue || 175,
+          clinic: data.doctors?.loc || 'Clinic'
+        });
+      }
+    };
+
+    fetchNext();
+  }, [user?.id]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('good_morning') : hour < 17 ? t('good_afternoon') : t('good_evening');
   const firstName = user?.name?.split(' ')[0] || 'Ahmed';
-  const next = APPOINTMENTS_UPCOMING[0];
+  const next = nextAppt;
 
   return (
     <SafeAreaView style={styles.screen}>

@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="app">
           <Sidebar />
-          <main className="main">{children}</main>
+          <main className="main" id="page-main">{children}</main>
         </div>
       </body>
     </html>

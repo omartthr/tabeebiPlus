@@ -71,11 +71,11 @@ export default function AppNavigator() {
   const loadPatient = async (authId: string) => {
     const { data } = await supabase
       .from('patients')
-      .select('name, phone')
+      .select('id, name, phone')
       .eq('auth_id', authId)
       .single();
 
-    if (data) setUser({ name: data.name, phone: data.phone });
+    if (data) setUser({ id: data.id, name: data.name, phone: data.phone });
     setLoading(false);
   };
 
@@ -100,12 +100,12 @@ export default function AppNavigator() {
           // Fetch real name from database
           const { data: existing } = await supabase
             .from('patients')
-            .select('name, phone')
+            .select('id, name, phone')
             .eq('auth_id', data.session.user.id)
             .maybeSingle();
 
           if (existing) {
-            setUser({ name: existing.name, phone: existing.phone });
+            setUser({ id: existing.id, name: existing.name, phone: existing.phone });
           } else {
             setUser({ name: 'Bilinmeyen Kullanıcı', phone: u.phone });
           }
@@ -140,11 +140,11 @@ export default function AppNavigator() {
 
       if (signUpData?.session) {
         // Yeni hasta → veritabanına kaydet
-        const { error: insertError } = await supabase.from('patients').insert({
+        const { data: inserted, error: insertError } = await supabase.from('patients').insert({
           auth_id: signUpData.session.user.id,
           phone: u.phone,
           name: u.name,
-        });
+        }).select('id').single();
 
         if (insertError) {
           if (insertError.code === '23505') {
@@ -156,12 +156,14 @@ export default function AppNavigator() {
           Alert.alert('Veri Kayıt Hatası', insertError.message);
           return false;
         }
+        if (inserted) {
+          setUser({ id: inserted.id, name: u.name || '', phone: u.phone });
+        }
       } else {
         Alert.alert('Hata', 'Supabase ayarlarından Confirm Email tam kapanmamış olabilir.');
         return false;
       }
 
-      setUser({ name: u.name || '', phone: u.phone });
       return true;
 
     } catch (e) {

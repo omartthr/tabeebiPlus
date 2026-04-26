@@ -1,16 +1,45 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
+import { supabase } from '../../lib/supabase';
 import TopBar from '../../components/TopBar';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
+  const [checking, setChecking] = useState(false);
   const valid = phone.replace(/\D/g, '').length >= 10;
+
+  const handleContinue = async () => {
+    setChecking(true);
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    const { data: patient } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('phone', cleanPhone)
+      .maybeSingle();
+
+    setChecking(false);
+
+    if (!patient) {
+      Alert.alert(
+        'Hesap Bulunamadı',
+        'Bu numara ile kayıtlı hesap bulunamadı. Lütfen önce kayıt olun.',
+        [
+          { text: 'Kayıt Ol', onPress: () => navigation.navigate('Register') },
+          { text: 'Tamam', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
+    navigation.navigate('OTP', { phone: cleanPhone, isLogin: true });
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -21,12 +50,12 @@ export default function LoginScreen({ navigation }: Props) {
             <Text style={styles.title}>Tabeebi+</Text>
             <Text style={styles.subtitle}>Kliniğinize ve randevularınıza ulaşmak için giriş yapın.</Text>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Telefon Numarası</Text>
-            <TextInput 
+            <TextInput
               style={styles.input}
-              placeholder="05XX XXX XX XX"
+              placeholder="750 123 4567"
               keyboardType="phone-pad"
               placeholderTextColor={colors.ink400}
               value={phone}
@@ -36,14 +65,17 @@ export default function LoginScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[styles.btnPrimary, !valid && styles.btnDisabled]}
-            disabled={!valid}
-            onPress={() => navigation.navigate('OTP', { phone, isLogin: true })}
+          <TouchableOpacity
+            style={[styles.btnPrimary, (!valid || checking) && styles.btnDisabled]}
+            disabled={!valid || checking}
+            onPress={handleContinue}
           >
-            <Text style={styles.btnText}>Devam Et</Text>
+            {checking
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.btnText}>Devam Et</Text>
+            }
           </TouchableOpacity>
-          
+
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>Hesabınız yok mu? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>

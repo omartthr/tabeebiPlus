@@ -10,8 +10,8 @@ interface Props {
 
 export default function MapPicker({ onChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef       = useRef<any>(null);
-  const markerRef    = useRef<any>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
   const [address, setAddress] = useState('');
 
   useEffect(() => {

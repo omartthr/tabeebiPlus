@@ -45,13 +45,15 @@ button { font-family: inherit; cursor: pointer; }
 input, textarea, select { font-family: inherit; }
 
 .app {
-  display: grid;
-  grid-template-columns: 256px 1fr;
+  display: flex;
   min-height: 100vh;
 }
 
+
 /* Sidebar */
 .sidebar {
+  width: 256px;
+  flex-shrink: 0;
   background: linear-gradient(180deg, #064649 0%, #0a5d60 100%);
   color: #fff;
   padding: 28px 18px 22px;
@@ -91,7 +93,7 @@ input, textarea, select { font-family: inherit; }
 .sb-doctor .sub  { font-size: 11px; color: rgba(255,255,255,0.55); font-weight: 500; margin-top: 2px; }
 
 /* Main */
-.main { padding: 28px 40px 40px; max-width: 1280px; width: 100%; }
+.main { flex: 1; min-width: 0; padding: 28px 40px 40px; max-width: 1280px; }
 
 /* Topbar */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; }

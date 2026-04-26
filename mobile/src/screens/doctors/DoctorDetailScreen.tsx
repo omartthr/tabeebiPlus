@@ -1,23 +1,85 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MapPin, CreditCard, Clock } from 'lucide-react-native';
+import { MapPin, CreditCard, Clock, ExternalLink } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { colors, shadows } from '../../theme';
-import { iqd } from '../../data';
+import { iqd, DAYS } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 import Rating from '../../components/Rating';
+import { supabase } from '../../lib/supabase';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'DoctorDetail'>;
 
-const PREVIEW_SLOTS = ['10:30 AM', '11:00 AM', '1:30 PM', '3:00 PM', '3:30 PM', '4:00 PM'];
+// PREVIEW_SLOTS removed — now using real schedule from DB
+
 
 export default function DoctorDetailScreen({ route, navigation }: Props) {
   const { doctor } = route.params;
   const { t } = useTranslation();
+  const [scheduleLoading, setScheduleLoading] = React.useState(true);
+  const [schedule, setSchedule] = React.useState<any>(null);
+  const [nextSlots, setNextSlots] = React.useState<string[]>([]);
+  const [nextDay, setNextDay] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setScheduleLoading(true);
+
+      const regId = doctor.registration_id;
+      if (!regId) {
+        setScheduleLoading(false);
+        return;
+      }
+
+      // Get schedule directly using registration_id
+      const { data: sched } = await supabase
+        .from('doctor_schedules')
+        .select('schedule')
+        .eq('doctor_registration_id', regId)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (sched?.schedule) {
+        setSchedule(sched.schedule);
+
+        // Find next available day with slots
+        for (const day of DAYS) {
+          const dayKey = day.day.toLowerCase();
+          const daySched = sched.schedule[dayKey];
+          if (daySched && daySched.isOpen && daySched.slots.length > 0) {
+            setNextDay(day);
+            setNextSlots(daySched.slots.slice(0, 6));
+            break;
+          }
+        }
+      }
+
+      setScheduleLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [doctor.id]);
+
+  const openInMaps = () => {
+    if (!doctor.location_lat || !doctor.location_lng) return;
+    const url = `https://www.google.com/maps/search/?api=1&query=${doctor.location_lat},${doctor.location_lng}`;
+    Linking.openURL(url);
+  };
+
+  const getHoursText = (dayKey: string) => {
+    if (scheduleLoading) return '...';
+    if (!schedule || !schedule[dayKey]) return t('hours_closed');
+    const dayData = schedule[dayKey];
+    if (!dayData.isOpen || !dayData.slots || dayData.slots.length === 0) return t('hours_closed');
+    const first = dayData.slots[0];
+    const last = dayData.slots[dayData.slots.length - 1];
+    return `${first} – ${last}`;
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -66,29 +128,55 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>{t('working_hours')}</Text>
           <View style={styles.hoursCard}>
-            <View style={styles.hoursRow}>
-              <Text style={styles.hoursDay}>{t('hours_sat_thu')}</Text>
-              <Text style={styles.hoursTime}>9:00 AM – 5:00 PM</Text>
-            </View>
-            <View style={styles.hoursRow}>
-              <Text style={styles.hoursDay}>{t('hours_fri')}</Text>
-              <Text style={[styles.hoursTime, { color: colors.red500 }]}>{t('hours_closed')}</Text>
-            </View>
+            {[
+              { id: 'mon', label: 'Pazartesi' },
+              { id: 'tue', label: 'Salı' },
+              { id: 'wed', label: 'Çarşamba' },
+              { id: 'thu', label: 'Perşembe' },
+              { id: 'fri', label: 'Cuma' },
+              { id: 'sat', label: 'Cumartesi' },
+              { id: 'sun', label: 'Pazar' },
+            ].map(d => {
+              const text = getHoursText(d.id);
+              const isClosed = text === t('hours_closed');
+              return (
+                <View key={d.id} style={styles.hoursRow}>
+                  <Text style={styles.hoursDay}>{d.label}</Text>
+                  <Text style={[styles.hoursTime, isClosed && { color: colors.red500 }]}>{text}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
         <View style={styles.section}>
-          <View style={styles.slotHeader}>
-            <Text style={styles.sectionLabel}>{t('next_available')} — TUE APR 28</Text>
-            <Text style={styles.seeAll}>{t('see_all')}</Text>
-          </View>
-          <View style={styles.slotGrid}>
-            {PREVIEW_SLOTS.map(slotTime => (
-              <View key={slotTime} style={styles.slotItem}>
-                <Text style={styles.slotText}>{slotTime}</Text>
-              </View>
-            ))}
-          </View>
+          <Text style={styles.sectionLabel}>{t('location_map')}</Text>
+          {doctor.location_lat && doctor.location_lng ? (
+            <View style={styles.locationCard}>
+              <TouchableOpacity activeOpacity={0.85} onPress={openInMaps} style={styles.locationMapBanner}>
+                <View style={styles.locationIconCircle}>
+                  <MapPin size={28} color={colors.teal700} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locationCoords}>
+                    {Number(doctor.location_lat).toFixed(5)}, {Number(doctor.location_lng).toFixed(5)}
+                  </Text>
+                  <Text style={styles.locationOpenText}>Google Maps'te görüntüle →</Text>
+                </View>
+                <ExternalLink size={18} color={colors.teal700} />
+              </TouchableOpacity>
+              {doctor.location_address ? (
+                <View style={styles.addressBox}>
+                  <MapPin size={14} color={colors.ink500} />
+                  <Text style={styles.addressText}>{doctor.location_address}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            <View style={[styles.locationCard, { padding: 16 }]}>
+              <Text style={{ fontSize: 13, color: colors.ink400 }}>Konum bilgisi bulunmuyor.</Text>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 110 }} />
@@ -139,4 +227,11 @@ const styles = StyleSheet.create({
   footerPrice: { fontSize: 18, fontWeight: '700', color: colors.ink900 },
   bookBtn: { flex: 1, height: 54, borderRadius: 100, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#0d7377', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },
   bookBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  locationCard: { backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.ink100, overflow: 'hidden' },
+  locationMapBanner: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: colors.teal50 },
+  locationIconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3 },
+  locationCoords: { fontSize: 13, fontWeight: '700', color: colors.teal700, marginBottom: 3 },
+  locationOpenText: { fontSize: 11, color: colors.teal800, fontWeight: '600' },
+  addressBox: { padding: 14, flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: colors.ink100 },
+  addressText: { flex: 1, fontSize: 13, color: colors.ink700, fontWeight: '500', lineHeight: 18 },
 });

@@ -5,6 +5,9 @@ export default {
   results: 'Results',
   alerts: 'Alerts',
   profile: 'Profile',
+  loading: 'Loading',
+  no_available_slots: 'No available slots for this day.',
+  location_map: 'CLINIC LOCATION',
 
   // Welcome Screen
   welcome_title: 'Your trusted\ndoctor, one tap away.',
@@ -73,6 +76,7 @@ export default {
   service_fee: 'Service fee',
   total: 'Total',
   confirm_booking: 'Confirm booking',
+  processing: 'Processing...',
 
   // Confirmed Screen
   youre_booked: "You're booked!",

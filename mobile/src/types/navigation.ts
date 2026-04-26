@@ -32,6 +32,7 @@ export interface BookingData {
 }
 
 export interface UserData {
+  id?: string;
   name?: string;
   phone: string;
   isLogin?: boolean;

@@ -5,6 +5,9 @@ export default {
   results: 'Sonuçlar',
   alerts: 'Bildirimler',
   profile: 'Profil',
+  loading: 'Yükleniyor',
+  no_available_slots: 'Bu gün için müsait randevu saati bulunmuyor.',
+  location_map: 'KLİNİK KONUMU',
 
   // Welcome Screen
   welcome_title: 'Güvenilir doktorunuz\nbir tık uzağınızda.',
@@ -73,6 +76,7 @@ export default {
   service_fee: 'Hizmet ücreti',
   total: 'Toplam',
   confirm_booking: 'Randevuyu onayla',
+  processing: 'İşleniyor...',
 
   // Confirmed Screen
   youre_booked: 'Randevunuz alındı!',

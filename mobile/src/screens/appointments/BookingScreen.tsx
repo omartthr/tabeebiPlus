@@ -10,20 +10,118 @@ import { DAYS, TIME_SLOTS, iqd } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../navigation/AppNavigator';
+
 type Props = NativeStackScreenProps<MainStackParamList, 'Booking'>;
 
 export default function BookingScreen({ route, navigation }: Props) {
   const { doctor } = route.params;
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [dayIdx, setDayIdx] = useState(1);
   const [slotIdx, setSlotIdx] = useState(3);
   const [payment, setPayment] = useState<'online' | 'cash'>('online');
+  const [loading, setLoading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [slots, setSlots] = useState<{ t: string; state: 'available' | 'unavailable' }[]>([]);
+  const [schedule, setSchedule] = useState<any>(null);
 
   const day = DAYS[dayIdx];
-  const slot = TIME_SLOTS[slotIdx];
-  const canBook = slot && slot.state === 'available';
+  const slot = slots[slotIdx];
+  const canBook = slot && slot.state === 'available' && !bookingLoading;
 
-  const confirm = () => {
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      // 1. Get registration ID for this doctor
+      const { data: reg } = await supabase
+        .from('doctor_registrations')
+        .select('id')
+        .eq('doctors_id', doctor.id)
+        .maybeSingle();
+      
+      if (cancelled || !reg) {
+        setLoading(false);
+        return;
+      }
+
+      // 2. Get schedule
+      const { data: sched } = await supabase
+        .from('doctor_schedules')
+        .select('schedule')
+        .eq('doctor_registration_id', reg.id)
+        .maybeSingle();
+      
+      if (sched) setSchedule(sched.schedule);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [doctor.id]);
+
+  React.useEffect(() => {
+    if (!schedule) return;
+    let cancelled = false;
+
+    (async () => {
+      const dayKey = day.day.toLowerCase(); // 'mon', 'tue', etc.
+      const daySched = schedule[dayKey];
+      
+      if (!daySched || !daySched.isOpen) {
+        setSlots([]);
+        return;
+      }
+
+      // 3. Get booked slots for this day
+      const { data: booked } = await supabase
+        .from('appointments')
+        .select('time')
+        .eq('doctor_id', doctor.id)
+        .eq('date', day.key)
+        .neq('status', 'cancelled');
+
+      if (cancelled) return;
+
+      const bookedTimes = booked?.map(b => b.time) || [];
+      const newSlots = daySched.slots.map((t: string) => ({
+        t,
+        state: bookedTimes.includes(t) ? 'unavailable' : 'available'
+      }));
+
+      setSlots(newSlots);
+    })();
+
+    return () => { cancelled = true; };
+  }, [dayIdx, schedule]);
+
+  const confirm = async () => {
+    if (!user?.id) {
+      alert('Oturum hatası. Lütfen tekrar giriş yapın.');
+      return;
+    }
+
+    setBookingLoading(true);
+    const { error } = await supabase
+      .from('appointments')
+      .insert({
+        patient_id: user.id,
+        doctor_id: doctor.id,
+        date: day.key,
+        time: slot.t,
+        payment: payment,
+        status: 'pending',
+        price: doctor.price
+      });
+
+    setBookingLoading(false);
+
+    if (error) {
+      console.error('Booking error:', error);
+      alert('Randevu alınırken bir hata oluştu: ' + error.message);
+      return;
+    }
+
     navigation.navigate('Confirmed', { booking: { doctor, day: day.full, time: slot.t, payment } });
   };
 
@@ -55,15 +153,21 @@ export default function BookingScreen({ route, navigation }: Props) {
 
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t('available_time')}</Text>
         <View style={styles.slotGrid}>
-          {TIME_SLOTS.map((s, i) => {
-            const active = i === slotIdx && s.state === 'available';
-            const disabled = s.state === 'unavailable';
-            return (
-              <TouchableOpacity key={i} disabled={disabled} onPress={() => setSlotIdx(i)} style={[styles.slotBtn, active && styles.slotBtnActive, disabled && styles.slotBtnDisabled]} activeOpacity={0.8}>
-                <Text style={[styles.slotText, active && styles.slotTextActive, disabled && styles.slotTextDisabled]}>{s.t}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          {loading ? (
+            <Text style={{ fontSize: 13, color: colors.ink400 }}>{t('loading')}...</Text>
+          ) : slots.length > 0 ? (
+            slots.map((s, i) => {
+              const active = i === slotIdx && s.state === 'available';
+              const disabled = s.state === 'unavailable';
+              return (
+                <TouchableOpacity key={i} disabled={disabled} onPress={() => setSlotIdx(i)} style={[styles.slotBtn, active && styles.slotBtnActive, disabled && styles.slotBtnDisabled]} activeOpacity={0.8}>
+                  <Text style={[styles.slotText, active && styles.slotTextActive, disabled && styles.slotTextDisabled]}>{s.t}</Text>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <Text style={{ fontSize: 13, color: colors.ink400 }}>{t('no_available_slots')}</Text>
+          )}
         </View>
 
         <View style={styles.legend}>
@@ -123,7 +227,7 @@ export default function BookingScreen({ route, navigation }: Props) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={[styles.bookBtn, !canBook && styles.bookBtnDisabled]} disabled={!canBook} onPress={confirm} activeOpacity={0.85}>
-          <Text style={styles.bookBtnText}>{t('confirm_booking')}</Text>
+          <Text style={styles.bookBtnText}>{bookingLoading ? t('processing') : t('confirm_booking')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

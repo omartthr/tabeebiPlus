@@ -11,7 +11,7 @@ serve(async (req) => {
 
   try {
     const { phone, code } = await req.json()
-    const cleanPhone = phone.replace(/\D/g, '')
+    const cleanPhone = String(phone).replace(/\D/g, '').replace(/^0/, '')
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,

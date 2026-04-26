@@ -39,7 +39,7 @@ export default function OTPScreen({ route, navigation }: Props) {
     setSending(true);
     try {
       const { error } = await supabase.functions.invoke('send-otp', {
-        body: { phone },
+        body: { phone: phone.replace(/\D/g, '').replace(/^0/, '') },
       });
       if (error) Alert.alert('Hata', 'WhatsApp kodu gönderilemedi. Tekrar dene.');
     } catch {
@@ -64,8 +64,9 @@ export default function OTPScreen({ route, navigation }: Props) {
     setSubmitting(true);
 
     try {
+      const cleanedPhone = phone.replace(/\D/g, '').replace(/^0/, '');
       const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: { phone, code: full },
+        body: { phone: cleanedPhone, code: full },
       });
 
       if (error || !data?.valid) {

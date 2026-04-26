@@ -1,4 +1,4 @@
-export const TODAY = new Date(2026, 3, 27);
+export const TODAY = new Date();
 
 export const DOCTOR = {
   name: 'Dr. Layla Al-Jabari',
@@ -95,7 +95,10 @@ export function fmtDateLong(d: Date): string {
 }
 
 export function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const r = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${r}`;
 }
 
 export function addDays(d: Date, n: number): Date {

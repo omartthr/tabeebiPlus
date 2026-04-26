@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { IDash, ICal, IUsers, IDoc, IChat, ICash, ISet, Avatar } from '@/components/ui/icons';
-import { DOCTOR } from '@/data';
+import { IDash, IUsers, IDoc, ISet, Avatar } from '@/components/ui/icons';
+import { getDoctorSession, type DoctorSession } from '@/hooks/useDoctor';
 
 const NAV = [
   { href: '/dashboard',    icon: IDash,  label: 'Gösterge Paneli', badge: 3 },
@@ -10,9 +10,28 @@ const NAV = [
   { href: '/profile',      icon: ISet,   label: 'Ayarlar' },
 ];
 
+function getInitials(name: string, surname: string) {
+  return ((name?.[0] ?? '') + (surname?.[0] ?? '')).toUpperCase();
+}
+
 export default function Sidebar() {
   const [activePath, setActivePath] = useState('');
-  useEffect(() => { setActivePath(window.location.pathname); }, []);
+  const [visible, setVisible] = useState(false);
+  const [doctor, setDoctor] = useState<DoctorSession | null>(null);
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    setActivePath(path);
+    const isPanel = !path.startsWith('/auth') && path !== '/';
+    setVisible(isPanel);
+    if (isPanel) setDoctor(getDoctorSession());
+  }, []);
+
+  if (!visible) return null;
+
+  const initials = doctor ? getInitials(doctor.name, doctor.surname) : '?';
+  const fullName = doctor ? `Dr. ${doctor.name} ${doctor.surname}` : '';
+  const specialty = doctor?.specialty ?? '';
 
   return (
     <aside className="sidebar">
@@ -45,10 +64,10 @@ export default function Sidebar() {
       </nav>
 
       <div className="sb-doctor">
-        <Avatar initials={DOCTOR.initials} hue={DOCTOR.hue} size={38} rounded={10} />
+        <Avatar initials={initials} hue={175} size={38} rounded={10} />
         <div style={{ overflow: 'hidden' }}>
-          <div className="name">{DOCTOR.name}</div>
-          <div className="sub">{DOCTOR.specialty}</div>
+          <div className="name">{fullName}</div>
+          <div className="sub">{specialty}</div>
         </div>
       </div>
     </aside>

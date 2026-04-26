@@ -19,6 +19,10 @@ export interface Doctor {
   loc: string;
   initials: string;
   hue: number;
+  registration_id?: string;
+  location_address?: string;
+  location_lat?: number;
+  location_lng?: number;
 }
 
 export interface Appointment {
@@ -74,19 +78,20 @@ export interface Day {
   num: number;
   month: string;
   full: string;
+  key: string;
 }
 
 export const SPECIALTIES: Specialty[] = [
-  { id: 'obgyn', name: 'OB-GYN', sub: '3 doctors (Demo)', icon: 'user-round', tint: '#f5e1ec', accent: '#8a2a64' },
-  { id: 'derm', name: 'Dermatology', sub: '3 doctors (Demo)', icon: 'layers', tint: '#fbefe2', accent: '#a5622b' },
-  { id: 'pulmo', name: 'Pulmonary', sub: '3 doctors (Demo)', icon: 'wind', tint: '#e3edf0', accent: '#3d6a78' },
-  { id: 'dental', name: 'Dental', sub: '3 doctors (Demo)', icon: 'tooth', tint: '#eaf5f5', accent: '#0d7377' },
-  { id: 'eye', name: 'Eye Care', sub: '3 doctors (Demo)', icon: 'eye', tint: '#fdf6e6', accent: '#b37d1f' },
-  { id: 'cardio', name: 'Cardiology', sub: '3 doctors (Demo)', icon: 'heart', tint: '#fadfdc', accent: '#912a23' },
-  { id: 'neuro', name: 'Neurology', sub: '3 doctors (Demo)', icon: 'brain', tint: '#ede7f5', accent: '#5b3b9f' },
-  { id: 'ortho', name: 'Orthopedic', sub: '3 doctors (Demo)', icon: 'bone', tint: '#eaf1f5', accent: '#2c5a85' },
-  { id: 'general', name: 'General', sub: '3 doctors (Demo)', icon: 'stethoscope', tint: '#d4ecec', accent: '#0a5d60' },
-  { id: 'pediatric', name: 'Pediatric', sub: '3 doctors (Demo)', icon: 'baby', tint: '#fbe6d1', accent: '#8f4a0d' },
+  { id: 'obgyn', name: 'OB-GYN', sub: '3 doctors (Demo)', icon: 'user-round', tint: '#f5e1ec', accent: '#8a2a64', dbNames: ['Kadın Hastalıkları ve Doğum'] },
+  { id: 'derm', name: 'Dermatology', sub: '3 doctors (Demo)', icon: 'layers', tint: '#fbefe2', accent: '#a5622b', dbNames: ['Dermatoloji (Cildiye)'] },
+  { id: 'pulmo', name: 'Pulmonary', sub: '3 doctors (Demo)', icon: 'wind', tint: '#e3edf0', accent: '#3d6a78', dbNames: ['Gastroenteroloji', 'Endokrinoloji'] },
+  { id: 'dental', name: 'Dental', sub: '3 doctors (Demo)', icon: 'tooth', tint: '#eaf5f5', accent: '#0d7377', dbNames: ['Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti'] },
+  { id: 'eye', name: 'Eye Care', sub: '3 doctors (Demo)', icon: 'eye', tint: '#fdf6e6', accent: '#b37d1f', dbNames: ['Göz Hastalıkları'] },
+  { id: 'cardio', name: 'Cardiology', sub: '3 doctors (Demo)', icon: 'heart', tint: '#fadfdc', accent: '#912a23', dbNames: ['Kardiyoloji'] },
+  { id: 'neuro', name: 'Neurology', sub: '3 doctors (Demo)', icon: 'brain', tint: '#ede7f5', accent: '#5b3b9f', dbNames: ['Nöroloji'] },
+  { id: 'ortho', name: 'Orthopedic', sub: '3 doctors (Demo)', icon: 'bone', tint: '#eaf1f5', accent: '#2c5a85', dbNames: ['Ortopedi ve Travmatoloji'] },
+  { id: 'general', name: 'General', sub: '3 doctors (Demo)', icon: 'stethoscope', tint: '#d4ecec', accent: '#0a5d60', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji'] },
+  { id: 'pediatric', name: 'Pediatric', sub: '3 doctors (Demo)', icon: 'baby', tint: '#fbe6d1', accent: '#8f4a0d', dbNames: ['Pediatri'] },
 ];
 
 export const DOCTORS: Doctor[] = [
@@ -164,14 +169,34 @@ export const TIME_SLOTS: TimeSlot[] = [
   { t: '4:30 PM', state: 'unavailable' },
 ];
 
-export const DAYS: Day[] = [
-  { day: 'Mon', num: 27, month: 'Apr', full: 'Mon Apr 27' },
-  { day: 'Tue', num: 28, month: 'Apr', full: 'Tue Apr 28' },
-  { day: 'Wed', num: 29, month: 'Apr', full: 'Wed Apr 29' },
-  { day: 'Thu', num: 30, month: 'Apr', full: 'Thu Apr 30' },
-  { day: 'Fri', num: 1, month: 'May', full: 'Fri May 1' },
-  { day: 'Sat', num: 2, month: 'May', full: 'Sat May 2' },
-  { day: 'Sun', num: 3, month: 'May', full: 'Sun May 3' },
-];
+const generateDays = (): Day[] => {
+  const days: Day[] = [];
+  const now = new Date();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(now.getDate() + i);
+    
+    const dayName = weekDays[d.getDay()];
+    const monthName = months[d.getMonth()];
+    const num = d.getDate();
+    const year = d.getFullYear();
+    const monthNum = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(num).padStart(2, '0');
+
+    days.push({
+      day: dayName,
+      num: num,
+      month: monthName,
+      full: `${dayName} ${monthName} ${num}`,
+      key: `${year}-${monthNum}-${dayNum}`
+    });
+  }
+  return days;
+};
+
+export const DAYS: Day[] = generateDays();
 
 export const iqd = (n: number) => new Intl.NumberFormat('en-US').format(n);
