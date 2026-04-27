@@ -71,11 +71,11 @@ export default function AppNavigator() {
   const loadPatient = async (authId: string) => {
     const { data } = await supabase
       .from('patients')
-      .select('id, name, phone')
+      .select('id, name, phone, patient_code')
       .eq('auth_id', authId)
       .single();
 
-    if (data) setUser({ id: data.id, name: data.name, phone: data.phone });
+    if (data) setUser({ id: data.id, name: data.name, phone: data.phone, patient_code: data.patient_code });
     setLoading(false);
   };
 
@@ -100,12 +100,12 @@ export default function AppNavigator() {
           // Fetch real name from database
           const { data: existing } = await supabase
             .from('patients')
-            .select('id, name, phone')
+            .select('id, name, phone, patient_code')
             .eq('auth_id', data.session.user.id)
             .maybeSingle();
 
           if (existing) {
-            setUser({ id: existing.id, name: existing.name, phone: existing.phone });
+            setUser({ id: existing.id, name: existing.name, phone: existing.phone, patient_code: existing.patient_code });
           } else {
             setUser({ name: 'Bilinmeyen Kullanıcı', phone: u.phone });
           }
@@ -144,7 +144,7 @@ export default function AppNavigator() {
           auth_id: signUpData.session.user.id,
           phone: u.phone,
           name: u.name,
-        }).select('id').single();
+        }).select('id, patient_code').single();
 
         if (insertError) {
           if (insertError.code === '23505') {
@@ -157,7 +157,7 @@ export default function AppNavigator() {
           return false;
         }
         if (inserted) {
-          setUser({ id: inserted.id, name: u.name || '', phone: u.phone });
+          setUser({ id: inserted.id, name: u.name || '', phone: u.phone, patient_code: inserted.patient_code });
         }
       } else {
         Alert.alert('Hata', 'Supabase ayarlarından Confirm Email tam kapanmamış olabilir.');

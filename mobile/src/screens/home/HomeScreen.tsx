@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet,
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,55 +23,50 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [nextAppt, setNextAppt] = React.useState<Appointment | null>(null);
+  const [nextAppt, setNextAppt] = useState<Appointment | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  React.useEffect(() => {
+  const fetchNext = useCallback(async () => {
     if (!user?.id) return;
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-    const fetchNext = async () => {
-      const now = new Date();
-      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const { data } = await supabase
+      .from('appointments')
+      .select('*, doctors(name, specialty, initials, hue, loc)')
+      .eq('patient_id', user.id)
+      .in('status', ['pending', 'confirmed'])
+      .gte('date', localDate)
+      .order('date', { ascending: true })
+      .order('time', { ascending: true })
+      .limit(1)
+      .maybeSingle();
 
-      const { data } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          doctors (
-            name,
-            specialty,
-            initials,
-            hue,
-            loc
-          )
-        `)
-        .eq('patient_id', user.id)
-        .in('status', ['pending', 'confirmed'])
-        .gte('date', localDate)
-        .order('date', { ascending: true })
-        .order('time', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      if (data) {
-        const dayMatch = DAYS.find(d => d.key === data.date);
-        const dateLabel = dayMatch ? dayMatch.full : data.date;
-
-        setNextAppt({
-          id: data.id,
-          doctor: data.doctors?.name || 'Unknown',
-          specialty: data.doctors?.specialty || '-',
-          date: dateLabel,
-          time: data.time,
-          status: data.status,
-          initials: data.doctors?.initials || '??',
-          hue: data.doctors?.hue || 175,
-          clinic: data.doctors?.loc || 'Clinic'
-        });
-      }
-    };
-
-    fetchNext();
+    if (data) {
+      const dayMatch = DAYS.find(d => d.key === data.date);
+      setNextAppt({
+        id: data.id,
+        doctor: data.doctors?.name || 'Unknown',
+        specialty: data.doctors?.specialty || '-',
+        date: dayMatch ? dayMatch.full : data.date,
+        time: data.time,
+        status: data.status,
+        initials: data.doctors?.initials || '??',
+        hue: data.doctors?.hue || 175,
+        clinic: data.doctors?.loc || 'Clinic',
+      });
+    } else {
+      setNextAppt(null);
+    }
   }, [user?.id]);
+
+  React.useEffect(() => { fetchNext(); }, [fetchNext]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchNext();
+    setRefreshing(false);
+  }, [fetchNext]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('good_morning') : hour < 17 ? t('good_afternoon') : t('good_evening');
@@ -96,7 +91,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
         {/* Upcoming appointment card */}
         {next && (
           <TouchableOpacity style={styles.apptCard} activeOpacity={0.9}>

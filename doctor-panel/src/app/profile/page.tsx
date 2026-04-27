@@ -165,6 +165,7 @@ export default function ProfilePage() {
             location_address: locAddr,
             location_lat: locLat,
             location_lng: locLng,
+            schedule,
           })
           .eq('id', reg.doctors_id);
 

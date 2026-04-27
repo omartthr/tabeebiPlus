@@ -26,7 +26,7 @@ interface DbAppointment {
   price: number;
   patient_name: string | null;
   patient_phone: string | null;
-  patients: { id: string; name: string; phone: string; avatar_hue: number } | null;
+  patients: { id: string; name: string; phone: string; avatar_hue: number; patient_code: string | null } | null;
 }
 
 interface Apt {
@@ -39,7 +39,7 @@ interface Apt {
   status: AptStatus;
   notes: string | null;
   price: number;
-  patient: { name: string; initials: string; hue: number; phone: string };
+  patient: { name: string; initials: string; hue: number; phone: string; code: string | null };
 }
 
 function toInitials(name: string) {
@@ -79,7 +79,7 @@ function mapApt(row: DbAppointment): Apt {
     status: row.status,
     notes: row.notes,
     price: row.price ?? 0,
-    patient: { name: patName, initials: toInitials(patName), hue, phone: patPhone },
+    patient: { name: patName, initials: toInitials(patName), hue, phone: patPhone, code: row.patients?.patient_code ?? null },
   };
 }
 
@@ -96,7 +96,7 @@ function DayStrip({ selected, onSelect, apts }: {
       {WEEK.map(day => {
         const k   = dateKey(day);
         const dow = (day.getDay() + 6) % 7;
-        const cnt = apts.filter(a => a.dateKey === k).length;
+        const cnt = apts.filter(a => a.dateKey === k && a.status !== 'completed' && a.status !== 'cancelled').length;
         return (
           <button
             key={k}
@@ -158,6 +158,9 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
     await supabase.from('appointments').update({ status: s }).eq('id', apt.id);
     onStatusChange(apt.id, s);
     setSaving(false);
+    if (s === 'completed') {
+      window.location.href = '/results';
+    }
   };
 
   return (
@@ -181,21 +184,19 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{apt.patient.name}</div>
                 <div style={{ fontSize: 13, color: 'var(--ink-500)', marginTop: 2 }}>{apt.patient.phone}</div>
+                {apt.patient.code && (
+                  <div style={{ marginTop: 4, display: 'inline-block', background: 'var(--teal-50)', borderRadius: 6, padding: '2px 8px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--teal-700)', letterSpacing: '0.5px' }}>#{apt.patient.code}</span>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
-          <div className="detail-section">
-            <div className="detail-label">Durum & Şikayet</div>
-            <div className="detail-card amber">
-              <StatusBadge status={apt.status} />
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{apt.reason}</span>
             </div>
           </div>
           <div className="detail-section">
             <div className="detail-label">Bilgiler</div>
             <div className="kv-grid">
               <div className="kv"><div className="k">Saat</div><div className="v">{apt.time}</div></div>
-              <div className="kv"><div className="k">Süre</div><div className="v">{apt.duration} dakika</div></div>
+              <div className="kv"><div className="k">Durum</div><div className="v"><StatusBadge status={apt.status} /></div></div>
               <div className="kv"><div className="k">Ücret</div><div className="v">{apt.price.toLocaleString('tr-TR')} IQD</div></div>
             </div>
           </div>
@@ -239,7 +240,7 @@ export default function DashboardPage() {
     
     let query = supabase
       .from('appointments')
-      .select('*, patients(id, name, phone, avatar_hue)');
+      .select('*, patients(id, name, phone, avatar_hue, patient_code)');
 
     if (doctor.doctors_id) {
       query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);

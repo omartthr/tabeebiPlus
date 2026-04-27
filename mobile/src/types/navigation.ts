@@ -36,4 +36,5 @@ export interface UserData {
   name?: string;
   phone: string;
   isLogin?: boolean;
+  patient_code?: string | null;
 }

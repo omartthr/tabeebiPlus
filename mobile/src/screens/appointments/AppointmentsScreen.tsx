@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock } from 'lucide-react-native';
@@ -18,53 +18,47 @@ export default function AppointmentsScreen() {
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [apts, setApts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchApts = useCallback(async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*, doctors(name, specialty, initials, hue)')
+      .eq('patient_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Fetch appointments error:', error);
+    } else {
+      const mapped: Appointment[] = (data ?? []).map(a => {
+        const dayMatch = DAYS.find(d => d.key === a.date);
+        return {
+          id: a.id,
+          doctor: a.doctors?.name || 'Unknown',
+          specialty: a.doctors?.specialty || '-',
+          date: dayMatch ? dayMatch.full : a.date,
+          time: a.time,
+          status: a.status,
+          initials: a.doctors?.initials || '??',
+          hue: a.doctors?.hue || 175,
+          price: a.price,
+        };
+      });
+      setApts(mapped);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    setLoading(true);
+    fetchApts().finally(() => setLoading(false));
+  }, [fetchApts]);
 
-    const fetchApts = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          doctors (
-            name,
-            specialty,
-            initials,
-            hue
-          )
-        `)
-        .eq('patient_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Fetch appointments error:', error);
-      } else {
-        const mapped: Appointment[] = (data ?? []).map(a => {
-          // Find a nice label for the date if it's in our DAYS array
-          const dayMatch = DAYS.find(d => d.key === a.date);
-          const dateLabel = dayMatch ? dayMatch.full : a.date;
-
-          return {
-            id: a.id,
-            doctor: a.doctors?.name || 'Unknown',
-            specialty: a.doctors?.specialty || '-',
-            date: dateLabel,
-            time: a.time,
-            status: a.status,
-            initials: a.doctors?.initials || '??',
-            hue: a.doctors?.hue || 175,
-            price: a.price,
-          };
-        });
-        setApts(mapped);
-      }
-      setLoading(false);
-    };
-
-    fetchApts();
-  }, [user?.id]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchApts();
+    setRefreshing(false);
+  }, [fetchApts]);
 
   const upcoming = apts.filter(a => a.status === 'pending' || a.status === 'confirmed');
   const past = apts.filter(a => a.status === 'completed' || a.status === 'cancelled');
@@ -96,7 +90,7 @@ export default function AppointmentsScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
         {loading ? (
           <View style={{ padding: 40, alignItems: 'center' }}>
             <ActivityIndicator color={colors.teal700} />

@@ -26,11 +26,19 @@ export default function PatientsPage() {
   useEffect(() => {
     if (!doctor) return;
 
-    supabase
+    let q = supabase
       .from('appointments')
       .select('reason, date, time, patient_name, patient_phone, patients(id, name, phone, avatar_hue)')
-      .eq('doctor_registration_id', doctor.id)
-      .order('date', { ascending: false })
+      .eq('report_uploaded', true)
+      .order('date', { ascending: false });
+
+    if (doctor.doctors_id) {
+      q = q.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
+    } else {
+      q = q.eq('doctor_registration_id', doctor.id);
+    }
+
+    q
       .then(({ data }) => {
         if (!data) { setFetching(false); return; }
 
@@ -127,7 +135,11 @@ export default function PatientsPage() {
               </div>
 
               <div style={{ color: 'var(--ink-700)', fontSize: 14, fontWeight: 600 }}>{p.lastComplaint}</div>
-              <div style={{ color: 'var(--ink-500)', fontSize: 13 }}>{p.lastDate}</div>
+              <div style={{ color: 'var(--ink-500)', fontSize: 13 }}>
+                {p.lastDate && p.lastDate.includes('-')
+                  ? new Date(p.lastDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : p.lastDate}
+              </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', color: 'var(--ink-300)' }}>
                 <IChevR size={18} />

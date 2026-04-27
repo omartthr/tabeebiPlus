@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet,
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +18,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const { user, signOut } = useAuth();
   const { t, i18n } = useTranslation();
+  const [refreshing, setRefreshing] = useState(false);
 
   const initials = (user?.name || 'Ahmed Rubaie').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
 
@@ -26,12 +27,18 @@ export default function ProfileScreen() {
     i18n.changeLanguage(newLang);
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await new Promise<void>(r => setTimeout(r, 600));
+    setRefreshing(false);
+  }, []);
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('profile_title')}</Text>
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
 
         {/* Profile card */}
         <View style={styles.profileCard}>
@@ -39,6 +46,11 @@ export default function ProfileScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.profileName}>{user?.name || 'Ahmed Al-Rubaie'}</Text>
             <Text style={styles.profilePhone}>+964 {user?.phone || '750 123 4567'}</Text>
+            {user?.patient_code && (
+              <View style={styles.idBadge}>
+                <Text style={styles.idText}>#{user.patient_code}</Text>
+              </View>
+            )}
           </View>
           <TouchableOpacity style={styles.editBtn}>
             <Pencil size={18} color={colors.ink700} />
@@ -158,4 +170,6 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: 16, fontWeight: '700', color: colors.red500 },
   version: { textAlign: 'center', fontSize: 11, color: colors.ink400, fontWeight: '600' },
+  idBadge: { marginTop: 4, alignSelf: 'flex-start', backgroundColor: colors.teal50, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  idText: { fontSize: 11, fontWeight: '700', color: colors.teal700, letterSpacing: 0.5 },
 });

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Clock, FileText, Check, Bell } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,14 @@ const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
+  const [refreshing, setRefreshing] = useState(false);
   const unreadCount = NOTIFICATIONS.filter(n => n.unread).length;
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await new Promise<void>(r => setTimeout(r, 600));
+    setRefreshing(false);
+  }, []);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -28,7 +35,7 @@ export default function NotificationsScreen() {
           <Text style={styles.markAll}>{t('mark_all_read')}</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
         {NOTIFICATIONS.map(n => {
           const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.reminder;
           const Icon = cfg.Icon;

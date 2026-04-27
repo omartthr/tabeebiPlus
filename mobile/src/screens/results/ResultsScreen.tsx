@@ -1,23 +1,91 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Linking, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Calendar, ChevronDown } from 'lucide-react-native';
+import { FileText, Calendar, ExternalLink, ChevronDown } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
-import { RESULTS } from '../../data';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../navigation/AppNavigator';
+
+interface Result {
+  id: string;
+  date: string;
+  doctorName: string;
+  specialty: string;
+  aiSummary: string | null;
+  pdfUrl: string | null;
+}
 
 export default function ResultsScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const [results, setResults] = useState<Result[]>([]);
+  const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchResults = useCallback(async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from('appointments')
+      .select('id, date, ai_summary, pdf_url, doctors(name, specialty)')
+      .eq('patient_id', user.id)
+      .eq('status', 'completed')
+      .eq('report_uploaded', true)
+      .order('date', { ascending: false });
+
+    const mapped: Result[] = (data ?? []).map((a: any) => ({
+      id: a.id,
+      date: a.date,
+      doctorName: a.doctors?.name ?? 'Bilinmeyen Doktor',
+      specialty: a.doctors?.specialty ?? '-',
+      aiSummary: a.ai_summary ?? null,
+      pdfUrl: a.pdf_url ?? null,
+    }));
+    setResults(mapped);
+  }, [user?.id]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchResults().finally(() => setLoading(false));
+  }, [fetchResults]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchResults();
+    setRefreshing(false);
+  }, [fetchResults]);
+
+  const formatDate = (d: string) => {
+    if (!d) return '-';
+    if (d.includes('-')) {
+      const dt = new Date(d);
+      return dt.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    return d;
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('my_results_title')}</Text>
-        <Text style={styles.subtitle}>{t('results_subtitle')}</Text>
+        <Text style={styles.subtitle}>{results.length} rapor mevcut</Text>
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {RESULTS.map(r => {
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}
+      >
+        {loading ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator color={colors.teal700} />
+          </View>
+        ) : results.length === 0 ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <Text style={{ fontSize: 14, color: colors.ink500 }}>Henüz yüklenmiş rapor yok.</Text>
+          </View>
+        ) : results.map(r => {
           const open = openId === r.id;
           return (
             <View key={r.id} style={styles.card}>
@@ -26,44 +94,40 @@ export default function ResultsScreen() {
                   <FileText size={20} color={colors.teal700} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.resultTitle}>{r.title}</Text>
-                    {r.unread && <View style={styles.unreadDot} />}
-                  </View>
-                  <Text style={styles.doctorMeta}>{r.doctor} · {r.specialty}</Text>
+                  <Text style={styles.doctorName}>{r.doctorName}</Text>
+                  <Text style={styles.specialty}>{r.specialty}</Text>
                 </View>
                 <View style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}>
                   <ChevronDown size={20} color={colors.ink400} />
                 </View>
               </TouchableOpacity>
 
-              <Text style={styles.diagnosis}>{r.diagnosis}</Text>
               <View style={styles.dateRow}>
                 <Calendar size={14} color={colors.ink400} />
-                <Text style={styles.date}>{r.date}</Text>
+                <Text style={styles.date}>{formatDate(r.date)}</Text>
               </View>
 
               {open && (
                 <View style={styles.expanded}>
                   <View style={styles.expandDivider} />
-                  <Text style={styles.expandLabel}>{t('clinical_notes')}</Text>
-                  <Text style={styles.expandText}>{r.notes}</Text>
 
-                  {r.meds.length > 0 && (
+                  {r.aiSummary ? (
                     <>
-                      <Text style={[styles.expandLabel, { marginTop: 14 }]}>{t('medications')}</Text>
-                      {r.meds.map((m, i) => (
-                        <View key={i} style={styles.medItem}>
-                          <Text style={styles.medText}>{m}</Text>
-                        </View>
-                      ))}
+                      <Text style={styles.expandLabel}>AI Özeti</Text>
+                      <View style={styles.summaryBox}>
+                        <Text style={styles.summaryText}>{r.aiSummary}</Text>
+                      </View>
                     </>
+                  ) : (
+                    <Text style={{ fontSize: 13, color: colors.ink400, marginBottom: 10 }}>Özet henüz oluşturulmadı.</Text>
                   )}
 
-                  <Text style={[styles.expandLabel, { marginTop: 14 }]}>{t('next_steps')}</Text>
-                  <View style={styles.nextSteps}>
-                    <Text style={styles.nextText}>{r.next}</Text>
-                  </View>
+                  {r.pdfUrl && (
+                    <TouchableOpacity style={styles.pdfBtn} onPress={() => Linking.openURL(r.pdfUrl!)} activeOpacity={0.8}>
+                      <ExternalLink size={16} color={colors.teal700} />
+                      <Text style={styles.pdfBtnText}>Raporu Görüntüle (PDF)</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
             </View>
@@ -84,19 +148,15 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(11,31,34,0.03)', ...shadows.card },
   cardHeader: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
   iconWrap: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.teal50, alignItems: 'center', justifyContent: 'center' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  resultTitle: { fontSize: 15, fontWeight: '700', color: colors.ink900, letterSpacing: -0.2, flex: 1 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.amber500 },
-  doctorMeta: { fontSize: 12, color: colors.ink500, fontWeight: '500', marginTop: 2 },
-  diagnosis: { fontSize: 13, color: colors.ink700, fontWeight: '500', lineHeight: 20, paddingHorizontal: 16 },
-  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, paddingTop: 8 },
+  doctorName: { fontSize: 15, fontWeight: '700', color: colors.ink900, letterSpacing: -0.2 },
+  specialty: { fontSize: 12, color: colors.ink500, fontWeight: '500', marginTop: 2 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
   date: { fontSize: 12, color: colors.ink500, fontWeight: '600' },
   expanded: { paddingHorizontal: 16, paddingBottom: 16 },
-  expandDivider: { height: 1, backgroundColor: colors.ink100, marginBottom: 14, marginTop: 4 },
-  expandLabel: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 6 },
-  expandText: { fontSize: 13, color: colors.ink700, fontWeight: '500', lineHeight: 20 },
-  medItem: { padding: 10, backgroundColor: colors.teal50, borderRadius: 10, marginBottom: 6 },
-  medText: { fontSize: 13, fontWeight: '600', color: colors.teal800 },
-  nextSteps: { padding: 12, backgroundColor: colors.amber50, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(230,166,59,0.15)' },
-  nextText: { fontSize: 13, color: '#8a5a0d', fontWeight: '600', lineHeight: 20 },
+  expandDivider: { height: 1, backgroundColor: colors.ink100, marginBottom: 14 },
+  expandLabel: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 8 },
+  summaryBox: { backgroundColor: colors.teal50, borderRadius: 14, padding: 14, marginBottom: 12 },
+  summaryText: { fontSize: 13, color: colors.ink700, fontWeight: '500', lineHeight: 20 },
+  pdfBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1.5, borderColor: colors.teal700, justifyContent: 'center' },
+  pdfBtnText: { fontSize: 14, fontWeight: '700', color: colors.teal700 },
 });

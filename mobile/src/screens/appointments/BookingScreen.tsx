@@ -1,134 +1,131 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CreditCard, Banknote, Check } from 'lucide-react-native';
+import { CreditCard, Banknote, Check, ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
-import { colors, shadows } from '../../theme';
-import { DAYS, TIME_SLOTS, iqd } from '../../data';
+import { colors } from '../../theme';
+import { DAYS, iqd } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
-
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Booking'>;
 
+function gen10MinSlots(hourStart: string): string[] {
+  const [h, m] = hourStart.split(':').map(Number);
+  return Array.from({ length: 6 }, (_, i) => {
+    const total = m + i * 10;
+    const hh = h + Math.floor(total / 60);
+    const mm = total % 60;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  });
+}
+
 export default function BookingScreen({ route, navigation }: Props) {
   const { doctor } = route.params;
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [dayIdx, setDayIdx] = useState(1);
-  const [slotIdx, setSlotIdx] = useState(3);
+
+  const [dayIdx, setDayIdx] = useState(0);
   const [payment, setPayment] = useState<'online' | 'cash'>('online');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [slots, setSlots] = useState<{ t: string; state: 'available' | 'unavailable' }[]>([]);
   const [schedule, setSchedule] = useState<any>(null);
+  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [selectedHour, setSelectedHour] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const day = DAYS[dayIdx];
-  const slot = slots[slotIdx];
-  const canBook = slot && slot.state === 'available' && !bookingLoading;
 
+  // Fetch schedule once
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      // 1. Get registration ID for this doctor
-      const { data: reg } = await supabase
-        .from('doctor_registrations')
-        .select('id')
-        .eq('doctors_id', doctor.id)
-        .maybeSingle();
-      
-      if (cancelled || !reg) {
-        setLoading(false);
-        return;
-      }
-
-      // 2. Get schedule
-      const { data: sched } = await supabase
-        .from('doctor_schedules')
+      const { data, error } = await supabase
+        .from('doctors')
         .select('schedule')
-        .eq('doctor_registration_id', reg.id)
+        .eq('id', doctor.id)
         .maybeSingle();
-      
-      if (sched) setSchedule(sched.schedule);
-      setLoading(false);
+      if (error) console.error('[Booking] schedule error:', error.message);
+      if (!cancelled && data?.schedule) setSchedule(data.schedule);
+      if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [doctor.id]);
 
+  // When day changes: reset selection, fetch booked times
   React.useEffect(() => {
     if (!schedule) return;
     let cancelled = false;
+    setSelectedHour(null);
+    setSelectedTime(null);
 
-    (async () => {
-      const dayKey = day.day.toLowerCase(); // 'mon', 'tue', etc.
-      const daySched = schedule[dayKey];
-      
-      if (!daySched || !daySched.isOpen) {
-        setSlots([]);
-        return;
-      }
-
-      // 3. Get booked slots for this day
-      const { data: booked } = await supabase
-        .from('appointments')
-        .select('time')
-        .eq('doctor_id', doctor.id)
-        .eq('date', day.key)
-        .neq('status', 'cancelled');
-
-      if (cancelled) return;
-
-      const bookedTimes = booked?.map(b => b.time) || [];
-      const newSlots = daySched.slots.map((t: string) => ({
-        t,
-        state: bookedTimes.includes(t) ? 'unavailable' : 'available'
-      }));
-
-      setSlots(newSlots);
-    })();
+    supabase
+      .from('appointments')
+      .select('time')
+      .eq('doctor_id', doctor.id)
+      .eq('date', day.key)
+      .neq('status', 'cancelled')
+      .then(({ data }) => {
+        if (!cancelled) setBookedTimes((data ?? []).map(b => b.time));
+      });
 
     return () => { cancelled = true; };
   }, [dayIdx, schedule]);
 
+  // Hour blocks from schedule (e.g. "09:00 - 10:00" → "09:00")
+  const hourBlocks = useMemo<string[]>(() => {
+    if (!schedule) return [];
+    const dayKey = day.day.toLowerCase();
+    const daySched = schedule[dayKey];
+    if (!daySched?.isOpen || !daySched.slots?.length) return [];
+    return daySched.slots.map((s: string) => s.split(' - ')[0].trim());
+  }, [dayIdx, schedule]);
+
+  // 10-min slots for selected hour
+  const tenMinSlots = useMemo(() => {
+    if (!selectedHour) return [];
+    return gen10MinSlots(selectedHour).map(t => ({
+      t,
+      booked: bookedTimes.includes(t),
+    }));
+  }, [selectedHour, bookedTimes]);
+
+  const isHourFull = (h: string) =>
+    gen10MinSlots(h).every(s => bookedTimes.includes(s));
+
+  const canBook = selectedTime !== null && !bookingLoading;
+
   const confirm = async () => {
-    if (!user?.id) {
-      alert('Oturum hatası. Lütfen tekrar giriş yapın.');
-      return;
-    }
-
+    if (!user?.id || !selectedTime) return;
     setBookingLoading(true);
-    const { error } = await supabase
-      .from('appointments')
-      .insert({
-        patient_id: user.id,
-        doctor_id: doctor.id,
-        date: day.key,
-        time: slot.t,
-        payment: payment,
-        status: 'pending',
-        price: doctor.price
-      });
-
+    const { error } = await supabase.from('appointments').insert({
+      patient_id: user.id,
+      doctor_id: doctor.id,
+      date: day.key,
+      time: selectedTime,
+      payment,
+      status: 'pending',
+      price: doctor.price,
+    });
     setBookingLoading(false);
-
     if (error) {
-      console.error('Booking error:', error);
-      alert('Randevu alınırken bir hata oluştu: ' + error.message);
+      Alert.alert('Hata', 'Randevu alınırken bir hata oluştu: ' + error.message);
       return;
     }
-
-    navigation.navigate('Confirmed', { booking: { doctor, day: day.full, time: slot.t, payment } });
+    navigation.navigate('Confirmed', { booking: { doctor, day: day.full, time: selectedTime, payment } });
   };
 
   return (
     <SafeAreaView style={styles.screen}>
       <TopBar title={t('book_appointment')} onBack={() => navigation.goBack()} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
+        {/* Doctor recap */}
         <View style={styles.doctorRecap}>
           <DocAvatar initials={doctor.initials} hue={doctor.hue} size={48} rounded={12} />
           <View style={{ flex: 1 }}>
@@ -137,6 +134,7 @@ export default function BookingScreen({ route, navigation }: Props) {
           </View>
         </View>
 
+        {/* Day selector */}
         <Text style={styles.sectionLabel}>{t('choose_day')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll} contentContainerStyle={styles.dayContent}>
           {DAYS.map((d, i) => {
@@ -151,43 +149,79 @@ export default function BookingScreen({ route, navigation }: Props) {
           })}
         </ScrollView>
 
+        {/* Hour blocks */}
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t('available_time')}</Text>
-        <View style={styles.slotGrid}>
-          {loading ? (
-            <Text style={{ fontSize: 13, color: colors.ink400 }}>{t('loading')}...</Text>
-          ) : slots.length > 0 ? (
-            slots.map((s, i) => {
-              const active = i === slotIdx && s.state === 'available';
-              const disabled = s.state === 'unavailable';
+        {loading ? (
+          <Text style={styles.emptyText}>{t('loading')}...</Text>
+        ) : hourBlocks.length === 0 ? (
+          <Text style={styles.emptyText}>{t('no_available_slots')}</Text>
+        ) : (
+          <View style={styles.hourGrid}>
+            {hourBlocks.map(h => {
+              const full = isHourFull(h);
+              const active = selectedHour === h;
               return (
-                <TouchableOpacity key={i} disabled={disabled} onPress={() => setSlotIdx(i)} style={[styles.slotBtn, active && styles.slotBtnActive, disabled && styles.slotBtnDisabled]} activeOpacity={0.8}>
-                  <Text style={[styles.slotText, active && styles.slotTextActive, disabled && styles.slotTextDisabled]}>{s.t}</Text>
+                <TouchableOpacity
+                  key={h}
+                  disabled={full}
+                  onPress={() => { setSelectedHour(h); setSelectedTime(null); }}
+                  style={[styles.hourBtn, active && styles.hourBtnActive, full && styles.hourBtnFull]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.hourText, active && styles.hourTextActive, full && styles.hourTextFull]}>{h}</Text>
+                  {!full && <ChevronRight size={14} color={active ? '#fff' : colors.ink400} />}
                 </TouchableOpacity>
               );
-            })
-          ) : (
-            <Text style={{ fontSize: 13, color: colors.ink400 }}>{t('no_available_slots')}</Text>
-          )}
-        </View>
+            })}
+          </View>
+        )}
 
-        <View style={styles.legend}>
-          {[
-            { color: colors.teal700, label: t('legend_selected'), border: false },
-            { color: colors.surface, label: t('legend_available'), border: true },
-            { color: colors.ink200, label: t('legend_unavailable'), border: false },
-          ].map(l => (
-            <View key={l.label} style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: l.color }, l.border ? { borderWidth: 1.5, borderColor: colors.ink200 } : {}]} />
-              <Text style={styles.legendText}>{l.label}</Text>
+        {/* 10-min slots */}
+        {selectedHour && (
+          <>
+            <Text style={[styles.sectionLabel, { marginTop: 20 }]}>
+              {selectedHour} — Saat Seç
+            </Text>
+            <View style={styles.slotGrid}>
+              {tenMinSlots.map(s => {
+                const active = selectedTime === s.t;
+                return (
+                  <TouchableOpacity
+                    key={s.t}
+                    disabled={s.booked}
+                    onPress={() => setSelectedTime(s.t)}
+                    style={[styles.slotBtn, active && styles.slotBtnActive, s.booked && styles.slotBtnDisabled]}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.slotText, active && styles.slotTextActive, s.booked && styles.slotTextDisabled]}>
+                      {s.t}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          ))}
-        </View>
 
+            <View style={styles.legend}>
+              {[
+                { color: colors.teal700, label: t('legend_selected'), border: false },
+                { color: colors.surface, label: t('legend_available'), border: true },
+                { color: colors.ink200, label: t('legend_unavailable'), border: false },
+              ].map(l => (
+                <View key={l.label} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: l.color }, l.border ? { borderWidth: 1.5, borderColor: colors.ink200 } : {}]} />
+                  <Text style={styles.legendText}>{l.label}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Payment */}
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>{t('payment_method')}</Text>
         <View style={styles.paymentOptions}>
           {[
-            { id: 'online' as const, Icon: CreditCard, title: t('pay_online'), sub: t('pay_online_sub'), badge: t('instant_confirm') },
-            { id: 'cash' as const, Icon: Banknote, title: t('pay_clinic'), sub: t('pay_clinic_sub'), badge: null },
+            { id: 'online' as const, Icon: CreditCard, title: t('pay_online'), sub: t('pay_online_sub') },
+            { id: 'cash' as const, Icon: Banknote, title: t('pay_clinic'), sub: t('pay_clinic_sub') },
           ].map(opt => {
             const active = payment === opt.id;
             return (
@@ -207,6 +241,7 @@ export default function BookingScreen({ route, navigation }: Props) {
           })}
         </View>
 
+        {/* Summary */}
         <View style={styles.summary}>
           <Text style={styles.sectionLabel}>{t('summary')}</Text>
           <View style={styles.summaryRow}>
@@ -227,7 +262,9 @@ export default function BookingScreen({ route, navigation }: Props) {
 
       <View style={styles.footer}>
         <TouchableOpacity style={[styles.bookBtn, !canBook && styles.bookBtnDisabled]} disabled={!canBook} onPress={confirm} activeOpacity={0.85}>
-          <Text style={styles.bookBtnText}>{bookingLoading ? t('processing') : t('confirm_booking')}</Text>
+          <Text style={styles.bookBtnText}>
+            {bookingLoading ? t('processing') : selectedTime ? `${selectedTime} — ${t('confirm_booking')}` : t('confirm_booking')}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -242,6 +279,7 @@ const styles = StyleSheet.create({
   doctorName: { fontSize: 14, fontWeight: '700', color: colors.ink900 },
   specialty: { fontSize: 12, color: colors.ink500, fontWeight: '500' },
   sectionLabel: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 10 },
+  emptyText: { fontSize: 13, color: colors.ink400 },
   dayScroll: { flexGrow: 0 },
   dayContent: { gap: 8 },
   dayBtn: { minWidth: 62, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.ink200, alignItems: 'center', gap: 2 },
@@ -250,6 +288,13 @@ const styles = StyleSheet.create({
   dayNum: { fontSize: 20, fontWeight: '700', color: colors.ink900, letterSpacing: -0.3 },
   dayMonth: { fontSize: 10, fontWeight: '600', color: colors.ink500 },
   dayTextActive: { color: '#fff' },
+  hourGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  hourBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 100, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.ink200 },
+  hourBtnActive: { backgroundColor: colors.teal700, borderWidth: 0 },
+  hourBtnFull: { backgroundColor: colors.ink100, borderWidth: 0 },
+  hourText: { fontSize: 14, fontWeight: '700', color: colors.ink900 },
+  hourTextActive: { color: '#fff' },
+  hourTextFull: { color: colors.ink400, textDecorationLine: 'line-through' },
   slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   slotBtn: { width: '30%', paddingVertical: 12, borderRadius: 100, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.ink200, alignItems: 'center' },
   slotBtnActive: { backgroundColor: colors.teal700, borderWidth: 0 },
