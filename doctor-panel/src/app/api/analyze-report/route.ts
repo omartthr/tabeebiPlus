@@ -7,6 +7,7 @@ const supabase = createClient(
 );
 
 export async function POST(req: NextRequest) {
+  console.log('--- [DEBUG] /api/analyze-report ISTEDI GELDI! ---');
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
@@ -33,61 +34,22 @@ export async function POST(req: NextRequest) {
 
     const base64Pdf = Buffer.from(fileBuffer).toString('base64');
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                inline_data: {
-                  mime_type: 'application/pdf',
-                  data: base64Pdf,
-                }
-              },
-              {
-                text: `Sen bir tıbbi rapor asistanısın. Sana bir doktor tarafından yazılmış tıbbi rapor verilecek.
+    // Supabase Edge Function'ı çağırıyoruz
+    const { data: functionData, error: functionError } = await supabase.functions.invoke('analyze-report', {
+      body: { appointmentId, base64Pdf }
+    });
 
-Görevin:
-1. Raporu dikkatlice oku
-2. Hastanın anlayabileceği sade ve samimi bir dille Türkçe özetle
-3. Teknik terimleri parantez içinde kısaca açıkla (örn: "hipertansiyon (yüksek tansiyon)")
-4. Kesinlikle şu 3 bölümü kullan, başka bir şey ekleme:
-
-📋 Genel Durum
-(Hastanın genel sağlık durumu hakkında 1-2 cümle)
-
-🔍 Önemli Bulgular
-(Rapordaki kritik bulgular, madde madde)
-
-💊 Öneriler
-(Doktorun önerileri veya yapılması gerekenler)
-
-Ton: Hastayı endişelendirme, sakin ve anlaşılır ol. Maksimum 200 kelime.
-
-Özetin en sonuna her zaman şu notu ekle:
-"⚠️ Bu özet yapay zeka tarafından oluşturulmuştur. Kesin tanı ve tedavi için lütfen doktorunuza danışınız."`
-              }
-            ]
-          }]
-        }),
-      }
-    );
-
-    let aiSummary = 'Özet oluşturulamadı.';
-    if (geminiRes.ok) {
-      const geminiData = await geminiRes.json();
-      aiSummary = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? aiSummary;
-    } else {
-      const geminiErr = await geminiRes.text();
-      console.error('Gemini error status:', geminiRes.status, geminiErr);
+    if (functionError) {
+      console.error('Edge Function error:', functionError);
+      return NextResponse.json({ error: 'Analiz fonksiyonu hatası: ' + functionError.message }, { status: 500 });
     }
 
+    const aiSummary = functionData?.aiSummary || 'Özet oluşturulamadı.';
+
+    // Veritabanında PDF URL'ini de güncelleyelim (Özet zaten Edge Function içinde güncelleniyor)
     const { error: dbError } = await supabase
       .from('appointments')
-      .update({ pdf_url: pdfUrl, ai_summary: aiSummary, report_uploaded: true })
+      .update({ pdf_url: pdfUrl, report_uploaded: true })
       .eq('id', appointmentId);
 
     if (dbError) {

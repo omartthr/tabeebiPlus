@@ -225,6 +225,207 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
   );
 }
 
+/* ─── Add Appointment Modal ─── */
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 8).padStart(2, '0'));
+const MINS  = ['00', '10', '20', '30', '40', '50'];
+
+function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [selH, selM] = value.split(':');
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', padding: '10px 14px', borderRadius: 12,
+          border: '1.5px solid var(--ink-100)', fontSize: 14, fontWeight: 600,
+          color: 'var(--ink-900)', background: 'var(--bg)', cursor: 'pointer',
+          textAlign: 'left', boxSizing: 'border-box',
+        }}
+      >
+        {value}
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 100,
+          background: 'var(--surface)', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          border: '1px solid var(--ink-100)', display: 'flex', overflow: 'hidden',
+        }}>
+          <div style={{ flex: 1, maxHeight: 200, overflowY: 'auto', borderRight: '1px solid var(--ink-100)' }}>
+            {HOURS.map(h => (
+              <div key={h} onClick={() => { onChange(`${h}:${selM}`); }}
+                style={{
+                  padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  background: h === selH ? 'var(--teal-50)' : 'transparent',
+                  color: h === selH ? 'var(--teal-700)' : 'var(--ink-700)',
+                }}>
+                {h}:00
+              </div>
+            ))}
+          </div>
+          <div style={{ flex: 1 }}>
+            {MINS.map(m => (
+              <div key={m} onClick={() => { onChange(`${selH}:${m}`); setOpen(false); }}
+                style={{
+                  padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  background: m === selM ? 'var(--teal-50)' : 'transparent',
+                  color: m === selM ? 'var(--teal-700)' : 'var(--ink-700)',
+                }}>
+                :{m}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddAppointmentModal({ doctor, onClose, onAdded }: {
+  doctor: any; onClose: () => void; onAdded: (apt: Apt) => void;
+}) {
+  const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
+  const [date, setDate] = useState(dateKey(TODAY));
+  const [time, setTime] = useState('09:00');
+  const [reason, setReason] = useState('');
+  const [price, setPrice] = useState<number | null>(null);
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [existingPatient, setExistingPatient] = useState<any>(null);
+
+  useEffect(() => {
+    if (!doctor.doctors_id) return;
+    supabase.from('doctors').select('price').eq('id', doctor.doctors_id).maybeSingle()
+      .then(({ data }) => { if (data?.price) setPrice(data.price); });
+  }, [doctor.doctors_id]);
+
+  const lookupPatient = async () => {
+    const clean = phone.replace(/\D/g, '');
+    if (clean.length < 7) return;
+    const { data } = await supabase.from('patients').select('*').eq('phone', clean).maybeSingle();
+    if (data) { setExistingPatient(data); setName(data.name); }
+    else setExistingPatient(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!phone || !name || !date || !time) return;
+    setSaving(true);
+
+    // Çift randevu kontrolü
+    const { data: existingApt } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('date', date)
+      .eq('time', time)
+      .neq('status', 'cancelled') // iptal edilenler HARİÇ tüm randevuları (bekleyen, onaylanan, tamamlanan) sayalım
+      .or(`doctor_registration_id.eq.${doctor.id}${doctor.doctors_id ? `,doctor_id.eq.${doctor.doctors_id}` : ''}`)
+      .maybeSingle();
+
+    if (existingApt) {
+      alert('Bu tarih ve saatte zaten dolu bir randevu var. Lütfen farklı bir saat seçin.');
+      setSaving(false);
+      return;
+    }
+
+    let patientId = existingPatient?.id;
+    if (!patientId) {
+      const { data: np } = await supabase
+        .from('patients')
+        .insert({ name, phone: phone.replace(/\D/g, ''), avatar_hue: 175 })
+        .select('*').single();
+      patientId = np?.id;
+    }
+
+    const { data: apt, error } = await supabase
+      .from('appointments')
+      .insert({
+        date, time, duration: 30,
+        reason: reason || null,
+        price: price ?? 0,
+        notes: notes || null,
+        status: 'confirmed',
+        patient_id: patientId,
+        doctor_registration_id: doctor.id,
+        doctor_id: doctor.doctors_id || null,
+      })
+      .select('*, patients(id, name, phone, avatar_hue, patient_code)')
+      .single();
+
+    setSaving(false);
+    if (error) {
+      alert('Randevu oluşturulurken bir hata oluştu.');
+      console.error(error);
+      return;
+    }
+    if (apt) { onAdded(mapApt(apt as any)); onClose(); }
+  };
+
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '10px 14px', borderRadius: 12,
+    border: '1.5px solid var(--ink-100)', fontSize: 14,
+    fontWeight: 500, color: 'var(--ink-900)', outline: 'none',
+    background: 'var(--bg)', boxSizing: 'border-box',
+  };
+
+  return (
+    <>
+      <div className="drawer-overlay" onClick={onClose} />
+      <div className="drawer">
+        <div className="drawer-head">
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.3px' }}>Randevu Ekle</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-500)', fontWeight: 500, marginTop: 2 }}>Yeni hasta randevusu oluştur</div>
+          </div>
+          <button className="icon-btn" onClick={onClose}><IX size={18} /></button>
+        </div>
+        <div className="drawer-body">
+          <div className="detail-section">
+            <div className="detail-label">Hasta Bilgileri</div>
+            <input style={inp} placeholder="Telefon numarası" value={phone}
+              onChange={e => { setPhone(e.target.value); setExistingPatient(null); }}
+              onBlur={lookupPatient} />
+            {existingPatient && (
+              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--teal-50)', borderRadius: 10, fontSize: 13, color: 'var(--teal-700)', fontWeight: 600 }}>
+                ✓ Kayıtlı hasta: {existingPatient.name}
+              </div>
+            )}
+            <input style={{ ...inp, marginTop: 8 }} placeholder="Ad Soyad"
+              value={name} onChange={e => setName(e.target.value)}
+              readOnly={!!existingPatient} />
+          </div>
+          <div className="detail-section">
+            <div className="detail-label">Tarih & Saat</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <input style={inp} type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <TimePicker value={time} onChange={setTime} />
+            </div>
+          </div>
+          <div className="detail-section">
+            <div className="detail-label">Muayene Detayları</div>
+            <input style={inp} placeholder="Şikayet / Muayene türü" value={reason} onChange={e => setReason(e.target.value)} />
+            <div style={{ ...inp, marginTop: 8, color: 'var(--ink-500)', cursor: 'default' }}>
+              {price !== null ? `${price.toLocaleString('tr-TR')} IQD` : 'Ücret yükleniyor…'}
+            </div>
+            <textarea style={{ ...inp, marginTop: 8, resize: 'vertical', minHeight: 72 } as any}
+              placeholder="Notlar (isteğe bağlı)" value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <div className="drawer-foot">
+          <button className="btn btn-outline" onClick={onClose}>İptal</button>
+          <button className="btn btn-primary" style={{ flex: 1 }}
+            disabled={saving || !phone || !name || !date || !time}
+            onClick={handleSubmit}>
+            {saving ? 'Kaydediliyor…' : 'Randevu Oluştur'}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ─── Page ─── */
 export default function DashboardPage() {
   const { doctor, loading } = useRequireDoctor();
@@ -233,6 +434,7 @@ export default function DashboardPage() {
   const [selectedDay, setSelectedDay] = useState<Date>(TODAY);
   const [view, setView]     = useState<'list' | 'cal'>('list');
   const [selectedApt, setSelectedApt] = useState<Apt | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [search] = useState('');
 
   useEffect(() => {
@@ -292,7 +494,7 @@ export default function DashboardPage() {
         </div>
         <div className="topbar-actions">
           <button className="icon-btn"><IBell size={18} /><span className="dot" /></button>
-          <button className="btn btn-primary"><IPlus size={16} /> Randevu Ekle</button>
+          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}><IPlus size={16} /> Randevu Ekle</button>
         </div>
       </div>
 
@@ -324,6 +526,14 @@ export default function DashboardPage() {
 
       {selectedApt && (
         <AppointmentDrawer apt={selectedApt} onClose={() => setSelectedApt(null)} onStatusChange={handleStatusChange} />
+      )}
+
+      {showAddModal && (
+        <AddAppointmentModal
+          doctor={doctor}
+          onClose={() => setShowAddModal(false)}
+          onAdded={(apt) => { setApts(prev => [...prev, apt]); setSelectedDay(apt.date); }}
+        />
       )}
     </>
   );

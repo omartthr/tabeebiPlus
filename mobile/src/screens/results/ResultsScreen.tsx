@@ -32,7 +32,7 @@ export default function ResultsScreen() {
       .eq('patient_id', user.id)
       .eq('status', 'completed')
       .eq('report_uploaded', true)
-      .order('date', { ascending: false });
+      .order('created_at', { ascending: false });
 
     const mapped: Result[] = (data ?? []).map((a: any) => ({
       id: a.id,
