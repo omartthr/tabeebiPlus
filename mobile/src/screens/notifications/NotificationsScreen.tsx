@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Clock, FileText, Check, Bell } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
-import { NOTIFICATIONS } from '../../data';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../navigation/AppNavigator';
+import { Notification } from '../../data';
 
 const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
   reminder: { bg: colors.teal50,    fg: colors.teal700,  Icon: Clock },
@@ -14,15 +16,60 @@ const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
 };
 
 export default function NotificationsScreen() {
+  const { user } = useAuth();
   const { t } = useTranslation();
+  const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const unreadCount = NOTIFICATIONS.filter(n => n.unread).length;
+
+  const fetchNotifs = useCallback(async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('patient_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Fetch notifications error:', error.message);
+    } else {
+      const mapped: Notification[] = (data ?? []).map(n => ({
+        id: n.id,
+        type: n.data?.type || 'reminder',
+        title: n.title,
+        body: n.body,
+        time: new Date(n.created_at).toLocaleDateString() === new Date().toLocaleDateString() 
+          ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : new Date(n.created_at).toLocaleDateString(),
+        unread: !n.is_read
+      }));
+      setNotifs(mapped);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchNotifs().finally(() => setLoading(false));
+  }, [fetchNotifs]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise<void>(r => setTimeout(r, 600));
+    await fetchNotifs();
     setRefreshing(false);
-  }, []);
+  }, [fetchNotifs]);
+
+  const markAllRead = async () => {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('patient_id', user.id)
+      .eq('is_read', false);
+    
+    if (!error) fetchNotifs();
+  };
+
+  const unreadCount = notifs.filter(n => n.unread).length;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -31,30 +78,42 @@ export default function NotificationsScreen() {
           <Text style={styles.title}>{t('notif_title')}</Text>
           <Text style={styles.subtitle}>{t('new_alerts', { count: unreadCount })}</Text>
         </View>
-        <TouchableOpacity>
-          <Text style={styles.markAll}>{t('mark_all_read')}</Text>
-        </TouchableOpacity>
+        {unreadCount > 0 && (
+          <TouchableOpacity onPress={markAllRead}>
+            <Text style={styles.markAll}>{t('mark_all_read')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
-        {NOTIFICATIONS.map(n => {
-          const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.reminder;
-          const Icon = cfg.Icon;
-          return (
-            <View key={n.id} style={[styles.card, n.unread && styles.cardUnread]}>
-              <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>
-                <Icon size={20} color={cfg.fg} />
-              </View>
-              <View style={styles.body}>
-                <View style={styles.top}>
-                  <Text style={styles.notifTitle}>{n.title}</Text>
-                  <Text style={styles.time}>{n.time}</Text>
+        {loading ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator color={colors.teal700} />
+          </View>
+        ) : notifs.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>{t('no_notifications') || 'Henüz bildiriminiz yok.'}</Text>
+          </View>
+        ) : (
+          notifs.map(n => {
+            const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.reminder;
+            const Icon = cfg.Icon;
+            return (
+              <View key={n.id} style={[styles.card, n.unread && styles.cardUnread]}>
+                <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>
+                  <Icon size={20} color={cfg.fg} />
                 </View>
-                <Text style={styles.notifBody}>{n.body}</Text>
+                <View style={styles.body}>
+                  <View style={styles.top}>
+                    <Text style={styles.notifTitle}>{n.title}</Text>
+                    <Text style={styles.time}>{n.time}</Text>
+                  </View>
+                  <Text style={styles.notifBody}>{n.body}</Text>
+                </View>
+                {n.unread && <View style={styles.unreadDot} />}
               </View>
-              {n.unread && <View style={styles.unreadDot} />}
-            </View>
-          );
-        })}
+            );
+          })
+        )}
       </ScrollView>
     </SafeAreaView>
   );

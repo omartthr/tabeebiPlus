@@ -11,7 +11,7 @@ export type MainStackParamList = {
   MainTabs: undefined;
   DoctorList: { specialty: Specialty };
   DoctorDetail: { doctor: Doctor };
-  Booking: { doctor: Doctor };
+  Booking: { doctor: Doctor; appointmentId?: string };
   Confirmed: { booking: BookingData };
   Help: undefined;
 };

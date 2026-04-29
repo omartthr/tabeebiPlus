@@ -82,6 +82,17 @@ export async function POST(req: NextRequest) {
         console.error('WhatsApp gönderim hatası:', wpError);
         // Hata olsa bile API yanıtını bozmuyoruz, çünkü analiz başarılı
       }
+    } else if (aptData?.patients?.id && isRegistered) {
+      // KAYITLI HASTA - Push Bildirimi Gönder
+      console.log(`[Push] Kayıtlı hasta tespit edildi, bildirim gönderiliyor: ${aptData.patients.id}`);
+      await supabase.functions.invoke('send-push-notification', {
+        body: {
+          patient_id: aptData.patients.id,
+          title: 'Yeni Raporunuz Hazır! 🧬',
+          body: 'Doktorunuz tahlil sonuçlarınızı sisteme yükledi. Hemen inceleyebilirsiniz.',
+          data: { type: 'result', appointmentId }
+        }
+      });
     }
 
     return NextResponse.json({ pdfUrl, aiSummary });

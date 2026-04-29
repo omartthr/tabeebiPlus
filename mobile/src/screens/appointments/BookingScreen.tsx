@@ -6,7 +6,7 @@ import { CreditCard, Banknote, Check, ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
-import { DAYS, iqd } from '../../data';
+import { getDays, iqd } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 import { supabase } from '../../lib/supabase';
@@ -38,6 +38,7 @@ export default function BookingScreen({ route, navigation }: Props) {
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
+  const DAYS = useMemo(() => getDays(), []);
   const day = DAYS[dayIdx];
 
   // Fetch schedule once
@@ -103,18 +104,37 @@ export default function BookingScreen({ route, navigation }: Props) {
   const confirm = async () => {
     if (!user?.id || !selectedTime) return;
     setBookingLoading(true);
-    const { error } = await supabase.from('appointments').insert({
-      patient_id: user.id,
-      doctor_id: doctor.id,
-      date: day.key,
-      time: selectedTime,
-      payment,
-      status: 'pending',
-      price: doctor.price,
-    });
+
+    let error;
+    if (route.params.appointmentId) {
+      // RESCHEDULE (Update)
+      const { error: err } = await supabase
+        .from('appointments')
+        .update({
+          date: day.key,
+          time: selectedTime,
+          payment,
+          status: 'pending' // Yeniden planlanınca onaya geri dönsün
+        })
+        .eq('id', route.params.appointmentId);
+      error = err;
+    } else {
+      // NEW BOOKING (Insert)
+      const { error: err } = await supabase.from('appointments').insert({
+        patient_id: user.id,
+        doctor_id: doctor.id,
+        date: day.key,
+        time: selectedTime,
+        payment,
+        status: 'pending',
+        price: doctor.price,
+      });
+      error = err;
+    }
+
     setBookingLoading(false);
     if (error) {
-      Alert.alert('Hata', 'Randevu alınırken bir hata oluştu: ' + error.message);
+      Alert.alert('Hata', 'İşlem sırasında bir hata oluştu: ' + error.message);
       return;
     }
     navigation.navigate('Confirmed', { booking: { doctor, day: day.full, time: selectedTime, payment } });

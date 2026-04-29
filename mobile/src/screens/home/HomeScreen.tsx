@@ -17,7 +17,7 @@ import SpecialtyIcon from '../../components/SpecialtyIcon';
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 import { supabase } from '../../lib/supabase';
-import { Appointment, DAYS } from '../../data';
+import { Appointment, getDays } from '../../data';
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
@@ -43,7 +43,7 @@ export default function HomeScreen() {
       .maybeSingle();
 
     if (data) {
-      const dayMatch = DAYS.find(d => d.key === data.date);
+      const dayMatch = getDays().find(d => d.key === data.date);
       setNextAppt({
         id: data.id,
         doctor: data.doctors?.name || 'Unknown',

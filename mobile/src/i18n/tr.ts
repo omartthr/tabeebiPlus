@@ -57,6 +57,10 @@ export default {
   cancel: 'İptal et',
   view_result: 'Sonucu gör',
   book_again: 'Tekrar randevu al',
+  cancel_confirm_title: 'Randevuyu İptal Et',
+  cancel_confirm_msg: 'Bu randevuyu iptal etmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+  yes: 'Evet, İptal Et',
+  no: 'Hayır, Vazgeç',
 
   // Booking Screen
   book_appointment: 'Randevu al',

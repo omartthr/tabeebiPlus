@@ -29,6 +29,13 @@ export default function ResultsPage() {
   const [fetching, setFetching] = useState(true);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
 
   useEffect(() => {
     if (!doctor) return;
@@ -100,11 +107,12 @@ export default function ResultsPage() {
       setUploadingId(null);
       if (!res.ok) {
         console.error('Upload error:', data.error);
-        alert('Yükleme başarısız:\n' + data.error);
+        showToast('Yükleme başarısız: ' + data.error, 'error');
         return;
       }
       setRows(prev => prev.filter(r => r.id !== id));
-      window.location.href = '/patients';
+      showToast('Rapor başarıyla yüklendi ve hastaya bildirildi 📩');
+      // Artık yönlendirme yapmıyoruz, doktor sonuçlar listesinde kalıyor.
     };
     input.click();
   };
@@ -212,10 +220,29 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {toast && (
+        <div className={`toast-notify ${toast.type}`} style={{
+          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9999, padding: '12px 24px', borderRadius: '14px',
+          background: toast.type === 'error' ? 'var(--red-500)' : toast.type === 'info' ? 'var(--ink-700)' : 'var(--ink-900)', 
+          color: 'white', fontWeight: '600',
+          fontSize: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          display: 'flex', alignItems: 'center', gap: '8px',
+          animation: 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+          {toast.msg}
+        </div>
+      )}
+
       <style jsx>{`
+        @keyframes slideDown {
+          from { transform: translate(-50%, -40px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
         .result-row:hover { background-color: var(--ink-50); }
         .result-row:last-child { border-bottom: none; }
       `}</style>
     </div>
   );
 }
+

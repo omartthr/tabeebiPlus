@@ -169,7 +169,7 @@ export const TIME_SLOTS: TimeSlot[] = [
   { t: '4:30 PM', state: 'unavailable' },
 ];
 
-const generateDays = (): Day[] => {
+export const getDays = (): Day[] => {
   const days: Day[] = [];
   const now = new Date();
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -197,6 +197,6 @@ const generateDays = (): Day[] => {
   return days;
 };
 
-export const DAYS: Day[] = generateDays();
+
 
 export const iqd = (n: number) => new Intl.NumberFormat('en-US').format(n);

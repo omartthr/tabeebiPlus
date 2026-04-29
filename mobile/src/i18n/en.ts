@@ -57,6 +57,10 @@ export default {
   cancel: 'Cancel',
   view_result: 'View result',
   book_again: 'Book again',
+  cancel_confirm_title: 'Cancel Appointment',
+  cancel_confirm_msg: 'Are you sure you want to cancel this appointment? This action cannot be undone.',
+  yes: 'Yes, Cancel',
+  no: 'No, Keep it',
 
   // Booking Screen
   book_appointment: 'Book appointment',

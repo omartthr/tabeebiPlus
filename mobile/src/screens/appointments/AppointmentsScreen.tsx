@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, RefreshControl
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock } from 'lucide-react-native';
@@ -10,21 +10,28 @@ import DocAvatar from '../../components/DocAvatar';
 import StatusBadge from '../../components/StatusBadge';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../navigation/AppNavigator';
-import { Appointment, DAYS } from '../../data';
+import { Appointment, getDays } from '../../data';
+import { useNavigation } from '@react-navigation/native';
+import { MainStackParamList } from '../../types/navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function AppointmentsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [apts, setApts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [selectedAptId, setSelectedAptId] = useState<string | null>(null);
 
   const fetchApts = useCallback(async () => {
     if (!user?.id) return;
     const { data, error } = await supabase
       .from('appointments')
-      .select('*, doctors(name, specialty, initials, hue)')
+      .select('*, doctors(id, name, specialty, initials, hue, price)')
       .eq('patient_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -32,7 +39,7 @@ export default function AppointmentsScreen() {
       console.error('Fetch appointments error:', error);
     } else {
       const mapped: Appointment[] = (data ?? []).map(a => {
-        const dayMatch = DAYS.find(d => d.key === a.date);
+        const dayMatch = getDays().find(d => d.key === a.date);
         return {
           id: a.id,
           doctor: a.doctors?.name || 'Unknown',
@@ -43,6 +50,7 @@ export default function AppointmentsScreen() {
           initials: a.doctors?.initials || '??',
           hue: a.doctors?.hue || 175,
           price: a.price,
+          doctorObj: a.doctors, // Navigation için lazım
         };
       });
       setApts(mapped);
@@ -59,6 +67,28 @@ export default function AppointmentsScreen() {
     await fetchApts();
     setRefreshing(false);
   }, [fetchApts]);
+
+  const handleCancelPress = (id: string) => {
+    setSelectedAptId(id);
+    setCancelModalVisible(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!selectedAptId) return;
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', selectedAptId);
+    
+    setCancelModalVisible(false);
+    setSelectedAptId(null);
+    
+    if (error) {
+      Alert.alert('Hata', 'İptal işlemi başarısız oldu.');
+    } else {
+      fetchApts();
+    }
+  };
 
   const upcoming = apts.filter(a => a.status === 'pending' || a.status === 'confirmed');
   const past = apts.filter(a => a.status === 'completed' || a.status === 'cancelled');
@@ -123,14 +153,24 @@ export default function AppointmentsScreen() {
 
             {tab === 'upcoming' && (
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity 
+                  style={styles.actionBtn}
+                  onPress={() => navigation.navigate('Booking', { 
+                    doctor: (a as any).doctorObj, 
+                    appointmentId: a.id 
+                  })}
+                >
                   <Text style={styles.actionBtnText}>{t('reschedule')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]}>
+                <TouchableOpacity 
+                  style={[styles.actionBtn, styles.cancelBtn]}
+                  onPress={() => handleCancelPress(a.id)}
+                >
                   <Text style={[styles.actionBtnText, styles.cancelText]}>{t('cancel')}</Text>
                 </TouchableOpacity>
               </View>
             )}
+
             {tab === 'past' && a.status === 'completed' && (
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.actionBtn}>
@@ -144,6 +184,17 @@ export default function AppointmentsScreen() {
           </View>
         ))}
       </ScrollView>
+
+      <ConfirmModal
+        visible={cancelModalVisible}
+        title={t('cancel_confirm_title')}
+        message={t('cancel_confirm_msg')}
+        confirmText={t('yes')}
+        cancelText={t('no')}
+        onConfirm={confirmCancel}
+        onCancel={() => setCancelModalVisible(false)}
+        type="danger"
+      />
     </SafeAreaView>
   );
 }

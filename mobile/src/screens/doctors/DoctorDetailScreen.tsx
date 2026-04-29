@@ -6,7 +6,7 @@ import { MapPin, CreditCard, Clock, ExternalLink } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { colors, shadows } from '../../theme';
-import { iqd, DAYS } from '../../data';
+import { iqd, getDays } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 import Rating from '../../components/Rating';
@@ -49,7 +49,7 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
         setSchedule(sched.schedule);
 
         // Find next available day with slots
-        for (const day of DAYS) {
+        for (const day of getDays()) {
           const dayKey = day.day.toLowerCase();
           const daySched = sched.schedule[dayKey];
           if (daySched && daySched.isOpen && daySched.slots.length > 0) {

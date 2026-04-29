@@ -12,6 +12,8 @@ import ConfirmedScreen from '../screens/appointments/ConfirmedScreen';
 import HelpScreen from '../screens/support/HelpScreen';
 import { UserData } from '../types/navigation';
 import { supabase } from '../lib/supabase';
+import { registerForPushNotificationsAsync } from '../services/notificationService';
+import * as Notifications from 'expo-notifications';
 
 interface AuthContextValue {
   user: UserData | null;
@@ -47,24 +49,35 @@ export default function AppNavigator() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Uygulama açılınca mevcut oturumu kontrol et
     supabase.auth.getSession().then(({ data, error }) => {
       if (error) console.error('Oturum kontrol hatası:', error);
       if (data?.session) {
         loadPatient(data.session.user.id);
+        registerForPushNotificationsAsync(data.session.user.id);
       } else {
         setLoading(false);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+      if (session) {
+        loadPatient(session.user.id);
+        registerForPushNotificationsAsync(session.user.id);
+      } else {
         setUser(null);
         setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Listen for notifications
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+    });
+    return () => subscription.remove();
   }, []);
 
   // Supabase'den hasta bilgilerini çek
@@ -155,7 +168,7 @@ export default function AppNavigator() {
             .update({ auth_id: signUpData.session.user.id, name: u.name, is_registered: true })
             .eq('id', existingGuest.id)
             .select('id, patient_code').single();
-          
+
           if (!updateError && updated) {
             finalPatientId = updated.id;
             finalCode = updated.patient_code;

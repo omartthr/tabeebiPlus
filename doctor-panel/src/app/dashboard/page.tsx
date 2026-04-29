@@ -26,6 +26,7 @@ interface DbAppointment {
   price: number;
   patient_name: string | null;
   patient_phone: string | null;
+  reported: boolean;
   patients: { id: string; name: string; phone: string; avatar_hue: number; patient_code: string | null } | null;
 }
 
@@ -39,6 +40,7 @@ interface Apt {
   status: AptStatus;
   notes: string | null;
   price: number;
+  reported: boolean;
   patient: { name: string; initials: string; hue: number; phone: string; code: string | null };
 }
 
@@ -50,11 +52,11 @@ function mapApt(row: DbAppointment): Apt {
   const patName = row.patients?.name ?? row.patient_name ?? 'Bilinmeyen';
   const patPhone = row.patients?.phone ?? row.patient_phone ?? '-';
   const hue = row.patients?.avatar_hue ?? 175;
-  
+
   // Handle different date formats (legacy Mon Apr 27 vs new YYYY-MM-DD)
   let d: Date;
   let dk: string;
-  
+
   if (row.date.includes('-')) {
     // Standard format "2026-04-27"
     const [y, m, dayPart] = row.date.split('-').map(Number);
@@ -79,7 +81,15 @@ function mapApt(row: DbAppointment): Apt {
     status: row.status,
     notes: row.notes,
     price: row.price ?? 0,
-    patient: { name: patName, initials: toInitials(patName), hue, phone: patPhone, code: row.patients?.patient_code ?? null },
+    reported: row.reported ?? false,
+    patient: { 
+      id: row.patients?.id, // Added id for notifications
+      name: patName, 
+      initials: toInitials(patName), 
+      hue, 
+      phone: patPhone, 
+      code: row.patients?.patient_code ?? null 
+    },
   };
 }
 
@@ -90,11 +100,11 @@ function DayStrip({ selected, onSelect, apts }: {
   selected: Date; onSelect: (d: Date) => void; apts: Apt[];
 }) {
   const todayKey = dateKey(TODAY);
-  const selKey   = dateKey(selected);
+  const selKey = dateKey(selected);
   return (
     <div className="day-strip">
       {WEEK.map(day => {
-        const k   = dateKey(day);
+        const k = dateKey(day);
         const dow = (day.getDay() + 6) % 7;
         const cnt = apts.filter(a => a.dateKey === k && a.status !== 'completed' && a.status !== 'cancelled').length;
         return (
@@ -138,6 +148,14 @@ function AppointmentList({ appointments, selected, onSelect }: {
           <div className="appt-info">
             <div className="name">{a.patient.name}</div>
             <div className="reason">{a.reason}</div>
+            {a.reported && (
+              <div style={{ 
+                fontSize: 10, fontWeight: 700, color: 'var(--red-500)', 
+                marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.5px' 
+              }}>
+                ⚠️ ŞİKAYET EDİLDİ
+              </div>
+            )}
           </div>
           <StatusBadge status={a.status} />
           <IChevR size={16} color="var(--ink-400)" />
@@ -148,8 +166,10 @@ function AppointmentList({ appointments, selected, onSelect }: {
 }
 
 /* ─── Drawer ─── */
-function AppointmentDrawer({ apt, onClose, onStatusChange }: {
+function AppointmentDrawer({ apt, onClose, onStatusChange, onReport, showToast }: {
   apt: Apt; onClose: () => void; onStatusChange: (id: string, status: AptStatus) => void;
+  onReport: (id: string) => void;
+  showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }) {
   const [saving, setSaving] = useState(false);
 
@@ -159,8 +179,10 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
     onStatusChange(apt.id, s);
     setSaving(false);
     if (s === 'completed') {
-      window.location.href = '/results';
+      // Artık yönlendirme yapmıyoruz, doktor aynı sayfada kalıyor.
     }
+    onClose(); // İşlem sonrası çekmeceyi kapat
+
   };
 
   return (
@@ -210,16 +232,57 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
           )}
         </div>
         <div className="drawer-foot">
-          <button className="btn btn-primary" style={{ flex: 1 }} disabled={saving || apt.status === 'confirmed'} onClick={() => changeStatus('confirmed')}>
-            Onayla
-          </button>
-          <button className="btn btn-outline" disabled={saving || apt.status === 'completed'} onClick={() => changeStatus('completed')}>
-            Tamamlandı
-          </button>
-          <button className="btn btn-danger" disabled={saving || apt.status === 'cancelled'} onClick={() => changeStatus('cancelled')}>
-            <IX size={16} /> İptal
-          </button>
+          {apt.status === 'cancelled' ? (
+            <div style={{ width: '100%', gap: '12px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ 
+                padding: '12px', background: 'var(--red-50)', borderRadius: '12px', 
+                color: 'var(--red-500)', fontSize: '13px', fontWeight: '600', textAlign: 'center',
+                border: '1px solid var(--red-100)'
+              }}>
+                ⚠️ Bu randevu hasta tarafından iptal edildi.
+              </div>
+              <button 
+                className="btn btn-danger" 
+                style={{ width: '100%', height: '48px', opacity: apt.reported ? 0.6 : 1 }}
+                disabled={apt.reported}
+                onClick={async () => {
+                  const { error } = await supabase.from('appointments').update({ reported: true }).eq('id', apt.id);
+                  if (error) {
+                    showToast('Şikayet iletilemedi.', 'error');
+                  } else {
+                    onReport(apt.id);
+                    showToast('Kullanıcı şikayet edildi. Gereksiz iptaller hesabın askıya alınmasına neden olabilir.', 'info');
+                    
+                    // Send Warning Push
+                    supabase.functions.invoke('send-push-notification', {
+                      body: {
+                        patient_id: apt.patient.id,
+                        title: '⚠️ Önemli Uyarı',
+                        body: 'Randevu iptal kurallarına uymadığınız tespit edildi. Lütfen kurallara dikkat ediniz.',
+                        data: { type: 'block' }
+                      }
+                    });
+                  }
+                }}
+              >
+                {apt.reported ? '✓ Şikayet İletildi' : 'Kullanıcıyı Şikayet Et'}
+              </button>
+            </div>
+          ) : (
+            <>
+              <button className="btn btn-primary" style={{ flex: 1 }} disabled={saving || apt.status === 'confirmed'} onClick={() => changeStatus('confirmed')}>
+                Onayla
+              </button>
+              <button className="btn btn-outline" disabled={saving || apt.status === 'completed'} onClick={() => changeStatus('completed')}>
+                Tamamlandı
+              </button>
+              <button className="btn btn-danger" disabled={saving || apt.status === 'cancelled'} onClick={() => changeStatus('cancelled')}>
+                <IX size={16} /> İptal
+              </button>
+            </>
+          )}
         </div>
+
       </div>
     </>
   );
@@ -227,7 +290,7 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
 
 /* ─── Add Appointment Modal ─── */
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 8).padStart(2, '0'));
-const MINS  = ['00', '10', '20', '30', '40', '50'];
+const MINS = ['00', '10', '20', '30', '40', '50'];
 
 function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -283,8 +346,9 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
   );
 }
 
-function AddAppointmentModal({ doctor, onClose, onAdded }: {
+function AddAppointmentModal({ doctor, onClose, onAdded, showToast }: {
   doctor: any; onClose: () => void; onAdded: (apt: Apt) => void;
+  showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }) {
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
@@ -325,7 +389,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
       .maybeSingle();
 
     if (existingApt) {
-      alert('Bu tarih ve saatte zaten dolu bir randevu var. Lütfen farklı bir saat seçin.');
+      showToast('Bu tarih ve saatte zaten dolu bir randevu var. Lütfen farklı bir saat seçin.', 'error');
       setSaving(false);
       return;
     }
@@ -336,7 +400,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
         .from('patients')
         .insert({ name, phone: phone.replace(/\D/g, ''), avatar_hue: 175, is_registered: false })
         .select('*').single();
-      
+
       if (npError) {
         console.warn('Geçici hasta oluşturulamadı (RLS engeli olabilir), randevuya isim kaydedilecek:', npError.message);
       } else {
@@ -363,7 +427,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
 
     setSaving(false);
     if (error) {
-      alert('Randevu oluşturulurken bir hata oluştu.');
+      showToast('Randevu oluşturulurken bir hata oluştu.', 'error');
       console.error(error);
       return;
     }
@@ -436,17 +500,24 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
 /* ─── Page ─── */
 export default function DashboardPage() {
   const { doctor, loading } = useRequireDoctor();
-  const [apts, setApts]     = useState<Apt[]>([]);
+  const [apts, setApts] = useState<Apt[]>([]);
   const [fetching, setFetching] = useState(true);
   const [selectedDay, setSelectedDay] = useState<Date>(TODAY);
-  const [view, setView]     = useState<'list' | 'cal'>('list');
+  const [view, setView] = useState<'list' | 'cal'>('list');
   const [selectedApt, setSelectedApt] = useState<Apt | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [search] = useState('');
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
 
   useEffect(() => {
     if (!doctor) return;
-    
+
     let query = supabase
       .from('appointments')
       .select('*, patients(id, name, phone, avatar_hue, patient_code)');
@@ -466,7 +537,48 @@ export default function DashboardPage() {
   const handleStatusChange = (id: string, status: AptStatus) => {
     setApts(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     setSelectedApt(prev => prev?.id === id ? { ...prev, status } : prev);
+
+    let msg = 'Randevu güncellendi';
+    let pushTitle = 'Randevu Güncellemesi';
+    let pushBody = 'Randevunuz güncellendi.';
+
+    if (status === 'confirmed') {
+      msg = 'Randevu onaylandı ✅';
+      pushTitle = 'Randevunuz Onaylandı! ✅';
+      pushBody = 'Doktorunuz randevunuzu onayladı. Görüşmek üzere!';
+    }
+    if (status === 'completed') {
+      msg = 'Muayene tamamlandı 🏁';
+      pushTitle = 'Muayene Tamamlandı 🏁';
+      pushBody = 'Doktorunuz muayeneyi tamamladı. Sonuçlarınıza "Sonuçlarım" sekmesinden ulaşabilirsiniz.';
+    }
+    if (status === 'cancelled') {
+      msg = 'Randevu iptal edildi ❌';
+      pushTitle = 'Randevu İptal Edildi ❌';
+      pushBody = 'Randevunuz doktor tarafından iptal edildi.';
+    }
+    
+    showToast(msg);
+
+    // Send Push Notification via Edge Function
+    const apt = apts.find(a => a.id === id);
+    if (apt) {
+      supabase.functions.invoke('send-push-notification', {
+        body: {
+          patient_id: apt.patient.id, // We need to ensure mapApt includes patient.id
+          title: pushTitle,
+          body: pushBody,
+          data: { type: status === 'completed' ? 'result' : 'confirm', appointmentId: id }
+        }
+      });
+    }
   };
+
+  const handleReport = (id: string) => {
+    setApts(prev => prev.map(a => a.id === id ? { ...a, reported: true } : a));
+    setSelectedApt(prev => prev?.id === id ? { ...prev, reported: true } : prev);
+  };
+
 
   const todayKey = dateKey(TODAY);
   const todayApts = apts.filter(a => a.dateKey === todayKey);
@@ -532,16 +644,49 @@ export default function DashboardPage() {
       </div>
 
       {selectedApt && (
-        <AppointmentDrawer apt={selectedApt} onClose={() => setSelectedApt(null)} onStatusChange={handleStatusChange} />
+        <AppointmentDrawer 
+          apt={selectedApt} 
+          onClose={() => setSelectedApt(null)} 
+          onStatusChange={handleStatusChange} 
+          onReport={handleReport}
+          showToast={showToast}
+        />
       )}
 
       {showAddModal && (
         <AddAppointmentModal
           doctor={doctor}
           onClose={() => setShowAddModal(false)}
-          onAdded={(apt) => { setApts(prev => [...prev, apt]); setSelectedDay(apt.date); }}
+          onAdded={(apt) => {
+            setApts(prev => [...prev, apt]);
+            setSelectedDay(apt.date);
+            showToast('Randevu başarıyla oluşturuldu ✨');
+          }}
+          showToast={showToast}
         />
       )}
+
+      {toast && (
+        <div className={`toast-notify ${toast.type}`} style={{
+          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9999, padding: '12px 24px', borderRadius: '14px',
+          background: toast.type === 'error' ? 'var(--red-500)' : toast.type === 'info' ? 'var(--ink-700)' : 'var(--ink-900)', 
+          color: 'white', fontWeight: '600',
+          fontSize: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          display: 'flex', alignItems: 'center', gap: '8px',
+          animation: 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+          {toast.msg}
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes slideDown {
+          from { transform: translate(-50%, -40px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+      `}</style>
     </>
+
   );
 }
