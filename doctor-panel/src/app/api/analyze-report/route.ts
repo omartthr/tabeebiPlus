@@ -39,14 +39,16 @@ export async function POST(req: NextRequest) {
       body: { appointmentId, base64Pdf }
     });
 
+    let aiSummary = 'Özet oluşturulamadı.';
     if (functionError) {
-      console.error('Edge Function error:', functionError);
-      return NextResponse.json({ error: 'Analiz fonksiyonu hatası: ' + functionError.message }, { status: 500 });
+      console.error('Edge Function (Gemini) error, ama devam ediliyor:', functionError);
+      aiSummary = 'Yapay zeka analiz servisi şu an yoğun. Lütfen daha sonra tekrar deneyin.';
+      // Hata fırlatmak yerine devam ediyoruz ki PDF kaydı ve WhatsApp mesajı çalışsın.
+    } else {
+      aiSummary = functionData?.aiSummary || aiSummary;
     }
 
-    const aiSummary = functionData?.aiSummary || 'Özet oluşturulamadı.';
-
-    // Veritabanında PDF URL'ini de güncelleyelim (Özet zaten Edge Function içinde güncelleniyor)
+    // Veritabanında PDF URL'ini güncelleyelim
     const { error: dbError } = await supabase
       .from('appointments')
       .update({ pdf_url: pdfUrl, report_uploaded: true })
@@ -55,6 +57,31 @@ export async function POST(req: NextRequest) {
     if (dbError) {
       console.error('DB update error:', dbError);
       return NextResponse.json({ error: 'DB güncelleme hatası: ' + dbError.message }, { status: 500 });
+    }
+
+    // Hasta kayıtlı mı kontrol et ve değilse WhatsApp mesajı gönder
+    const { data: aptData } = await supabase
+      .from('appointments')
+      .select('patient_phone, patients(phone, is_registered)')
+      .eq('id', appointmentId)
+      .single();
+
+    // Eğer patient kaydı yoksa (is_registered false demektir) VEYA patient kaydı var ama is_registered false ise
+    const phoneToSend = aptData?.patients?.phone || aptData?.patient_phone;
+    const isRegistered = aptData?.patients?.is_registered ?? false;
+
+    if (phoneToSend && isRegistered === false) {
+      console.log(`[WhatsApp] Kayıt dışı hasta tespit edildi, mesaj gönderiliyor: ${phoneToSend}`);
+      
+      // WhatsApp gönderimi için Supabase Edge Function'ı çağır (veya Twilio API)
+      const { error: wpError } = await supabase.functions.invoke('send-whatsapp-result', {
+        body: { phone: phoneToSend, appointmentId }
+      });
+      
+      if (wpError) {
+        console.error('WhatsApp gönderim hatası:', wpError);
+        // Hata olsa bile API yanıtını bozmuyoruz, çünkü analiz başarılı
+      }
     }
 
     return NextResponse.json({ pdfUrl, aiSummary });

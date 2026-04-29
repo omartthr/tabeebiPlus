@@ -139,28 +139,61 @@ export default function AppNavigator() {
       }
 
       if (signUpData?.session) {
-        // Yeni hasta → veritabanına kaydet
-        const { data: inserted, error: insertError } = await supabase.from('patients').insert({
-          auth_id: signUpData.session.user.id,
-          phone: u.phone,
-          name: u.name,
-        }).select('id, patient_code').single();
+        // Veritabanında daha önce doktor tarafından eklenmiş geçici hasta var mı diye bak (is_registered = false olan)
+        const { data: existingGuest } = await supabase
+          .from('patients')
+          .select('id, patient_code')
+          .eq('phone', u.phone)
+          .maybeSingle();
 
-        if (insertError) {
-          if (insertError.code === '23505') {
+        let finalPatientId: string | undefined;
+        let finalCode: string | null = null;
+
+        if (existingGuest) {
+          // Mevcut geçici hastayı gerçek hesaba dönüştür
+          const { data: updated, error: updateError } = await supabase.from('patients')
+            .update({ auth_id: signUpData.session.user.id, name: u.name, is_registered: true })
+            .eq('id', existingGuest.id)
+            .select('id, patient_code').single();
+          
+          if (!updateError && updated) {
+            finalPatientId = updated.id;
+            finalCode = updated.patient_code;
+          }
+        } else {
+          // Yepyeni bir hasta oluştur
+          const { data: inserted, error: insertError } = await supabase.from('patients').insert({
+            auth_id: signUpData.session.user.id,
+            phone: u.phone,
+            name: u.name,
+            is_registered: true
+          }).select('id, patient_code').single();
+
+          if (insertError && insertError.code === '23505') {
             Alert.alert('Kayıt Hatası', 'Bu telefon numarası başka bir hesap tarafından kullanılıyor.');
             await supabase.auth.signOut();
             return false;
           }
-          console.error('Veritabanı Kayıt Hatası:', insertError.message);
-          Alert.alert('Veri Kayıt Hatası', insertError.message);
+          if (!insertError && inserted) {
+            finalPatientId = inserted.id;
+            finalCode = inserted.patient_code;
+          }
+        }
+
+        if (finalPatientId) {
+          // Doktor panelinden RLS yüzünden hasta ID'si boş kalmış randevular varsa, onları da bu ID'ye bağla
+          await supabase.from('appointments')
+            .update({ patient_id: finalPatientId })
+            .is('patient_id', null)
+            .eq('patient_phone', u.phone);
+
+          setUser({ id: finalPatientId, name: u.name || '', phone: u.phone, patient_code: finalCode });
+        } else {
+          Alert.alert('Veri Kayıt Hatası', 'Hasta bilgisi veritabanına kaydedilemedi.');
           return false;
         }
-        if (inserted) {
-          setUser({ id: inserted.id, name: u.name || '', phone: u.phone, patient_code: inserted.patient_code });
-        }
       } else {
-        Alert.alert('Hata', 'Supabase ayarlarından Confirm Email tam kapanmamış olabilir.');
+        Alert.alert('Hata', 'Kayıt sırasında bir oturum oluşturulamadı.');
         return false;
       }
 

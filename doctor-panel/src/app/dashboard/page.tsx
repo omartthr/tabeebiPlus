@@ -332,11 +332,16 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
 
     let patientId = existingPatient?.id;
     if (!patientId) {
-      const { data: np } = await supabase
+      const { data: np, error: npError } = await supabase
         .from('patients')
-        .insert({ name, phone: phone.replace(/\D/g, ''), avatar_hue: 175 })
+        .insert({ name, phone: phone.replace(/\D/g, ''), avatar_hue: 175, is_registered: false })
         .select('*').single();
-      patientId = np?.id;
+      
+      if (npError) {
+        console.warn('Geçici hasta oluşturulamadı (RLS engeli olabilir), randevuya isim kaydedilecek:', npError.message);
+      } else {
+        patientId = np?.id;
+      }
     }
 
     const { data: apt, error } = await supabase
@@ -347,7 +352,9 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
         price: price ?? 0,
         notes: notes || null,
         status: 'confirmed',
-        patient_id: patientId,
+        patient_id: patientId || null,
+        patient_name: name, // RLS fail olursa diye yedek isim
+        patient_phone: phone.replace(/\D/g, ''), // RLS fail olursa diye yedek numara
         doctor_registration_id: doctor.id,
         doctor_id: doctor.doctors_id || null,
       })
