@@ -35,7 +35,7 @@ export default function ResultsPage() {
 
     let query = supabase
       .from('appointments')
-      .select('id, date, time, reason, price, patients(name, phone, avatar_hue, patient_code)')
+      .select('id, date, time, reason, price, patient_name, patient_phone, patients(name, phone, avatar_hue, patient_code)')
       .eq('status', 'completed');
 
     if (doctor.doctors_id) {
@@ -46,7 +46,7 @@ export default function ResultsPage() {
 
     query.or('report_uploaded.eq.false,report_uploaded.is.null').order('date', { ascending: false }).then(({ data }) => {
       const mapped: ResultRow[] = (data ?? []).map((a: any) => {
-        const patName = a.patients?.name ?? 'Bilinmeyen';
+        const patName = a.patients?.name ?? a.patient_name ?? 'Bilinmeyen';
         return {
           id: a.id,
           date: a.date,
@@ -55,7 +55,7 @@ export default function ResultsPage() {
           price: a.price ?? 0,
           patient: {
             name: patName,
-            phone: a.patients?.phone ?? '-',
+            phone: a.patients?.phone ?? a.patient_phone ?? '-',
             initials: toInitials(patName),
             hue: a.patients?.avatar_hue ?? 175,
             code: a.patients?.patient_code ?? null,

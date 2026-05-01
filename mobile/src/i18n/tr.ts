@@ -55,8 +55,16 @@ export default {
   no_appointments: 'Henüz {{tab}} randevunuz yok.',
   reschedule: 'Yeniden planla',
   cancel: 'İptal et',
+  cancel_confirm_title: 'Randevuyu İptal Et',
+  cancel_confirm_message: 'Bu randevuyu iptal etmek istediğinize emin misiniz?',
+  cancel_confirmed_warning: 'UYARI: Onaylanmış bir randevuyu iptal ediyorsunuz. Sık yapılan iptaller hesabınızın kısıtlanmasına neden olabilir. Yine de iptal edilsin mi?',
+  reschedule_denied_title: 'Değişiklik Yapılamaz',
+  reschedule_denied_message: 'Randevunuz onaylandığı için artık üzerinde değişiklik yapamazsınız. Lütfen gerekirse klinikle iletişime geçin.',
   view_result: 'Sonucu gör',
   book_again: 'Tekrar randevu al',
+  yes: 'Evet',
+  no: 'Hayır',
+  ok: 'Tamam',
 
   // Booking Screen
   book_appointment: 'Randevu al',

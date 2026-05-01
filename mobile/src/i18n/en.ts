@@ -55,8 +55,16 @@ export default {
   no_appointments: 'No {{tab}} appointments yet.',
   reschedule: 'Reschedule',
   cancel: 'Cancel',
+  cancel_confirm_title: 'Cancel Appointment',
+  cancel_confirm_message: 'Are you sure you want to cancel this appointment?',
+  cancel_confirmed_warning: 'WARNING: You are cancelling a confirmed appointment. Frequent cancellations may lead to account restrictions. Proceed anyway?',
+  reschedule_denied_title: 'Cannot Reschedule',
+  reschedule_denied_message: 'Since your appointment is confirmed, you can no longer make changes. Please contact the clinic if needed.',
   view_result: 'View result',
   book_again: 'Book again',
+  yes: 'Yes',
+  no: 'No',
+  ok: 'OK',
 
   // Booking Screen
   book_appointment: 'Book appointment',

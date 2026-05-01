@@ -36,6 +36,7 @@ export interface Appointment {
   initials: string;
   hue: number;
   price?: number;
+  doctorId?: string;
 }
 
 export interface Result {

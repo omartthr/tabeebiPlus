@@ -8,25 +8,33 @@ import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
 import DocAvatar from '../../components/DocAvatar';
 import StatusBadge from '../../components/StatusBadge';
+import CustomAlert from '../../components/CustomAlert';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../navigation/AppNavigator';
 import { Appointment, DAYS } from '../../data';
+import { MainStackParamList } from '../../types/navigation';
 
-export default function AppointmentsScreen() {
+export default function AppointmentsScreen({ navigation }: any) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [apts, setApts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [alert, setAlert] = useState<{
+    visible: boolean; title: string; message: string; type: 'info' | 'warning' | 'danger';
+    confirmText?: string; cancelText?: string; onConfirm: () => void;
+  }>({
+    visible: false, title: '', message: '', type: 'info', onConfirm: () => { },
+  });
 
   const fetchApts = useCallback(async () => {
     if (!user?.id) return;
     const { data, error } = await supabase
       .from('appointments')
-      .select('*, doctors(name, specialty, initials, hue)')
+      .select('*, doctors(id, name, specialty, initials, hue, price)')
       .eq('patient_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('date', { ascending: false });
 
     if (error) {
       console.error('Fetch appointments error:', error);
@@ -42,7 +50,8 @@ export default function AppointmentsScreen() {
           status: a.status,
           initials: a.doctors?.initials || '??',
           hue: a.doctors?.hue || 175,
-          price: a.price,
+          price: a.price || a.doctors?.price || 0,
+          doctorId: a.doctor_id,
         };
       });
       setApts(mapped);
@@ -59,6 +68,66 @@ export default function AppointmentsScreen() {
     await fetchApts();
     setRefreshing(false);
   }, [fetchApts]);
+
+  const handleReschedule = (a: Appointment) => {
+    if (a.status === 'confirmed') {
+      setAlert({
+        visible: true,
+        title: t('reschedule_denied_title'),
+        message: t('reschedule_denied_message'),
+        type: 'warning',
+        confirmText: t('ok') || 'Tamam',
+        onConfirm: () => setAlert(p => ({ ...p, visible: false })),
+      });
+      return;
+    }
+    // Reconstruct doctor object for BookingScreen
+    navigation.navigate('Booking', {
+      doctor: {
+        id: a.doctorId || '',
+        name: a.doctor,
+        specialty: a.specialty,
+        initials: a.initials,
+        hue: a.hue,
+        price: a.price || 35000,
+        rating: 4.8,
+        reviews: 120,
+        today: true,
+        exp: '10 yrs',
+        loc: '',
+      }
+    });
+  };
+
+  const handleCancel = (aptId: string, status: string) => {
+    const isConfirmed = status === 'confirmed';
+    setAlert({
+      visible: true,
+      title: t('cancel_confirm_title'),
+      message: isConfirmed ? t('cancel_confirmed_warning') : t('cancel_confirm_message'),
+      type: 'danger',
+      confirmText: t('yes'),
+      cancelText: t('no'),
+      onConfirm: async () => {
+        setAlert(p => ({ ...p, visible: false }));
+        const { error } = await supabase
+          .from('appointments')
+          .update({ status: 'cancelled' })
+          .eq('id', aptId);
+        if (!error) {
+          fetchApts();
+        } else {
+          setAlert({
+            visible: true,
+            title: 'Hata',
+            message: error.message,
+            type: 'danger',
+            onConfirm: () => setAlert(p => ({ ...p, visible: false })),
+          });
+        }
+      },
+    });
+  };
 
   const upcoming = apts.filter(a => a.status === 'pending' || a.status === 'confirmed');
   const past = apts.filter(a => a.status === 'completed' || a.status === 'cancelled');
@@ -123,20 +192,20 @@ export default function AppointmentsScreen() {
 
             {tab === 'upcoming' && (
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => handleReschedule(a)}>
                   <Text style={styles.actionBtnText}>{t('reschedule')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]}>
+                <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]} onPress={() => handleCancel(a.id, a.status)}>
                   <Text style={[styles.actionBtnText, styles.cancelText]}>{t('cancel')}</Text>
                 </TouchableOpacity>
               </View>
             )}
             {tab === 'past' && a.status === 'completed' && (
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Results')}>
                   <Text style={styles.actionBtnText}>{t('view_result')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => handleReschedule(a)}>
                   <Text style={styles.actionBtnText}>{t('book_again')}</Text>
                 </TouchableOpacity>
               </View>
@@ -144,6 +213,17 @@ export default function AppointmentsScreen() {
           </View>
         ))}
       </ScrollView>
+
+      <CustomAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
+        confirmText={alert.confirmText}
+        cancelText={alert.cancelText}
+        onConfirm={alert.onConfirm}
+        onCancel={() => setAlert(p => ({ ...p, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

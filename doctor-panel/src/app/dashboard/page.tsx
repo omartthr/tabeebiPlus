@@ -12,6 +12,7 @@ import {
   Avatar, StatusBadge,
 } from '@/components/ui/icons';
 import StatsGrid from '@/components/appointments/StatsGrid';
+import CustomAlert from '@/components/ui/CustomAlert';
 
 type AptStatus = 'confirmed' | 'pending' | 'cancelled' | 'completed';
 
@@ -148,8 +149,9 @@ function AppointmentList({ appointments, selected, onSelect }: {
 }
 
 /* ─── Drawer ─── */
-function AppointmentDrawer({ apt, onClose, onStatusChange }: {
+function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
   apt: Apt; onClose: () => void; onStatusChange: (id: string, status: AptStatus) => void;
+  onReport: () => void;
 }) {
   const [saving, setSaving] = useState(false);
 
@@ -208,15 +210,30 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
           )}
         </div>
         <div className="drawer-foot">
-          <button className="btn btn-primary" style={{ flex: 1 }} disabled={saving || apt.status === 'confirmed'} onClick={() => changeStatus('confirmed')}>
-            Onayla
-          </button>
-          <button className="btn btn-outline" disabled={saving || apt.status === 'completed'} onClick={() => changeStatus('completed')}>
-            Tamamlandı
-          </button>
-          <button className="btn btn-danger" disabled={saving || apt.status === 'cancelled'} onClick={() => changeStatus('cancelled')}>
-            <IX size={16} /> İptal
-          </button>
+          {apt.status === 'cancelled' ? (
+            <button 
+              className="btn btn-danger" 
+              style={{ flex: 1 }} 
+              onClick={() => {
+                onReport();
+                onClose();
+              }}
+            >
+              Şikayet Et
+            </button>
+          ) : (
+            <>
+              <button className="btn btn-primary" style={{ flex: 1 }} disabled={saving || apt.status === 'confirmed'} onClick={() => changeStatus('confirmed')}>
+                Onayla
+              </button>
+              <button className="btn btn-outline" disabled={saving || apt.status === 'completed'} onClick={() => changeStatus('completed')}>
+                Tamamlandı
+              </button>
+              <button className="btn btn-danger" disabled={saving || apt.status === 'cancelled'} onClick={() => changeStatus('cancelled')}>
+                <IX size={16} /> İptal
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -454,7 +471,16 @@ export default function DashboardPage() {
   const [view, setView]     = useState<'list' | 'cal'>('list');
   const [selectedApt, setSelectedApt] = useState<Apt | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [search] = useState('');
+  const [search, setSearch] = useState('');
+  const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showAlert = (title: string, message: string) => {
+    setAlert({ visible: true, title, message });
+  };
 
   useEffect(() => {
     if (!doctor) return;
@@ -544,8 +570,20 @@ export default function DashboardPage() {
       </div>
 
       {selectedApt && (
-        <AppointmentDrawer apt={selectedApt} onClose={() => setSelectedApt(null)} onStatusChange={handleStatusChange} />
+        <AppointmentDrawer 
+          apt={selectedApt} 
+          onClose={() => setSelectedApt(null)} 
+          onStatusChange={handleStatusChange} 
+          onReport={() => showAlert('Şikayetiniz iletildi', 'Gereksiz veya asılsız şikayetlerin hesabınızın incelenmesine neden olabileceğini lütfen unutmayın.')}
+        />
       )}
+
+      <CustomAlert 
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() => setAlert(p => ({ ...p, visible: false }))}
+      />
 
       {showAddModal && (
         <AddAppointmentModal

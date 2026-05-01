@@ -35,6 +35,7 @@ export const IEdit    = (p: IconProps) => <Icon {...p}><path d="M4 20h4l10-10-4-
 export const IUp      = (p: IconProps) => <Icon {...p}><path d="M7 17l10-10M7 7h10v10"/></Icon>;
 export const IDown    = (p: IconProps) => <Icon {...p}><path d="M7 7l10 10M17 7v10H7"/></Icon>;
 export const IGraph   = (p: IconProps) => <Icon {...p}><path d="M3 17l6-6 4 4 8-8M17 7h4v4"/></Icon>;
+export const IAlert   = (p: IconProps) => <Icon {...p}><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></Icon>;
 
 
 export function Avatar({ initials, hue = 175, size = 44, rounded = 12 }: { initials: string; hue?: number; size?: number; rounded?: number }) {

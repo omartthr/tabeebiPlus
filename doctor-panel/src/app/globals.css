@@ -212,6 +212,11 @@ input, textarea, select { font-family: inherit; }
 .empty .ttl { font-size: 16px; font-weight: 700; color: var(--ink-900); }
 .empty .sub { font-size: 13px; color: var(--ink-500); font-weight: 500; margin-top: 4px; }
 
+ /* Alert Modal */
+ .alert-overlay { position: fixed; inset: 0; background: rgba(11,31,34,0.4); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn .2s ease; }
+ .alert-card { background: #fff; border-radius: 28px; padding: 32px; width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: var(--shadow-float); animation: zoomIn .25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+ @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
 /* Animations */
 .fade-up { animation: fadeUp .3s ease both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
