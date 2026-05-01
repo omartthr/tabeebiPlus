@@ -104,7 +104,7 @@ export default function ResultsPage() {
         return;
       }
       setRows(prev => prev.filter(r => r.id !== id));
-      window.location.href = '/patients';
+      // no redirect, keep user on results
     };
     input.click();
   };

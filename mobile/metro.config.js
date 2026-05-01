@@ -14,4 +14,18 @@ config.resolver.nodeModulesPaths = [
 ];
 config.resolver.disableHierarchicalLookup = true;
 
+// Fix semver sub-path imports that Metro can't resolve (needed by react-native-reanimated)
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'semver/functions/satisfies') {
+    return { filePath: path.resolve(projectRoot, 'stubs/semver-satisfies.js'), type: 'sourceFile' };
+  }
+  if (moduleName === 'semver/functions/prerelease') {
+    return { filePath: path.resolve(projectRoot, 'stubs/semver-prerelease.js'), type: 'sourceFile' };
+  }
+  if (moduleName === 'semver/ranges/outside') {
+    return { filePath: path.resolve(projectRoot, 'stubs/semver-outside.js'), type: 'sourceFile' };
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = withNativeWind(config, { input: './src/styles/global.css' });

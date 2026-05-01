@@ -158,9 +158,7 @@ function AppointmentDrawer({ apt, onClose, onStatusChange }: {
     await supabase.from('appointments').update({ status: s }).eq('id', apt.id);
     onStatusChange(apt.id, s);
     setSaving(false);
-    if (s === 'completed') {
-      window.location.href = '/results';
-    }
+    onClose();
   };
 
   return (
@@ -295,6 +293,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [existingPatient, setExistingPatient] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (!doctor.doctors_id) return;
@@ -313,6 +312,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
   const handleSubmit = async () => {
     if (!phone || !name || !date || !time) return;
     setSaving(true);
+    setErrorMsg('');
 
     // Çift randevu kontrolü
     const { data: existingApt } = await supabase
@@ -325,7 +325,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
       .maybeSingle();
 
     if (existingApt) {
-      alert('Bu tarih ve saatte zaten dolu bir randevu var. Lütfen farklı bir saat seçin.');
+      setErrorMsg('Bu tarih ve saatte zaten dolu bir randevu var. Lütfen farklı bir saat seçin.');
       setSaving(false);
       return;
     }
@@ -363,7 +363,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
 
     setSaving(false);
     if (error) {
-      alert('Randevu oluşturulurken bir hata oluştu.');
+      setErrorMsg('Randevu oluşturulurken bir hata oluştu.');
       console.error(error);
       return;
     }
@@ -389,6 +389,18 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
           <button className="icon-btn" onClick={onClose}><IX size={18} /></button>
         </div>
         <div className="drawer-body">
+          {errorMsg && (
+            <div style={{
+              margin: '0 24px 16px', padding: '12px 16px', 
+              background: '#FEF2F2', border: '1px solid #FCA5A5',
+              borderRadius: '12px', color: '#991B1B',
+              fontSize: '13px', fontWeight: '600',
+              display: 'flex', alignItems: 'center', gap: '8px'
+            }}>
+              <IX size={16} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
           <div className="detail-section">
             <div className="detail-label">Hasta Bilgileri</div>
             <input style={inp} placeholder="Telefon numarası" value={phone}
