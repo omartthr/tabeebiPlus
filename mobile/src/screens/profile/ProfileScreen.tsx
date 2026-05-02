@@ -1,24 +1,78 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl,
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Calendar, FileText, Bell, HelpCircle, Shield, MessageCircle, ChevronRight, LogOut, Pencil } from 'lucide-react-native';
+import { Calendar, FileText, Bell, HelpCircle, Shield, MessageCircle, ChevronRight, LogOut, Pencil, X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { MainStackParamList } from '../../types/navigation';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainStackParamList, TabParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
 import { colors, shadows } from '../../theme';
 import DocAvatar from '../../components/DocAvatar';
+import { supabase } from '../../lib/supabase';
+import { NOTIFICATIONS } from '../../data';
 
-type Nav = NativeStackNavigationProp<MainStackParamList>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList>,
+  NativeStackNavigationProp<MainStackParamList>
+>;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateUser } = useAuth();
   const { t, i18n } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
+  const [editVisible, setEditVisible] = useState(false);
+  const [newName, setNewName] = useState(user?.name || '');
+  const [saving, setSaving] = useState(false);
+  const [counts, setCounts] = useState({
+    bookings: 0,
+    results: 0,
+    notifications: 0,
+  });
+
+  const fetchCounts = useCallback(async () => {
+    if (!user?.id) return;
+    
+    // Fetch upcoming bookings
+    const { count: bookingCount } = await supabase
+      .from('appointments')
+      .select('*', { count: 'exact', head: true })
+      .eq('patient_id', user.id)
+      .in('status', ['pending', 'confirmed']);
+
+    // Fetch results
+    const { count: resultCount } = await supabase
+      .from('appointments')
+      .select('*', { count: 'exact', head: true })
+      .eq('patient_id', user.id)
+      .eq('status', 'completed')
+      .eq('report_uploaded', true);
+
+    const notifCount = NOTIFICATIONS.filter(n => n.unread).length;
+
+    setCounts({
+      bookings: bookingCount || 0,
+      results: resultCount || 0,
+      notifications: notifCount,
+    });
+  }, [user?.id]);
+
+  React.useEffect(() => {
+    fetchCounts();
+  }, [fetchCounts]);
+
+  const handleSaveName = async () => {
+    if (!newName.trim()) return;
+    setSaving(true);
+    const success = await updateUser({ name: newName.trim() });
+    setSaving(false);
+    if (success) setEditVisible(false);
+  };
 
   const initials = (user?.name || 'Ahmed Rubaie').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
 
@@ -29,16 +83,16 @@ export default function ProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise<void>(r => setTimeout(r, 600));
+    await fetchCounts();
     setRefreshing(false);
-  }, []);
+  }, [fetchCounts]);
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('profile_title')}</Text>
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
+      <View style={styles.content}>
 
         {/* Profile card */}
         <View style={styles.profileCard}>
@@ -52,7 +106,7 @@ export default function ProfileScreen() {
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.editBtn}>
+          <TouchableOpacity style={styles.editBtn} onPress={() => { setNewName(user?.name || ''); setEditVisible(true); }}>
             <Pencil size={18} color={colors.ink700} />
           </TouchableOpacity>
         </View>
@@ -61,9 +115,9 @@ export default function ProfileScreen() {
         {/* Menu group 1 */}
         <View style={styles.menuCard}>
           {[
-            { Icon: Calendar,  bg: colors.teal50,    iconColor: colors.teal700, label: t('my_bookings'),     sub: `2 ${t('upcoming')}`,  screen: 'MainTabs' as const },
-            { Icon: FileText,  bg: colors.amber50,   iconColor: '#b37d1f',       label: t('my_results'),     sub: `3 ${t('reports')}`,   screen: 'MainTabs' as const },
-            { Icon: Bell,      bg: '#ede7f5',         iconColor: '#5b3b9f',       label: t('notifications'),  sub: `2 ${t('unread')}`,    screen: 'MainTabs' as const },
+            { Icon: Calendar,  bg: colors.teal50,    iconColor: colors.teal700, label: t('my_bookings'),     sub: `${counts.bookings} ${t('upcoming')}`,  screen: 'Appointments' as const },
+            { Icon: FileText,  bg: colors.amber50,   iconColor: '#b37d1f',       label: t('my_results'),     sub: `${counts.results} ${t('reports')}`,   screen: 'Results' as const },
+            { Icon: Bell,      bg: '#ede7f5',         iconColor: '#5b3b9f',       label: t('notifications'),  sub: `${counts.notifications} ${t('unread')}`,    screen: 'Notifications' as const },
           ].map((m, i, arr) => (
             <TouchableOpacity
               key={i}
@@ -87,7 +141,7 @@ export default function ProfileScreen() {
         <View style={styles.menuCard}>
           {[
             { Icon: HelpCircle,    label: t('help_center'),       onPress: () => navigation.navigate('Help') },
-            { Icon: Shield,        label: t('privacy'), onPress: undefined },
+            { Icon: Shield,        label: t('privacy'), onPress: () => navigation.navigate('Privacy') },
             { Icon: MessageCircle, label: t('language'),           right: i18n.language === 'tr' ? t('turkish') : t('english'), onPress: toggleLanguage },
           ].map((m, i, arr) => (
             <TouchableOpacity
@@ -113,7 +167,45 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <Text style={styles.version}>Tabeebi+ · v1.0.0</Text>
-      </ScrollView>
+      </View>
+
+      {/* Edit Modal */}
+      <Modal visible={editVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('edit_profile')}</Text>
+              <TouchableOpacity onPress={() => setEditVisible(false)}>
+                <X size={24} color={colors.ink900} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t('edit_name')}</Text>
+              <TextInput
+                style={styles.input}
+                value={newName}
+                onChangeText={setNewName}
+                placeholder={t('name_placeholder')}
+                placeholderTextColor={colors.ink300}
+                autoFocus
+              />
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.saveBtn, saving && { opacity: 0.8 }]} 
+              onPress={handleSaveName}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.saveBtnText}>{t('save_changes')}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -122,8 +214,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { padding: 20, paddingBottom: 14 },
   title: { fontSize: 28, fontWeight: '700', color: colors.ink900, letterSpacing: -0.5 },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
+  content: { flex: 1, paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
   profileCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     padding: 18, backgroundColor: colors.surface, borderRadius: 20,
@@ -172,4 +263,19 @@ const styles = StyleSheet.create({
   version: { textAlign: 'center', fontSize: 11, color: colors.ink400, fontWeight: '600' },
   idBadge: { marginTop: 4, alignSelf: 'flex-start', backgroundColor: colors.teal50, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   idText: { fontSize: 11, fontWeight: '700', color: colors.teal700, letterSpacing: 0.5 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(11,31,34,0.4)', justifyContent: 'center', padding: 24 },
+  modalContent: { backgroundColor: colors.surface, borderRadius: 28, padding: 24, ...shadows.float },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.ink900, letterSpacing: -0.5 },
+  inputGroup: { marginBottom: 24 },
+  inputLabel: { fontSize: 11, fontWeight: '700', color: colors.ink500, letterSpacing: 0.5, marginBottom: 8, textTransform: 'uppercase' },
+  input: { 
+    height: 54, backgroundColor: colors.bg, borderRadius: 16, paddingHorizontal: 16,
+    fontSize: 16, fontWeight: '600', color: colors.ink900, borderWidth: 1, borderColor: colors.ink100
+  },
+  saveBtn: { 
+    height: 54, backgroundColor: colors.teal700, borderRadius: 100,
+    alignItems: 'center', justifyContent: 'center', ...shadows.button
+  },
+  saveBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 });

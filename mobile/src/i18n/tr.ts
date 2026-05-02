@@ -114,6 +114,12 @@ export default {
   turkish: 'Türkçe',
   logout: 'Çıkış yap',
 
+  // Edit Profile
+  edit_profile: 'Profili Düzenle',
+  edit_name: 'Adınız Soyadınız',
+  save_changes: 'Değişiklikleri kaydet',
+  updating: 'Güncelleniyor...',
+
   // Notifications Screen
   notif_title: 'Bildirimler',
   new_alerts: '{{count}} yeni bildirim',
@@ -150,17 +156,17 @@ export default {
 
   // Help Screen
   help_center_title: 'Yardım merkezi',
-  new_ticket: 'YENİ BİLET',
+  new_ticket: 'YENİ ŞİKAYET',
   category: 'Kategori',
   cat_booking: 'Randevu',
   cat_payment: 'Ödeme',
   cat_results: 'Sonuçlar',
   cat_other: 'Diğer',
   subject_placeholder: 'Konu',
-  message_placeholder: 'Sorununuzu açıklayın...',
-  submit_ticket: 'Bileti gönder',
-  ticket_submitted: '✓ Bilet gönderildi',
-  your_tickets: 'BİLETLERİNİZ',
+  message_placeholder: 'Şikayetinizi açıklayın...',
+  submit_ticket: 'Şikayeti gönder',
+  ticket_submitted: '✓ Şikayet gönderildi',
+  your_tickets: 'ŞİKAYETLERİNİZ',
 
   // Status Badge
   status_confirmed: 'Onaylandı',
@@ -169,4 +175,16 @@ export default {
   status_cancelled: 'İptal edildi',
   status_open: 'Açık',
   status_resolved: 'Çözüldü',
+
+  // Privacy Screen
+  privacy_title: 'Gizlilik ve güvenlik',
+  data_protection: 'VERİ KORUMASI',
+  data_protection_desc: 'Tıbbi kayıtlarınız ve kişisel verileriniz şifrelenir ve sağlık standartlarına uygun olarak güvenli bir şekilde saklanır.',
+  account_security: 'HESAP GÜVENLİĞİ',
+  change_phone: 'Telefon numarasını değiştir',
+  delete_account: 'Hesabı sil',
+  delete_warning: 'Bu işlem kalıcıdır ve tüm tıbbi geçmişinizi silecektir.',
+  permissions: 'İZİNLER',
+  notif_perms: 'Bildirim izinleri',
+  loc_perms: 'Konum izinleri',
 };

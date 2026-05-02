@@ -114,6 +114,12 @@ export default {
   turkish: 'Turkish',
   logout: 'Log out',
 
+  // Edit Profile
+  edit_profile: 'Edit Profile',
+  edit_name: 'Your name',
+  save_changes: 'Save changes',
+  updating: 'Updating...',
+
   // Notifications Screen
   notif_title: 'Notifications',
   new_alerts: '{{count}} new alerts',
@@ -150,7 +156,7 @@ export default {
 
   // Help Screen
   help_center_title: 'Help center',
-  new_ticket: 'NEW TICKET',
+  new_ticket: 'NEW COMPLAINT',
   category: 'Category',
   cat_booking: 'Booking',
   cat_payment: 'Payment',
@@ -158,9 +164,9 @@ export default {
   cat_other: 'Other',
   subject_placeholder: 'Subject',
   message_placeholder: 'Describe your issue...',
-  submit_ticket: 'Submit ticket',
-  ticket_submitted: '✓ Ticket submitted',
-  your_tickets: 'YOUR TICKETS',
+  submit_ticket: 'Submit complaint',
+  ticket_submitted: '✓ Complaint submitted',
+  your_tickets: 'YOUR COMPLAINTS',
 
   // Status Badge
   status_confirmed: 'Confirmed',
@@ -169,4 +175,16 @@ export default {
   status_cancelled: 'Cancelled',
   status_open: 'Open',
   status_resolved: 'Resolved',
+
+  // Privacy Screen
+  privacy_title: 'Privacy & security',
+  data_protection: 'DATA PROTECTION',
+  data_protection_desc: 'Your medical records and personal data are encrypted and stored securely in compliance with healthcare standards.',
+  account_security: 'ACCOUNT SECURITY',
+  change_phone: 'Change phone number',
+  delete_account: 'Delete account',
+  delete_warning: 'This action is permanent and will delete all your medical history.',
+  permissions: 'PERMISSIONS',
+  notif_perms: 'Notification permissions',
+  loc_perms: 'Location permissions',
 };

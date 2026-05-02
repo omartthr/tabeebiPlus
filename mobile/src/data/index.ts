@@ -5,6 +5,8 @@ export interface Specialty {
   icon: string;
   tint: string;
   accent: string;
+  dbNames?: string[];
+  disabled?: boolean;
 }
 
 export interface Doctor {
@@ -83,16 +85,16 @@ export interface Day {
 }
 
 export const SPECIALTIES: Specialty[] = [
-  { id: 'obgyn', name: 'OB-GYN', sub: '3 doctors (Demo)', icon: 'user-round', tint: '#f5e1ec', accent: '#8a2a64', dbNames: ['Kadın Hastalıkları ve Doğum'] },
-  { id: 'derm', name: 'Dermatology', sub: '3 doctors (Demo)', icon: 'layers', tint: '#fbefe2', accent: '#a5622b', dbNames: ['Dermatoloji (Cildiye)'] },
-  { id: 'pulmo', name: 'Pulmonary', sub: '3 doctors (Demo)', icon: 'wind', tint: '#e3edf0', accent: '#3d6a78', dbNames: ['Gastroenteroloji', 'Endokrinoloji'] },
-  { id: 'dental', name: 'Dental', sub: '3 doctors (Demo)', icon: 'tooth', tint: '#eaf5f5', accent: '#0d7377', dbNames: ['Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti'] },
-  { id: 'eye', name: 'Eye Care', sub: '3 doctors (Demo)', icon: 'eye', tint: '#fdf6e6', accent: '#b37d1f', dbNames: ['Göz Hastalıkları'] },
-  { id: 'cardio', name: 'Cardiology', sub: '3 doctors (Demo)', icon: 'heart', tint: '#fadfdc', accent: '#912a23', dbNames: ['Kardiyoloji'] },
-  { id: 'neuro', name: 'Neurology', sub: '3 doctors (Demo)', icon: 'brain', tint: '#ede7f5', accent: '#5b3b9f', dbNames: ['Nöroloji'] },
-  { id: 'ortho', name: 'Orthopedic', sub: '3 doctors (Demo)', icon: 'bone', tint: '#eaf1f5', accent: '#2c5a85', dbNames: ['Ortopedi ve Travmatoloji'] },
-  { id: 'general', name: 'General', sub: '3 doctors (Demo)', icon: 'stethoscope', tint: '#d4ecec', accent: '#0a5d60', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji'] },
-  { id: 'pediatric', name: 'Pediatric', sub: '3 doctors (Demo)', icon: 'baby', tint: '#fbe6d1', accent: '#8f4a0d', dbNames: ['Pediatri'] },
+  { id: 'dental', name: 'Dental', sub: 'Active (Kerkük)', icon: 'tooth', tint: '#eaf5f5', accent: '#0d7377', dbNames: ['Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti'] },
+  { id: 'general', name: 'General', sub: 'Active (Kerkük)', icon: 'stethoscope', tint: '#d4ecec', accent: '#0a5d60', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji'] },
+  { id: 'obgyn', name: 'OB-GYN', sub: 'Coming Soon', icon: 'user-round', tint: '#f5e1ec', accent: '#8a2a64', disabled: true },
+  { id: 'derm', name: 'Dermatology', sub: 'Coming Soon', icon: 'layers', tint: '#fbefe2', accent: '#a5622b', disabled: true },
+  { id: 'pulmo', name: 'Pulmonary', sub: 'Coming Soon', icon: 'wind', tint: '#e3edf0', accent: '#3d6a78', disabled: true },
+  { id: 'eye', name: 'Eye Care', sub: 'Coming Soon', icon: 'eye', tint: '#fdf6e6', accent: '#b37d1f', disabled: true },
+  { id: 'cardio', name: 'Cardiology', sub: 'Coming Soon', icon: 'heart', tint: '#fadfdc', accent: '#912a23', disabled: true },
+  { id: 'neuro', name: 'Neurology', sub: 'Coming Soon', icon: 'brain', tint: '#ede7f5', accent: '#5b3b9f', disabled: true },
+  { id: 'ortho', name: 'Orthopedic', sub: 'Coming Soon', icon: 'bone', tint: '#eaf1f5', accent: '#2c5a85', disabled: true },
+  { id: 'pediatric', name: 'Pediatric', sub: 'Coming Soon', icon: 'baby', tint: '#fbe6d1', accent: '#8f4a0d', disabled: true },
 ];
 
 export const DOCTORS: Doctor[] = [

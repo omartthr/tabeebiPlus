@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
   const [name, setName]         = useState('');
   const [surname, setSurname]   = useState('');
-  const [age, setAge]           = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [clinic, setClinic]     = useState('');
 
@@ -143,7 +143,7 @@ export default function RegisterPage() {
         phone,
         name: name.trim(),
         surname: surname.trim(),
-        age: age ? parseInt(age) : null,
+        birth_date: birthDate || null,
         specialty,
         clinic_name: clinic.trim() || null,
         location_address: locAddr,
@@ -281,8 +281,8 @@ export default function RegisterPage() {
               </div>
               <div className="fields-row">
                 <div className="field">
-                  <label>Yaş</label>
-                  <input className="field-input" placeholder="35" type="number" min="22" max="80" value={age} onChange={e => setAge(e.target.value)} />
+                  <label>Doğum Tarihi</label>
+                  <input className="field-input" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} />
                 </div>
                 <div className="field">
                   <label>Klinik Adı</label>

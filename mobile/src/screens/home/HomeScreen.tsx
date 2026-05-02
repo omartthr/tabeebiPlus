@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Clock, MapPin, ChevronRight, BadgeCheck } from 'lucide-react-native';
+import { Clock, MapPin, ChevronRight, BadgeCheck, Activity, Plus } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
@@ -81,14 +81,13 @@ export default function HomeScreen() {
           <Text style={styles.greet}>{greeting},</Text>
           <Text style={styles.name}>{firstName} 👋</Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
-          <DocAvatar
-            initials={firstName.slice(0, 2).toUpperCase()}
-            hue={175}
-            size={44}
-            rounded={14}
-          />
-        </TouchableOpacity>
+        <View style={styles.brandContainer}>
+          <View style={styles.logoIcon}>
+            <Activity size={20} color={colors.teal700} strokeWidth={2.5} />
+            <Plus size={10} color={colors.teal700} strokeWidth={3} style={styles.plusOverlay} />
+          </View>
+          <Text style={styles.brandText}>Tabeebi+</Text>
+        </View>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
@@ -133,16 +132,16 @@ export default function HomeScreen() {
           {SPECIALTIES.map(s => (
             <TouchableOpacity
               key={s.id}
-              style={styles.specialtyCard}
-              onPress={() => navigation.navigate('DoctorList', { specialty: s })}
-              activeOpacity={0.8}
+              style={[styles.specialtyCard, s.disabled && styles.specialtyCardDisabled]}
+              onPress={() => !s.disabled && navigation.navigate('DoctorList', { specialty: s })}
+              activeOpacity={s.disabled ? 1 : 0.8}
             >
-              <View style={[styles.specialtyIcon, { backgroundColor: s.tint }]}>
+              <View style={[styles.specialtyIcon, { backgroundColor: s.tint }, s.disabled && styles.iconDisabled]}>
                 <SpecialtyIcon kind={s.icon} size={26} color={s.accent} />
               </View>
               <View style={styles.specialtyText}>
-                <Text style={styles.specialtyName}>{s.name}</Text>
-                <Text style={styles.specialtyCount}>{s.sub}</Text>
+                <Text style={[styles.specialtyName, s.disabled && styles.textDisabled]}>{s.name}</Text>
+                <Text style={[styles.specialtyCount, s.disabled && styles.textDisabled]}>{s.sub}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -174,7 +173,11 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   greet: { fontSize: 13, color: colors.ink500, fontWeight: '600' },
-  name: { fontSize: 22, fontWeight: '700', color: colors.ink900, letterSpacing: -0.4 },
+  name: { fontSize: 20, fontWeight: '700', color: colors.ink900, letterSpacing: -0.4 },
+  brandContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: colors.teal50, alignItems: 'center', justifyContent: 'center' },
+  plusOverlay: { position: 'absolute', top: 6, right: 6 },
+  brandText: { fontSize: 15, fontWeight: '800', color: colors.teal700, letterSpacing: -0.5 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 24, gap: 0 },
 
@@ -245,6 +248,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(11,31,34,0.04)',
     ...shadows.card,
+  },
+  specialtyCardDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#fafafa',
+    borderColor: 'transparent',
+  },
+  iconDisabled: {
+    backgroundColor: '#eee',
+    opacity: 0.5,
+  },
+  textDisabled: {
+    color: colors.ink400,
   },
   specialtyIcon: {
     width: 48,

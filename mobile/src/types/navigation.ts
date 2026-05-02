@@ -14,6 +14,7 @@ export type MainStackParamList = {
   Booking: { doctor: Doctor };
   Confirmed: { booking: BookingData };
   Help: undefined;
+  Privacy: undefined;
 };
 
 export type TabParamList = {

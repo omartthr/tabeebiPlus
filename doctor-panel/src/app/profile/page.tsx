@@ -160,7 +160,7 @@ export default function ProfilePage() {
             specialty: reg.specialty,
             price: priceNum,
             exp: expNum + ' yrs',
-            loc: reg.clinic_name || 'Bağdat',
+            loc: reg.clinic_name || 'Kerkük',
             registration_id: reg.id,
             location_address: locAddr,
             location_lat: locLat,
@@ -195,10 +195,28 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: 948, margin: '0' }}>
+
+        {/* Doctor Rating Section */}
+        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontSize: 18, color: '#1a1a1a', marginBottom: 4 }}>Doktor Puanı</h2>
+            <p style={{ color: '#666', fontSize: 13 }}>Hastalarınızdan aldığınız ortalama puan.</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+              {[1, 2, 3, 4, 5].map(i => (
+                <svg key={i} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ddd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              ))}
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink-900)' }}>0.0 <span style={{ fontWeight: 500, color: 'var(--ink-400)', fontSize: 12 }}>(Henüz puan verilmedi)</span></div>
+          </div>
+        </div>
 
         {/* Profile Info */}
-        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', maxWidth: 900 }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <h2 style={{ fontSize: 18, color: '#1a1a1a', marginBottom: 20 }}>Profil Bilgileri</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
@@ -266,7 +284,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Schedule */}
-        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', maxWidth: 900 }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--teal-50)', color: 'var(--teal-700)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IClock size={20} />
@@ -362,14 +380,13 @@ export default function ProfilePage() {
         </div>
 
         {/* Unified Save Button */}
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '8px 0' }}>
+        <div style={{ display: 'flex', margin: '8px 0' }}>
           <button 
             onClick={handleSave} 
             disabled={saving} 
             className="btn btn-primary" 
             style={{ 
               width: '100%', 
-              maxWidth: 900, 
               height: 54, 
               fontSize: 16, 
               gap: 10,
@@ -381,7 +398,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Logout */}
-        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', maxWidth: 900 }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <h2 style={{ marginBottom: 8, fontSize: 18, color: '#1a1a1a' }}>Hesap İşlemleri</h2>
           <p style={{ color: '#666', marginBottom: 20, fontSize: 14 }}>Oturumunuzu sonlandırmak için aşağıdaki butonu kullanabilirsiniz.</p>
           <button onClick={handleLogout} style={{ backgroundColor: '#ff4d4f', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>

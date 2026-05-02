@@ -10,6 +10,7 @@ import DoctorDetailScreen from '../screens/doctors/DoctorDetailScreen';
 import BookingScreen from '../screens/appointments/BookingScreen';
 import ConfirmedScreen from '../screens/appointments/ConfirmedScreen';
 import HelpScreen from '../screens/support/HelpScreen';
+import PrivacyScreen from '../screens/profile/PrivacyScreen';
 import { UserData } from '../types/navigation';
 import { supabase } from '../lib/supabase';
 
@@ -17,12 +18,14 @@ interface AuthContextValue {
   user: UserData | null;
   signIn: (u: UserData) => Promise<boolean>;
   signOut: () => Promise<void>;
+  updateUser: (updates: Partial<UserData>) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextValue>({
   user: null,
   signIn: async () => false,
   signOut: async () => { },
+  updateUser: async () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -38,6 +41,7 @@ function MainNavigator() {
       <Stack.Screen name="Booking" component={BookingScreen} />
       <Stack.Screen name="Confirmed" component={ConfirmedScreen} options={{ animation: 'fade' }} />
       <Stack.Screen name="Help" component={HelpScreen} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} />
     </Stack.Navigator>
   );
 }
@@ -211,11 +215,29 @@ export default function AppNavigator() {
     setUser(null);
   };
 
+  const updateUser = async (updates: Partial<UserData>): Promise<boolean> => {
+    if (!user?.id) return false;
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ name: updates.name })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      return true;
+    } catch (e) {
+      console.error('Update user error:', e);
+      return false;
+    }
+  };
+
   // Oturum kontrolü yapılıyor
   if (loading) return null;
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, signIn, signOut, updateUser }}>
       <NavigationContainer>
         {user ? <MainNavigator /> : <AuthNavigator />}
       </NavigationContainer>

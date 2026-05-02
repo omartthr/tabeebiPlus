@@ -32,7 +32,7 @@ export default function MapPicker({ onChange }: Props) {
 
       if (cancelled || !containerRef.current) return;
 
-      const map = L.map(containerRef.current).setView([33.3152, 44.3661], 12);
+      const map = L.map(containerRef.current).setView([35.4670, 44.3921], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
       }).addTo(map);
