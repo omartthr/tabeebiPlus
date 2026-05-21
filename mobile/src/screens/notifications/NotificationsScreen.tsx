@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Clock, FileText, Check, Bell } from 'lucide-react-native';
+import { Clock, FileText, Check, Bell, Inbox } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, shadows } from '../../theme';
-import { NOTIFICATIONS } from '../../data';
+import { colors } from '../../theme';
+import { useAuth } from '../../navigation/AppNavigator';
+import { supabase } from '../../lib/supabase';
 
 const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
   reminder: { bg: colors.teal50,    fg: colors.teal700,  Icon: Clock },
@@ -13,49 +14,170 @@ const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
   block:    { bg: colors.orange100, fg: '#8f4a0d',        Icon: Bell },
 };
 
+function formatRelativeTime(dateStr: string | null) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Az önce';
+    if (diffMins < 60) return `${diffMins} dk önce`;
+    if (diffHours < 24) return `${diffHours} sa önce`;
+    if (diffDays === 1) return 'Dün';
+    if (diffDays < 7) return `${diffDays} gün önce`;
+    
+    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function NotificationsScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const unreadCount = NOTIFICATIONS.filter(n => n.unread).length;
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await new Promise<void>(r => setTimeout(r, 600));
+  const fetchNotifications = useCallback(async (showIndicator = false) => {
+    if (!user?.id) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    if (showIndicator) setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('patient_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Fetch notifications error:', error.message);
+    } else {
+      setNotifications(data ?? []);
+    }
+    setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    fetchNotifications(true);
+  }, [fetchNotifications]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchNotifications(false);
+  }, [fetchNotifications]);
+
+  const markAllAsRead = async () => {
+    if (!user?.id || notifications.length === 0) return;
+    
+    // Optimistic UI update
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+
+    const { error } = await supabase
+      .from('notifications')
+      .update({ unread: false })
+      .eq('patient_id', user.id)
+      .eq('unread', true);
+
+    if (error) {
+      console.error('Mark all as read error:', error.message);
+      // Rollback on error
+      fetchNotifications(false);
+    }
+  };
+
+  const handleMarkOneRead = async (id: string, currentlyUnread: boolean) => {
+    if (!currentlyUnread) return;
+
+    // Optimistic UI update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+
+    const { error } = await supabase
+      .from('notifications')
+      .update({ unread: false })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Mark notification as read error:', error.message);
+      fetchNotifications(false);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => n.unread).length;
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
-        <View>
+        <View style={{ flex: 1, marginRight: 8 }}>
           <Text style={styles.title}>{t('notif_title')}</Text>
           <Text style={styles.subtitle}>{t('new_alerts', { count: unreadCount })}</Text>
         </View>
-        <TouchableOpacity>
-          <Text style={styles.markAll}>{t('mark_all_read')}</Text>
-        </TouchableOpacity>
+        {unreadCount > 0 && (
+          <TouchableOpacity onPress={markAllAsRead} style={{ padding: 4 }}>
+            <Text style={styles.markAll}>{t('mark_all_read')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
-        {NOTIFICATIONS.map(n => {
-          const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.reminder;
-          const Icon = cfg.Icon;
-          return (
-            <View key={n.id} style={[styles.card, n.unread && styles.cardUnread]}>
-              <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>
-                <Icon size={20} color={cfg.fg} />
-              </View>
-              <View style={styles.body}>
-                <View style={styles.top}>
-                  <Text style={styles.notifTitle}>{n.title}</Text>
-                  <Text style={styles.time}>{n.time}</Text>
+
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.teal700} />
+        </View>
+      ) : notifications.length === 0 ? (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}
+        >
+          <Inbox size={48} color={colors.ink300} style={{ marginBottom: 12 }} />
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink600 }}>{t('no_notifications')}</Text>
+          <Text style={{ fontSize: 13, color: colors.ink400, textAlign: 'center', marginTop: 4, paddingHorizontal: 20 }}>
+            {t('no_notifications_sub')}
+          </Text>
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}
+        >
+          {notifications.map(n => {
+            const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.reminder;
+            const Icon = cfg.Icon;
+            return (
+              <TouchableOpacity
+                key={n.id}
+                activeOpacity={n.unread ? 0.7 : 1}
+                onPress={() => handleMarkOneRead(n.id, n.unread)}
+                style={[styles.card, n.unread && styles.cardUnread]}
+              >
+                <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>
+                  <Icon size={20} color={cfg.fg} />
                 </View>
-                <Text style={styles.notifBody}>{n.body}</Text>
-              </View>
-              {n.unread && <View style={styles.unreadDot} />}
-            </View>
-          );
-        })}
-      </ScrollView>
+                <View style={styles.body}>
+                  <View style={styles.top}>
+                    <Text style={styles.notifTitle}>{n.title}</Text>
+                    <Text style={styles.time}>{formatRelativeTime(n.created_at || n.time)}</Text>
+                  </View>
+                  <Text style={styles.notifBody}>{n.body}</Text>
+                </View>
+                {n.unread && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

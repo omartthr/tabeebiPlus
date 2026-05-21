@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Filter } from 'lucide-react-native';
@@ -17,6 +17,7 @@ export default function DoctorListScreen({ route, navigation }: Props) {
   const { specialty } = route.params;
   const { t } = useTranslation();
   const [filter, setFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +26,7 @@ export default function DoctorListScreen({ route, navigation }: Props) {
       .from('doctors')
       .select('*')
       .eq('is_active', true)
-      .in('specialty', specialty.dbNames)
+      .in('specialty', specialty.dbNames || [])
       .then(({ data }) => {
         const mapped: Doctor[] = (data ?? []).map(d => ({
           id: d.id,
@@ -56,7 +57,36 @@ export default function DoctorListScreen({ route, navigation }: Props) {
     { id: 'near',  label: t('nearby') },
   ];
 
-  const filtered = filter === 'today' ? doctors.filter(d => d.today) : doctors;
+  const filtered = useMemo(() => {
+    let list = [...doctors];
+    if (filter === 'today') {
+      list = list.filter(d => d.today);
+    } else if (filter === 'top') {
+      list = list.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
+    } else if (filter === 'near') {
+      list = list.sort((a, b) => (parseInt(b.exp) || 0) - (parseInt(a.exp) || 0));
+    }
+
+    if (sortOrder === 'asc') {
+      list = list.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+    } else if (sortOrder === 'desc') {
+      list = list.sort((a, b) => b.name.localeCompare(a.name, 'tr'));
+    }
+    return list;
+  }, [doctors, filter, sortOrder]);
+
+  const handleFilterPress = () => {
+    Alert.alert(
+      'Sıralama Seçenekleri',
+      'Doktorları nasıl sıralamak istersiniz?',
+      [
+        { text: 'Varsayılan', onPress: () => setSortOrder('none') },
+        { text: 'A - Z (İsim)', onPress: () => setSortOrder('asc') },
+        { text: 'Z - A (İsim)', onPress: () => setSortOrder('desc') },
+        { text: t('cancel') || 'İptal', style: 'cancel' }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -64,7 +94,7 @@ export default function DoctorListScreen({ route, navigation }: Props) {
         title={specialty.name}
         onBack={() => navigation.goBack()}
         right={
-          <TouchableOpacity style={styles.filterBtn}>
+          <TouchableOpacity style={styles.filterBtn} onPress={handleFilterPress}>
             <Filter size={18} color={colors.ink700} />
           </TouchableOpacity>
         }

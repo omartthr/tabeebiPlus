@@ -148,6 +148,78 @@ function AppointmentList({ appointments, selected, onSelect }: {
   );
 }
 
+/* ─── CalendarGrid ─── */
+const CAL_HOURS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+
+function CalendarGrid({ appointments, selectedDay, onSelect, onAddClick }: {
+  appointments: Apt[]; selectedDay: Date; onSelect: (a: Apt) => void; onAddClick: (time: string) => void;
+}) {
+  const now = new Date();
+  const isToday = dateKey(selectedDay) === dateKey(TODAY);
+  const curHour = now.getHours();
+
+  return (
+    <div className="calendar-grid" style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+      {CAL_HOURS.map(hourStr => {
+        const hourNum = parseInt(hourStr);
+        const slotApts = appointments.filter(a => a.time.startsWith(hourStr.split(':')[0] + ':'));
+        const isPast = isToday && hourNum < curHour;
+
+        return (
+          <div key={hourStr} style={{ display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px dashed var(--ink-100)', paddingBottom: 12 }}>
+            <div style={{ width: 60, fontSize: 13, fontWeight: 700, color: 'var(--ink-500)' }}>
+              {hourStr}
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', gap: 12 }}>
+              {slotApts.length > 0 ? (
+                slotApts.map(a => (
+                  <div
+                    key={a.id}
+                    onClick={() => onSelect(a)}
+                    style={{
+                      flex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+                      background: 'white', border: `1.5px solid ${a.status === 'pending' ? '#d59528' : '#0d7377'}`,
+                      borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s'
+                    }}
+                  >
+                    <Avatar initials={a.patient.initials} hue={a.patient.hue} size={36} rounded={10} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-900)' }}>{a.patient.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink-400)', fontWeight: 500 }}>{a.reason}</div>
+                    </div>
+                    <StatusBadge status={a.status} />
+                  </div>
+                ))
+              ) : (
+                <button
+                  disabled={isPast}
+                  onClick={() => onAddClick(hourStr)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    height: 48, background: isPast ? 'var(--ink-50)' : 'white',
+                    border: '1.5px dashed var(--ink-200)', borderRadius: 12,
+                    fontSize: 12, fontWeight: 700, color: isPast ? 'var(--ink-300)' : 'var(--ink-400)',
+                    cursor: isPast ? 'not-allowed' : 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {isPast ? (
+                    'Mesai Saati Geçti'
+                  ) : (
+                    <>
+                      <IPlus size={14} /> Randevu Planla
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ─── Drawer ─── */
 function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
   apt: Apt; onClose: () => void; onStatusChange: (id: string, status: AptStatus) => void;
@@ -229,7 +301,7 @@ function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
               <button className="btn btn-outline" disabled={saving || apt.status === 'completed'} onClick={() => changeStatus('completed')}>
                 Tamamlandı
               </button>
-              <button className="btn btn-danger" disabled={saving || apt.status === 'cancelled'} onClick={() => changeStatus('cancelled')}>
+              <button className="btn btn-danger" disabled={saving} onClick={() => changeStatus('cancelled')}>
                 <IX size={16} /> İptal
               </button>
             </>
@@ -244,9 +316,25 @@ function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 8).padStart(2, '0'));
 const MINS  = ['00', '10', '20', '30', '40', '50'];
 
-function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TimePicker({ value, onChange, selectedDate }: { value: string; onChange: (v: string) => void; selectedDate: string }) {
   const [open, setOpen] = useState(false);
   const [selH, selM] = value.split(':');
+
+  const now = new Date();
+  const isToday = selectedDate === dateKey(TODAY);
+  const curHour = now.getHours();
+  const curMin = now.getMinutes();
+
+  const filteredHours = useMemo(() => {
+    if (!isToday) return HOURS;
+    return HOURS.filter(h => parseInt(h) >= curHour);
+  }, [isToday, curHour]);
+
+  const filteredMins = useMemo(() => {
+    if (!isToday) return MINS;
+    if (parseInt(selH) > curHour) return MINS;
+    return MINS.filter(m => parseInt(m) >= curMin);
+  }, [isToday, selH, curHour, curMin]);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -269,19 +357,24 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
           border: '1px solid var(--ink-100)', display: 'flex', overflow: 'hidden',
         }}>
           <div style={{ flex: 1, maxHeight: 200, overflowY: 'auto', borderRight: '1px solid var(--ink-100)' }}>
-            {HOURS.map(h => (
-              <div key={h} onClick={() => { onChange(`${h}:${selM}`); }}
-                style={{
-                  padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                  background: h === selH ? 'var(--teal-50)' : 'transparent',
-                  color: h === selH ? 'var(--teal-700)' : 'var(--ink-700)',
-                }}>
-                {h}:00
-              </div>
-            ))}
+            {filteredHours.map(h => {
+              const hNum = parseInt(h);
+              const validMinsForH = isToday && hNum === curHour ? MINS.filter(m => parseInt(m) >= curMin) : MINS;
+              const nextMin = validMinsForH.includes(selM) ? selM : validMinsForH[0];
+              return (
+                <div key={h} onClick={() => { onChange(`${h}:${nextMin}`); }}
+                  style={{
+                    padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    background: h === selH ? 'var(--teal-50)' : 'transparent',
+                    color: h === selH ? 'var(--teal-700)' : 'var(--ink-700)',
+                  }}>
+                  {h}:00
+                </div>
+              );
+            })}
           </div>
           <div style={{ flex: 1 }}>
-            {MINS.map(m => (
+            {filteredMins.map(m => (
               <div key={m} onClick={() => { onChange(`${selH}:${m}`); setOpen(false); }}
                 style={{
                   padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -298,13 +391,34 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
   );
 }
 
-function AddAppointmentModal({ doctor, onClose, onAdded }: {
-  doctor: any; onClose: () => void; onAdded: (apt: Apt) => void;
+function AddAppointmentModal({ doctor, onClose, onAdded, preselectedTime }: {
+  doctor: any; onClose: () => void; onAdded: (apt: Apt) => void; preselectedTime?: string;
 }) {
+  const now = new Date();
+  const isTodayPast = now.getHours() > 19 || (now.getHours() === 19 && now.getMinutes() > 50);
+  const initialDate = isTodayPast ? dateKey(addDays(TODAY, 1)) : dateKey(TODAY);
+
+  const getFirstValidTime = (selDate: string) => {
+    const isToday = selDate === dateKey(TODAY);
+    if (!isToday) return '08:00';
+    const curHour = now.getHours();
+    const curMin = now.getMinutes();
+    for (const h of HOURS) {
+      const hNum = parseInt(h);
+      if (hNum > curHour) return `${h}:00`;
+      if (hNum === curHour) {
+        for (const m of MINS) {
+          if (parseInt(m) >= curMin) return `${h}:${m}`;
+        }
+      }
+    }
+    return '08:00';
+  };
+
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
-  const [date, setDate] = useState(dateKey(TODAY));
-  const [time, setTime] = useState('09:00');
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(preselectedTime || getFirstValidTime(initialDate));
   const [reason, setReason] = useState('');
   const [price, setPrice] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
@@ -435,8 +549,18 @@ function AddAppointmentModal({ doctor, onClose, onAdded }: {
           <div className="detail-section">
             <div className="detail-label">Tarih & Saat</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <input style={inp} type="date" value={date} onChange={e => setDate(e.target.value)} />
-              <TimePicker value={time} onChange={setTime} />
+              <input 
+                style={inp} 
+                type="date" 
+                value={date} 
+                min={initialDate}
+                onChange={e => {
+                  const newDate = e.target.value;
+                  setDate(newDate);
+                  setTime(getFirstValidTime(newDate));
+                }} 
+              />
+              <TimePicker value={time} onChange={setTime} selectedDate={date} />
             </div>
           </div>
           <div className="detail-section">
@@ -470,7 +594,7 @@ export default function DashboardPage() {
   const [selectedDay, setSelectedDay] = useState<Date>(TODAY);
   const [view, setView]     = useState<'list' | 'cal'>('list');
   const [selectedApt, setSelectedApt] = useState<Apt | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState<boolean | string>(false);
   const [search, setSearch] = useState('');
   const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({
     visible: false,
@@ -485,20 +609,27 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!doctor) return;
     
-    let query = supabase
-      .from('appointments')
-      .select('*, patients(id, name, phone, avatar_hue, patient_code)');
+    const fetchData = () => {
+      let query = supabase
+        .from('appointments')
+        .select('*, patients(id, name, phone, avatar_hue, patient_code)');
 
-    if (doctor.doctors_id) {
-      query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
-    } else {
-      query = query.eq('doctor_registration_id', doctor.id);
-    }
+      if (doctor.doctors_id) {
+        query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
+      } else {
+        query = query.eq('doctor_registration_id', doctor.id);
+      }
 
-    query.then(({ data }) => {
-      setApts((data ?? []).map(mapApt));
-      setFetching(false);
-    });
+      query.then(({ data }) => {
+        setApts((data ?? []).map(mapApt));
+        setFetching(false);
+      });
+    };
+
+    fetchData();
+
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, [doctor]);
 
   const handleStatusChange = (id: string, status: AptStatus) => {
@@ -563,10 +694,18 @@ export default function DashboardPage() {
 
         <DayStrip selected={selectedDay} onSelect={setSelectedDay} apts={apts} />
 
-        {fetching
-          ? <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-400)' }}>Yükleniyor…</div>
-          : <AppointmentList appointments={dayApts} selected={selectedApt} onSelect={setSelectedApt} />
-        }
+        {fetching ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-400)' }}>Yükleniyor…</div>
+        ) : view === 'list' ? (
+          <AppointmentList appointments={dayApts} selected={selectedApt} onSelect={setSelectedApt} />
+        ) : (
+          <CalendarGrid 
+            appointments={dayApts} 
+            selectedDay={selectedDay} 
+            onSelect={setSelectedApt} 
+            onAddClick={(timeStr) => setShowAddModal(timeStr)} 
+          />
+        )}
       </div>
 
       {selectedApt && (
@@ -590,6 +729,7 @@ export default function DashboardPage() {
           doctor={doctor}
           onClose={() => setShowAddModal(false)}
           onAdded={(apt) => { setApts(prev => [...prev, apt]); setSelectedDay(apt.date); }}
+          preselectedTime={typeof showAddModal === 'string' ? showAddModal : undefined}
         />
       )}
     </>

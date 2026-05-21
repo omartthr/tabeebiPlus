@@ -23,18 +23,18 @@ export default function RegisterPage() {
     import('@/components/MapPicker').then(m => setMapPickerComp(() => m.default));
   }, []);
 
-  const [step, setStep]     = useState<Step>('phone');
+  const [step, setStep] = useState<Step>('phone');
   const [countryCode, setCountryCode] = useState('964');
-  const [phone, setPhone]   = useState('');
-  const [otp, setOtp]       = useState(['', '', '', '']);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState('');
+  const [error, setError] = useState('');
 
-  const [name, setName]         = useState('');
-  const [surname, setSurname]   = useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [specialty, setSpecialty] = useState('');
-  const [clinic, setClinic]     = useState('');
+  const [clinic, setClinic] = useState('');
 
   const [locLat, setLocLat] = useState<number | null>(null);
   const [locLng, setLocLng] = useState<number | null>(null);
@@ -99,7 +99,16 @@ export default function RegisterPage() {
     }
 
     // Check if phone is already registered (using data from backend)
-    const existing = data?.doctor;
+    let existing = data?.doctor;
+
+    if (!existing && data?.valid) {
+      const { data: fetchedDoc } = await supabase
+        .from('doctor_registrations')
+        .select('id, name, surname, specialty, status')
+        .eq('phone', phone)
+        .maybeSingle();
+      existing = fetchedDoc;
+    }
 
     setLoading(false);
 
@@ -177,7 +186,7 @@ export default function RegisterPage() {
         <div className="auth-logo">
           <div className="auth-logo-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
           </div>
           <div className="auth-logo-name">tabeebi<span>+</span></div>
@@ -254,7 +263,7 @@ export default function RegisterPage() {
               {loading ? 'Doğrulanıyor…' : 'Doğrula ve Devam Et'}
             </button>
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <button className="auth-link" onClick={() => { setOtp(['','','','']); setStep('phone'); }}>
+              <button className="auth-link" onClick={() => { setOtp(['', '', '', '']); setStep('phone'); }}>
                 ← Numarayı Değiştir
               </button>
               <span style={{ color: 'var(--ink-300)', margin: '0 10px' }}>·</span>

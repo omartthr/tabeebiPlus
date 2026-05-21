@@ -15,8 +15,8 @@ export default function ConfirmedScreen({ route, navigation }: Props) {
   const { booking } = route.params;
   const { t } = useTranslation();
 
-  const goHome = () => navigation.navigate('MainTabs');
-  const goAppts = () => navigation.navigate('MainTabs');
+  const goHome = () => navigation.navigate('MainTabs', { screen: 'Home' });
+  const goAppts = () => navigation.navigate('MainTabs', { screen: 'Appointments' });
 
   return (
     <SafeAreaView style={styles.screen}>

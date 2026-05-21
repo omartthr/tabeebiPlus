@@ -1,7 +1,7 @@
 'use client';
 import { useRequireDoctor } from '@/hooks/useDoctor';
 import { supabase } from '@/lib/supabase';
-import { ISearch, IPhone, IChevR, Avatar } from '@/components/ui/icons';
+import { ISearch, IPhone, IChevR, Avatar, IX, StatusBadge } from '@/components/ui/icons';
 import { useState, useEffect, useMemo } from 'react';
 
 interface Patient {
@@ -17,11 +17,94 @@ function toInitials(name: string) {
   return name.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase();
 }
 
+function PatientDrawer({ patient, doctor, onClose }: { patient: Patient; doctor: any; onClose: () => void }) {
+  const [apts, setApts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let q = supabase
+      .from('appointments')
+      .select('id, date, time, reason, status, notes, pdf_url')
+      .eq('patient_phone', patient.phone)
+      .order('date', { ascending: false });
+
+    q.then(({ data }) => {
+      setApts(data ?? []);
+      setLoading(false);
+    });
+  }, [patient.phone]);
+
+  return (
+    <>
+      <div className="drawer-overlay" onClick={onClose} />
+      <div className="drawer">
+        <div className="drawer-head">
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.3px' }}>Hasta Detayı</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-500)', fontWeight: 500, marginTop: 2 }}>Tıbbi geçmiş ve randevu kayıtları</div>
+          </div>
+          <button className="icon-btn" onClick={onClose}><IX size={18} /></button>
+        </div>
+        <div className="drawer-body" style={{ padding: '0 24px 24px' }}>
+          <div className="detail-section">
+            <div className="detail-label">Hasta Kartı</div>
+            <div className="detail-card" style={{ display: 'flex', alignItems: 'center', gap: '14px', background: 'var(--ink-50)', padding: '16px', borderRadius: '14px' }}>
+              <Avatar initials={toInitials(patient.name)} hue={patient.avatar_hue} size={48} rounded={14} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-900)' }}>{patient.name}</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-500)', marginTop: 2, fontWeight: 500 }}>
+                  📞 {patient.phone}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="detail-section">
+            <div className="detail-label">Randevu Geçmişi</div>
+            {loading ? (
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--ink-400)', fontWeight: 600 }}>Yükleniyor...</div>
+            ) : apts.length === 0 ? (
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--ink-400)', fontWeight: 600 }}>Kayıt bulunamadı.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {apts.map(a => (
+                  <div key={a.id} className="detail-card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', border: '1.5px solid var(--ink-100)', borderRadius: '14px', background: 'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-700)' }}>
+                        📅 {a.date.includes('-') ? new Date(a.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : a.date} · {a.time}
+                      </div>
+                      <StatusBadge status={a.status} />
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>
+                      🩺 Şikayet: {a.reason ?? '-'}
+                    </div>
+                    {a.notes && (
+                      <div style={{ fontSize: 12, color: 'var(--ink-600)', background: 'var(--ink-50)', padding: '10px 12px', borderRadius: '10px', fontWeight: 500, lineHeight: 1.5 }}>
+                        Not: {a.notes}
+                      </div>
+                    )}
+                    {a.pdf_url && (
+                      <a href={a.pdf_url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline" style={{ marginTop: 4, height: 36, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center', textDecoration: 'none' }}>
+                        📄 Tıbbi Raporu Görüntüle (PDF)
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function PatientsPage() {
   const { doctor, loading } = useRequireDoctor();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [fetching, setFetching] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     if (!doctor) return;
@@ -113,7 +196,7 @@ export default function PatientsPage() {
           )}
 
           {!fetching && filtered.map(p => (
-            <div key={p.id} className="patient-row" style={{
+            <div key={p.id} className="patient-row" onClick={() => setSelectedPatient(p)} style={{
               display: 'grid',
               gridTemplateColumns: '1.5fr 1.5fr 1.5fr 1.2fr 40px',
               alignItems: 'center',
@@ -154,6 +237,14 @@ export default function PatientsPage() {
           )}
         </div>
       </div>
+
+      {selectedPatient && (
+        <PatientDrawer
+          patient={selectedPatient}
+          doctor={doctor}
+          onClose={() => setSelectedPatient(null)}
+        />
+      )}
 
       <style jsx>{`
         .patient-row:hover { background-color: var(--ink-50); }

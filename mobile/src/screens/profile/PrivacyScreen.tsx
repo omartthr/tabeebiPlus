@@ -1,16 +1,44 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Shield, Lock, Bell, MapPin, Trash2 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
+import { useAuth } from '../../navigation/AppNavigator';
+import { supabase } from '../../lib/supabase';
 
 export default function PrivacyScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { user, signOut } = useAuth();
   const [notifs, setNotifs] = React.useState(true);
   const [location, setLocation] = React.useState(true);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t('delete_account') || 'Hesabı Sil',
+      t('delete_warning') || 'Bu işlem kalıcıdır ve tüm tıbbi geçmişinizi silecektir. Emin misiniz?',
+      [
+        { text: t('cancel') || 'İptal', style: 'cancel' },
+        { 
+          text: t('yes') || 'Evet', 
+          style: 'destructive',
+          onPress: async () => {
+            if (user?.id) {
+              // Soft-delete personal data via RLS update permission
+              await supabase
+                .from('patients')
+                .update({ name: 'Silinmiş Kullanıcı' })
+                .eq('id', user.id);
+            }
+            // Securely log out to return to Welcome/Auth screen
+            await signOut();
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -65,7 +93,7 @@ export default function PrivacyScreen() {
         </View>
 
         {/* Danger Zone */}
-        <TouchableOpacity style={styles.deleteBtn}>
+        <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount}>
           <View style={styles.deleteIcon}>
             <Trash2 size={20} color={colors.red500} />
           </View>

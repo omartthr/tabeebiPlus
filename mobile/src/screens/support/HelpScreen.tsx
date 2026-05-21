@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   faqItem: { padding: 18, borderBottomWidth: 1, borderBottomColor: colors.ink100 },
   faqHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   faqQ: { fontSize: 14, fontWeight: '700', color: colors.ink900, flex: 1 },
-  faqA: { fontSize: 13, color: colors.ink600, fontWeight: '500', lineHeight: 20, marginTop: 14 },
+  faqA: { fontSize: 13, color: colors.ink500, fontWeight: '500', lineHeight: 20, marginTop: 14 },
   aboutCard: { 
     backgroundColor: colors.surface, borderRadius: 24, padding: 20, 
     borderWidth: 1, borderColor: 'rgba(11,31,34,0.03)', ...shadows.card, 

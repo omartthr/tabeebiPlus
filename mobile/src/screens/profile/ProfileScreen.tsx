@@ -53,12 +53,17 @@ export default function ProfileScreen() {
       .eq('status', 'completed')
       .eq('report_uploaded', true);
 
-    const notifCount = NOTIFICATIONS.filter(n => n.unread).length;
+    // Fetch unread notifications
+    const { count: notifCount } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('patient_id', user.id)
+      .eq('unread', true);
 
     setCounts({
       bookings: bookingCount || 0,
       results: resultCount || 0,
-      notifications: notifCount,
+      notifications: notifCount || 0,
     });
   }, [user?.id]);
 

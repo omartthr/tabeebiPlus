@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { IDash, IUsers, IDoc, ISet, Avatar } from '@/components/ui/icons';
+import { IDash, ICal, IUsers, IDoc, IGraph, ISet, Avatar } from '@/components/ui/icons';
 import { getDoctorSession, type DoctorSession } from '@/hooks/useDoctor';
+import { supabase } from '@/lib/supabase';
 
 const NAV = [
-  { href: '/dashboard',    icon: IDash,  label: 'Gösterge Paneli', badge: 3 },
+  { href: '/dashboard',    icon: IDash,  label: 'Gösterge Paneli', badgeKey: 'pending' },
   { href: '/patients',     icon: IUsers, label: 'Hastalar' },
   { href: '/results',      icon: IDoc,   label: 'Sonuçlar' },
   { href: '/profile',      icon: ISet,   label: 'Ayarlar' },
@@ -18,13 +19,29 @@ export default function Sidebar() {
   const [activePath, setActivePath] = useState('');
   const [visible, setVisible] = useState(false);
   const [doctor, setDoctor] = useState<DoctorSession | null>(null);
+  const [pendingBadge, setPendingBadge] = useState<number | null>(null);
 
   useEffect(() => {
     const path = window.location.pathname;
     setActivePath(path);
     const isPanel = !path.startsWith('/auth') && path !== '/';
     setVisible(isPanel);
-    if (isPanel) setDoctor(getDoctorSession());
+    if (isPanel) {
+      const doc = getDoctorSession();
+      setDoctor(doc);
+      if (doc) {
+        // Fetch pending count
+        let q = supabase.from('appointments').select('id').eq('status', 'pending');
+        if (doc.doctors_id) {
+          q = q.or(`doctor_registration_id.eq.${doc.id},doctor_id.eq.${doc.doctors_id}`);
+        } else {
+          q = q.eq('doctor_registration_id', doc.id);
+        }
+        q.then(({ data }) => {
+          if (data && data.length > 0) setPendingBadge(data.length);
+        });
+      }
+    }
   }, []);
 
   if (!visible) return null;
@@ -49,14 +66,15 @@ export default function Sidebar() {
 
       <div className="sb-section-label">Menü</div>
       <nav className="sb-nav">
-        {NAV.map(({ href, icon: Icon, label, badge }) => {
+        {NAV.map(({ href, icon: Icon, label, badgeKey }) => {
           const isActive = activePath === href || (href !== '/dashboard' && activePath.startsWith(href));
+          const displayBadge = badgeKey === 'pending' ? pendingBadge : null;
           return (
             <a key={href} href={href} style={{ textDecoration: 'none' }}>
               <button className={`sb-item${isActive ? ' active' : ''}`}>
                 <Icon size={18} color="currentColor" />
                 {label}
-                {badge && <span className="badge-count">{badge}</span>}
+                {displayBadge && <span className="badge-count">{displayBadge}</span>}
               </button>
             </a>
           );

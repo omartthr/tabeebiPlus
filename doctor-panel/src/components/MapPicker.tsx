@@ -6,9 +6,11 @@ type LatLng = { lat: number; lng: number };
 
 interface Props {
   onChange: (lat: number, lng: number, address: string) => void;
+  initialLat?: number | null;
+  initialLng?: number | null;
 }
 
-export default function MapPicker({ onChange }: Props) {
+export default function MapPicker({ onChange, initialLat, initialLng }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -32,10 +34,18 @@ export default function MapPicker({ onChange }: Props) {
 
       if (cancelled || !containerRef.current) return;
 
-      const map = L.map(containerRef.current).setView([35.4670, 44.3921], 13);
+      const defaultCenter: [number, number] = initialLat && initialLng
+        ? [initialLat, initialLng]
+        : [35.4670, 44.3921];
+
+      const map = L.map(containerRef.current).setView(defaultCenter, 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
       }).addTo(map);
+
+      if (initialLat && initialLng) {
+        markerRef.current = L.marker([initialLat, initialLng]).addTo(map);
+      }
 
       map.on('click', async (e: any) => {
         const { lat, lng } = e.latlng;

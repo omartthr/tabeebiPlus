@@ -9,10 +9,10 @@ export type DoctorSession = {
   name: string;
   surname: string;
   specialty: string;
-  clinic_name: string | null;
-  location_address: string | null;
-  location_lat: number | null;
-  location_lng: number | null;
+  clinic_name?: string | null;
+  location_address?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
   status: 'pending' | 'approved' | 'rejected';
 };
 
@@ -53,7 +53,14 @@ export function useRequireDoctor() {
       .select('id, name, surname, specialty, clinic_name, status, doctors_id, location_address, location_lat, location_lng')
       .eq('id', s.id)
       .maybeSingle()
-      .then(({ data: doc }) => {
+      .then(({ data: doc, error }) => {
+        if (error) {
+          console.error('Session validation error:', error);
+          // Don't clear session on network error, just use local session
+          setDoctor(s);
+          setLoading(false);
+          return;
+        }
         if (!doc) {
           clearDoctorSession();
           window.location.replace('/auth/login');

@@ -66,9 +66,12 @@ export async function POST(req: NextRequest) {
       .eq('id', appointmentId)
       .single();
 
-    // Eğer patient kaydı yoksa (is_registered false demektir) VEYA patient kaydı var ama is_registered false ise
-    const phoneToSend = aptData?.patients?.phone || aptData?.patient_phone;
-    const isRegistered = aptData?.patients?.is_registered ?? false;
+    const patients = Array.isArray(aptData?.patients)
+      ? aptData?.patients[0]
+      : (aptData?.patients as any);
+
+    const phoneToSend = patients?.phone || aptData?.patient_phone;
+    const isRegistered = patients?.is_registered ?? false;
 
     if (phoneToSend && isRegistered === false) {
       console.log(`[WhatsApp] Kayıt dışı hasta tespit edildi, mesaj gönderiliyor: ${phoneToSend}`);

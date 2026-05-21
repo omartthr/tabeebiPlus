@@ -85,7 +85,16 @@ export default function LoginPage() {
     }
 
     // 2. Use doctor data from backend
-    const doc = verifyData?.doctor;
+    let doc = verifyData?.doctor;
+
+    if (!doc) {
+      const { data: fetchedDoc } = await supabase
+        .from('doctor_registrations')
+        .select('id, name, surname, specialty, status')
+        .eq('phone', phone)
+        .maybeSingle();
+      doc = fetchedDoc;
+    }
 
     if (!doc) {
       // Doğrulandı ama kayıt yoksa kayıt sayfasına

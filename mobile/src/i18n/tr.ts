@@ -124,6 +124,8 @@ export default {
   notif_title: 'Bildirimler',
   new_alerts: '{{count}} yeni bildirim',
   mark_all_read: 'Tümünü okundu işaretle',
+  no_notifications: 'Bildirim Bulunmuyor',
+  no_notifications_sub: 'Herhangi bir yeni güncelleme veya randevu uyarınız yok.',
 
   // Results Screen
   my_results_title: 'Sonuçlarım',

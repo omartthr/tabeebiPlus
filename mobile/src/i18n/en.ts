@@ -124,6 +124,8 @@ export default {
   notif_title: 'Notifications',
   new_alerts: '{{count}} new alerts',
   mark_all_read: 'Mark all read',
+  no_notifications: 'No Notifications',
+  no_notifications_sub: 'You have no new updates or appointment reminders.',
 
   // Results Screen
   my_results_title: 'My results',

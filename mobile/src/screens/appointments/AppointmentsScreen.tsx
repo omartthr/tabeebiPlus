@@ -202,7 +202,7 @@ export default function AppointmentsScreen({ navigation }: any) {
             )}
             {tab === 'past' && a.status === 'completed' && (
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Results')}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'Results' })}>
                   <Text style={styles.actionBtnText}>{t('view_result')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => handleReschedule(a)}>
