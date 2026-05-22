@@ -6,6 +6,7 @@ import { AuthStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
 import { supabase } from '../../lib/supabase';
 import TopBar from '../../components/TopBar';
+import Logo from '../../components/Logo';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -47,7 +48,7 @@ export default function LoginScreen({ navigation }: Props) {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Tabeebi+</Text>
+            <Logo variant="light" width={240} height={60} />
             <Text style={styles.subtitle}>Kliniğinize ve randevularınıza ulaşmak için giriş yapın.</Text>
           </View>
 
@@ -92,8 +93,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1, padding: 24, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40 },
-  title: { fontSize: 36, fontWeight: '700', color: colors.teal700, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: colors.ink500, textAlign: 'center', paddingHorizontal: 20 },
+  subtitle: { fontSize: 15, color: colors.ink500, textAlign: 'center', paddingHorizontal: 20, marginTop: 12 },
   inputGroup: { marginBottom: 24 },
   label: { fontSize: 14, fontWeight: '600', color: colors.ink700, marginBottom: 8, marginLeft: 4 },
   input: {

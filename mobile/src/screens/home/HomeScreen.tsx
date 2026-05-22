@@ -14,6 +14,7 @@ import { SPECIALTIES, APPOINTMENTS_UPCOMING } from '../../data';
 import DocAvatar from '../../components/DocAvatar';
 import SpecialtyIcon from '../../components/SpecialtyIcon';
 import DoctorCard from '../../components/DoctorCard';
+import Logo from '../../components/Logo';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -162,13 +163,7 @@ export default function HomeScreen() {
           <Text style={styles.greet}>{greeting},</Text>
           <Text style={styles.name}>{firstName} 👋</Text>
         </View>
-        <View style={styles.brandContainer}>
-          <View style={styles.logoIcon}>
-            <Activity size={20} color={colors.teal700} strokeWidth={2.5} />
-            <Plus size={10} color={colors.teal700} strokeWidth={3} style={styles.plusOverlay} />
-          </View>
-          <Text style={styles.brandText}>Tabeebi+</Text>
-        </View>
+        <Logo variant="light" width={160} height={36} showText={true} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>
@@ -277,10 +272,6 @@ const styles = StyleSheet.create({
   },
   greet: { fontSize: 13, color: colors.ink500, fontWeight: '600' },
   name: { fontSize: 20, fontWeight: '700', color: colors.ink900, letterSpacing: -0.4 },
-  brandContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: colors.teal50, alignItems: 'center', justifyContent: 'center' },
-  plusOverlay: { position: 'absolute', top: 6, right: 6 },
-  brandText: { fontSize: 15, fontWeight: '800', color: colors.teal700, letterSpacing: -0.5 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 24, gap: 0 },
 

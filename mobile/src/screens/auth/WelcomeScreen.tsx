@@ -8,6 +8,7 @@ import { BadgeCheck, Shield, Clock, ChevronDown, Check, X } from 'lucide-react-n
 import { useTranslation } from 'react-i18next';
 import { AuthStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
+import Logo from '../../components/Logo';
 import { changeLanguage, ALL_LANGUAGES } from '../../i18n';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
@@ -28,14 +29,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         {/* Header (Logo + Language Pill Selector) */}
         <View style={styles.headerRow}>
-          <View style={styles.logoRow}>
-            <View style={styles.logoIcon}>
-              <Text style={styles.logoEmoji}>✦</Text>
-            </View>
-            <Text style={styles.logoText}>
-              Tabeebi<Text style={styles.logoPlus}>+</Text>
-            </Text>
-          </View>
+          <Logo variant="dark" width={220} height={50} />
 
           {/* Language Selector Dropdown Button */}
           <TouchableOpacity
@@ -166,25 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  logoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  logoEmoji: { fontSize: 18, color: '#fff' },
-  logoText: { fontSize: 22, fontWeight: '700', color: '#fff', letterSpacing: -0.4 },
-  logoPlus: { color: '#e6a63b' },
-
   langSelectorBtn: {
     flexDirection: 'row',
     alignItems: 'center',

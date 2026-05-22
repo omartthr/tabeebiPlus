@@ -15,6 +15,7 @@ import StatusBadge from '../../components/StatusBadge';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../navigation/AppNavigator';
 import CustomAlert from '../../components/CustomAlert';
+import Logo from '../../components/Logo';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -205,7 +206,7 @@ export default function HelpScreen({ navigation }: Props) {
             <View style={styles.aboutCard}>
               <View style={styles.aboutHeader}>
                 <Info size={20} color={colors.teal700} />
-                <Text style={styles.aboutTitle}>Tabeebi+</Text>
+                <Logo variant="light" width={140} height={32} showText={true} />
               </View>
               <Text style={styles.aboutText}>
                 {t('about_us_text')}

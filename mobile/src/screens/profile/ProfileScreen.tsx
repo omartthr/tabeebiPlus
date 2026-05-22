@@ -16,6 +16,7 @@ import DocAvatar from '../../components/DocAvatar';
 import { supabase } from '../../lib/supabase';
 import { changeLanguage, ALL_LANGUAGES } from '../../i18n';
 import { useRTL } from '../../context/RTLContext';
+import Logo from '../../components/Logo';
 
 type Nav = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList>,
@@ -179,7 +180,10 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Tabeebi+ · v1.0.0</Text>
+        <View style={{ alignItems: 'center', marginTop: 10 }}>
+          <Logo variant="light" width={120} height={28} showText={true} />
+          <Text style={[styles.version, { marginTop: 4 }]}>v1.0.0</Text>
+        </View>
       </View>
 
       {/* Edit Modal */}
