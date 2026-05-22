@@ -231,12 +231,12 @@ export default function HomeScreen() {
         {/* Recommended Doctors section */}
         {recommendedDoctors.length > 0 && (
           <View style={{ marginTop: 24, paddingBottom: 16 }}>
-            <View style={styles.sectionHeader}>
+            <View style={styles.recsHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Sparkles size={18} color={colors.teal700} strokeWidth={2.5} />
-                <Text style={styles.sectionTitle}>Sizin İçin Önerilen Hekimler</Text>
+                <Text style={styles.sectionTitle}>{t('recommended_doctors')}</Text>
               </View>
-              <Text style={styles.sectionSub}>Muayene geçmişinize ve en yüksek puanlı uzmanlara göre</Text>
+              <Text style={styles.recsSub}>{t('recommended_subtitle')}</Text>
             </View>
             <View style={styles.recsList}>
               {recommendedDoctors.map(doc => (
@@ -334,6 +334,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.ink900, letterSpacing: -0.2 },
   sectionSub: { fontSize: 13, fontWeight: '500', color: colors.ink400 },
+  recsHeader: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginBottom: 14,
+  },
+  recsSub: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.ink400,
+  },
 
   grid: {
     flexDirection: 'row',

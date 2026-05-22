@@ -37,7 +37,7 @@ export default function ResultsScreen() {
     const mapped: Result[] = (data ?? []).map((a: any) => ({
       id: a.id,
       date: a.date,
-      doctorName: a.doctors?.name ?? 'Bilinmeyen Doktor',
+      doctorName: a.doctors?.name ?? t('unknown_doctor'),
       specialty: a.doctors?.specialty ?? '-',
       aiSummary: a.ai_summary ?? null,
       pdfUrl: a.pdf_url ?? null,
@@ -69,7 +69,7 @@ export default function ResultsScreen() {
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('my_results_title')}</Text>
-        <Text style={styles.subtitle}>{results.length} rapor mevcut</Text>
+        <Text style={styles.subtitle}>{t('reports_available', { count: results.length })}</Text>
       </View>
       <ScrollView
         style={styles.scroll}
@@ -83,7 +83,7 @@ export default function ResultsScreen() {
           </View>
         ) : results.length === 0 ? (
           <View style={{ padding: 40, alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, color: colors.ink500 }}>Henüz yüklenmiş rapor yok.</Text>
+            <Text style={{ fontSize: 14, color: colors.ink500 }}>{t('no_reports_yet')}</Text>
           </View>
         ) : results.map(r => {
           const open = openId === r.id;
@@ -113,19 +113,19 @@ export default function ResultsScreen() {
 
                   {r.aiSummary ? (
                     <>
-                      <Text style={styles.expandLabel}>AI Özeti</Text>
+                      <Text style={styles.expandLabel}>{t('ai_summary')}</Text>
                       <View style={styles.summaryBox}>
                         <Text style={styles.summaryText}>{r.aiSummary}</Text>
                       </View>
                     </>
                   ) : (
-                    <Text style={{ fontSize: 13, color: colors.ink400, marginBottom: 10 }}>Özet henüz oluşturulmadı.</Text>
+                    <Text style={{ fontSize: 13, color: colors.ink400, marginBottom: 10 }}>{t('summary_not_ready')}</Text>
                   )}
 
                   {r.pdfUrl && (
                     <TouchableOpacity style={styles.pdfBtn} onPress={() => Linking.openURL(r.pdfUrl!)} activeOpacity={0.8}>
                       <ExternalLink size={16} color={colors.teal700} />
-                      <Text style={styles.pdfBtnText}>Raporu Görüntüle (PDF)</Text>
+                      <Text style={styles.pdfBtnText}>{t('view_report_pdf')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>

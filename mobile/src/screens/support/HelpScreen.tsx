@@ -96,7 +96,7 @@ export default function HelpScreen({ navigation }: Props) {
       }
     } catch (error: any) {
       setSent(false);
-      Alert.alert('Hata', error.message || 'Şikayet gönderilemedi.');
+      Alert.alert(t('error'), error.message || t('complaint_failed'));
     }
   };
 
@@ -106,10 +106,10 @@ export default function HelpScreen({ navigation }: Props) {
   };
 
   const FAQS = [
-    { id: 1, q: t('faq_q1', 'Nasıl randevu alabilirim?'), a: t('faq_a1', 'Ana sayfadan istediğiniz uzmanlık alanını seçip, doktorunuzu ve uygun saati belirleyerek randevunuzu kolayca oluşturabilirsiniz.') },
-    { id: 2, q: t('faq_q2', 'Randevumu iptal edebilir miyim?'), a: t('faq_a2', 'Onaylanmamış randevuları serbestçe iptal edebilirsiniz. Ancak onaylanmış randevuların sık iptal edilmesi durumunda hesabınız geçici olarak bloklanabilir.') },
-    { id: 3, q: t('faq_q3', 'Sonuçlarımı nerede görebilirim?'), a: t('faq_a3', '"Sonuçlarım" sekmesinden tüm geçmiş tıbbi raporlarınıza ve AI özetlerinize ulaşabilirsiniz.') },
-    { id: 4, q: t('faq_q4', 'Ödeme nasıl yapılır?'), a: t('faq_a4', 'Hem online (kart veya Zain Cash) hem de klinikte nakit ödeme seçeneklerimiz mevcuttur.') },
+    { id: 1, q: t('faq_q1'), a: t('faq_a1') },
+    { id: 2, q: t('faq_q2'), a: t('faq_a2') },
+    { id: 3, q: t('faq_q3'), a: t('faq_a3') },
+    { id: 4, q: t('faq_q4'), a: t('faq_a4') },
   ];
 
   return (
@@ -180,13 +180,13 @@ export default function HelpScreen({ navigation }: Props) {
                 <MessageSquare size={24} color={colors.teal700} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.complaintTitle}>{t('submit_complaint_title', 'Bize Ulaşın / Şikayet Bildir')}</Text>
-                <Text style={styles.complaintSub}>{t('submit_complaint_sub', 'Sorunlarınızı doğrudan bize iletin.')}</Text>
+                <Text style={styles.complaintTitle}>{t('submit_complaint_title')}</Text>
+                <Text style={styles.complaintSub}>{t('submit_complaint_sub')}</Text>
               </View>
               <ChevronDown size={20} color={colors.ink400} style={{ transform: [{ rotate: '-90deg' }] }} />
             </TouchableOpacity>
 
-            <Text style={styles.sectionLabel}>{t('faqs', 'SIKÇA SORULAN SORULAR')}</Text>
+            <Text style={styles.sectionLabel}>{t('faqs')}</Text>
             <View style={styles.faqList}>
               {FAQS.map(f => (
                 <TouchableOpacity key={f.id} style={styles.faqItem} onPress={() => toggleFaq(f.id)} activeOpacity={0.7}>
@@ -201,14 +201,14 @@ export default function HelpScreen({ navigation }: Props) {
               ))}
             </View>
 
-            <Text style={styles.sectionLabel}>{t('about_us_label', 'BİZ KİMİZ')}</Text>
+            <Text style={styles.sectionLabel}>{t('about_us_label')}</Text>
             <View style={styles.aboutCard}>
               <View style={styles.aboutHeader}>
                 <Info size={20} color={colors.teal700} />
                 <Text style={styles.aboutTitle}>Tabeebi+</Text>
               </View>
               <Text style={styles.aboutText}>
-                {t('about_us_text', 'Tabeebi+, Kerkük genelinde uzman doktorlara kolayca ulaşmanızı sağlayan modern bir sağlık platformudur. Amacımız, hasta ve doktor arasındaki iletişimi dijitalleştirerek sağlık süreçlerini hızlandırmaktır.')}
+                {t('about_us_text')}
               </Text>
             </View>
 
@@ -216,7 +216,7 @@ export default function HelpScreen({ navigation }: Props) {
             {loading ? (
               <ActivityIndicator color={colors.teal700} style={{ marginTop: 20 }} />
             ) : tickets.length === 0 ? (
-              <Text style={styles.emptyText}>Henüz bir şikayetiniz yok.</Text>
+              <Text style={styles.emptyText}>{t('no_complaints_yet')}</Text>
             ) : tickets.map(ticket => (
               <View key={ticket.id} style={styles.ticketCard}>
                 <View style={styles.ticketTop}>
@@ -236,12 +236,12 @@ export default function HelpScreen({ navigation }: Props) {
       <CustomAlert
         visible={alertVisible}
         title={t('ticket_submitted')}
-        message={t('complaint_success_msg', 'Şikayetiniz başarıyla iletildi. En kısa sürede inceleyip size dönüş yapacağız.')}
+        message={t('complaint_success_msg')}
         onConfirm={() => {
           setAlertVisible(false);
           setView('main');
         }}
-        confirmText={t('ok', 'Tamam')}
+        confirmText={t('ok')}
       />
     </SafeAreaView>
   );

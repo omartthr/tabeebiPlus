@@ -129,13 +129,13 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
           <Text style={styles.sectionLabel}>{t('working_hours')}</Text>
           <View style={styles.hoursCard}>
             {[
-              { id: 'mon', label: 'Pazartesi' },
-              { id: 'tue', label: 'Salı' },
-              { id: 'wed', label: 'Çarşamba' },
-              { id: 'thu', label: 'Perşembe' },
-              { id: 'fri', label: 'Cuma' },
-              { id: 'sat', label: 'Cumartesi' },
-              { id: 'sun', label: 'Pazar' },
+              { id: 'mon', label: t('day_mon') },
+              { id: 'tue', label: t('day_tue') },
+              { id: 'wed', label: t('day_wed') },
+              { id: 'thu', label: t('day_thu') },
+              { id: 'fri', label: t('day_fri') },
+              { id: 'sat', label: t('day_sat') },
+              { id: 'sun', label: t('day_sun') },
             ].map(d => {
               const text = getHoursText(d.id);
               const isClosed = text === t('hours_closed');
@@ -161,7 +161,7 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
                   <Text style={styles.locationCoords}>
                     {Number(doctor.location_lat).toFixed(5)}, {Number(doctor.location_lng).toFixed(5)}
                   </Text>
-                  <Text style={styles.locationOpenText}>Google Maps'te görüntüle →</Text>
+                  <Text style={styles.locationOpenText}>{t('view_on_maps')}</Text>
                 </View>
                 <ExternalLink size={18} color={colors.teal700} />
               </TouchableOpacity>
@@ -174,7 +174,7 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
             </View>
           ) : (
             <View style={[styles.locationCard, { padding: 16 }]}>
-              <Text style={{ fontSize: 13, color: colors.ink400 }}>Konum bilgisi bulunmuyor.</Text>
+              <Text style={{ fontSize: 13, color: colors.ink400 }}>{t('no_location_info')}</Text>
             </View>
           )}
         </View>

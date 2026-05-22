@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Smile, Eye, Heart, Brain, Bone, Stethoscope,
-  Baby, UserRound, Layers, Wind,
+  Baby, UserRound, Layers, Wind, FlaskConical,
 } from 'lucide-react-native';
 
 interface Props {
@@ -23,6 +23,7 @@ export default function SpecialtyIcon({ kind, size = 26, color = '#0d7377' }: Pr
     case 'user-round':   return <UserRound {...props} />;
     case 'layers':       return <Layers {...props} />;
     case 'wind':         return <Wind {...props} />;
+    case 'flask':        return <FlaskConical {...props} />;
     default:             return <Stethoscope {...props} />;
   }
 }

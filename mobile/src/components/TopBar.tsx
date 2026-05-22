@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { colors } from '../theme';
+import { useRTL } from '../context/RTLContext';
 
 interface Props {
   title: string;
@@ -10,17 +11,22 @@ interface Props {
 }
 
 export default function TopBar({ title, onBack, right }: Props) {
+  const { isRTL } = useRTL();
+
+  // In RTL mode: back arrow flips to ChevronRight, layout reverses
+  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isRTL && styles.containerRTL]}>
       <View style={styles.side}>
         {onBack && (
           <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-            <ChevronLeft size={20} color={colors.ink900} />
+            <BackIcon size={20} color={colors.ink900} />
           </TouchableOpacity>
         )}
       </View>
       <Text style={styles.title} numberOfLines={1}>{title}</Text>
-      <View style={[styles.side, styles.rightSide]}>
+      <View style={[styles.side, isRTL ? styles.leftSide : styles.rightSide]}>
         {right}
       </View>
     </View>
@@ -35,11 +41,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: colors.bg,
   },
+  containerRTL: {
+    flexDirection: 'row-reverse',
+  },
   side: {
     width: 44,
   },
   rightSide: {
     alignItems: 'flex-end',
+  },
+  leftSide: {
+    alignItems: 'flex-start',
   },
   backBtn: {
     width: 40,

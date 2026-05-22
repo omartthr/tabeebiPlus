@@ -55,14 +55,14 @@ export default function AppointmentsScreen({ navigation }: any) {
         .eq('id', ratingApt.id);
 
       if (error) {
-        Alert.alert('Hata', 'Değerlendirme kaydedilemedi: ' + error.message);
+        Alert.alert(t('error'), t('rating_save_error') + error.message);
       } else {
         setRateModalVisible(false);
         fetchApts();
-        Alert.alert('Teşekkürler', 'Değerlendirmeniz başarıyla iletildi!');
+        Alert.alert(t('thanks'), t('rating_success'));
       }
     } catch (err: any) {
-      Alert.alert('Hata', 'Bir sorun oluştu: ' + err.message);
+      Alert.alert(t('error'), t('something_went_wrong') + err.message);
     }
     setSubmittingRating(false);
   };
@@ -82,7 +82,7 @@ export default function AppointmentsScreen({ navigation }: any) {
         const dayMatch = DAYS.find(d => d.key === a.date);
         return {
           id: a.id,
-          doctor: a.doctors?.name || 'Unknown',
+          doctor: a.doctors?.name || t('unknown_doctor'),
           specialty: a.doctors?.specialty || '-',
           date: dayMatch ? dayMatch.full : a.date,
           time: a.time,
@@ -160,7 +160,7 @@ export default function AppointmentsScreen({ navigation }: any) {
         } else {
           setAlert({
             visible: true,
-            title: 'Hata',
+            title: t('error'),
             message: error.message,
             type: 'danger',
             onConfirm: () => setAlert(p => ({ ...p, visible: false })),
@@ -245,11 +245,11 @@ export default function AppointmentsScreen({ navigation }: any) {
               <View style={styles.actions}>
                 {a.rating && a.rating > 0 ? (
                   <View style={styles.ratedBadge}>
-                    <Text style={styles.ratedText}>⭐ {a.rating} / 5 Puan Verildi</Text>
+                    <Text style={styles.ratedText}>{t('rated_x_out_of_5', { rating: a.rating })}</Text>
                   </View>
                 ) : (
                   <TouchableOpacity style={[styles.actionBtn, styles.rateBtn]} onPress={() => handleOpenRateModal(a)}>
-                    <Text style={styles.rateBtnText}>⭐ Puan Ver</Text>
+                    <Text style={styles.rateBtnText}>{t('rate_btn')}</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'Results' })}>
@@ -284,8 +284,8 @@ export default function AppointmentsScreen({ navigation }: any) {
       >
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Doktoru Değerlendir</Text>
-            <Text style={styles.modalSub}>{ratingApt?.doctor} ile olan randevunuzu puanlayın.</Text>
+            <Text style={styles.modalTitle}>{t('rate_doctor_title')}</Text>
+            <Text style={styles.modalSub}>{t('rate_doctor_sub', { doctor: ratingApt?.doctor })}</Text>
 
             {/* Yıldız Seçimi */}
             <View style={styles.starsRow}>
@@ -301,7 +301,7 @@ export default function AppointmentsScreen({ navigation }: any) {
             {/* Yorum Input */}
             <TextInput
               style={styles.reviewInput}
-              placeholder="Doktor ve muayene hakkında yorumunuzu yazın (isteğe bağlı)..."
+              placeholder={t('rate_doctor_placeholder')}
               placeholderTextColor={colors.ink400}
               multiline
               numberOfLines={4}
@@ -316,7 +316,7 @@ export default function AppointmentsScreen({ navigation }: any) {
                 onPress={() => setRateModalVisible(false)}
                 disabled={submittingRating}
               >
-                <Text style={styles.cancelBtnText}>Vazgeç</Text>
+                <Text style={styles.cancelBtnText}>{t('cancel_btn_text')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalSubmitBtn]}
@@ -324,7 +324,7 @@ export default function AppointmentsScreen({ navigation }: any) {
                 disabled={submittingRating}
               >
                 <Text style={styles.submitBtnText}>
-                  {submittingRating ? 'Kaydediliyor...' : 'Gönder'}
+                  {submittingRating ? t('saving') : t('submit_btn_text')}
                 </Text>
               </TouchableOpacity>
             </View>

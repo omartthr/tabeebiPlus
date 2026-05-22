@@ -1,9 +1,11 @@
 import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Calendar, FlaskConical, Bell, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../theme';
 import { TabParamList } from '../types/navigation';
+import { useRTL } from '../context/RTLContext';
 import HomeScreen from '../screens/home/HomeScreen';
 import AppointmentsScreen from '../screens/appointments/AppointmentsScreen';
 import ResultsScreen from '../screens/results/ResultsScreen';
@@ -14,6 +16,8 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function MainTabNavigator() {
   const { t } = useTranslation();
+  const { isRTL } = useRTL();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -27,12 +31,15 @@ export default function MainTabNavigator() {
           paddingBottom: 20,
           paddingTop: 8,
           height: 70,
+          // Flip the tab bar inner content direction for RTL
+          flexDirection: isRTL ? 'row-reverse' : 'row',
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          writingDirection: isRTL ? 'rtl' : 'ltr',
         },
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color }) => {
           const icons: Record<string, React.ReactNode> = {
             Home:          <Home size={24} color={color} />,
             Appointments:  <Calendar size={24} color={color} />,
@@ -44,11 +51,11 @@ export default function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('home') }} />
-      <Tab.Screen name="Appointments" component={AppointmentsScreen} options={{ tabBarLabel: t('bookings') }} />
-      <Tab.Screen name="Results" component={ResultsScreen} options={{ tabBarLabel: t('results') }} />
+      <Tab.Screen name="Home"          component={HomeScreen}          options={{ tabBarLabel: t('home') }} />
+      <Tab.Screen name="Appointments"  component={AppointmentsScreen}  options={{ tabBarLabel: t('bookings') }} />
+      <Tab.Screen name="Results"       component={ResultsScreen}       options={{ tabBarLabel: t('results') }} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: t('alerts') }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: t('profile') }} />
+      <Tab.Screen name="Profile"       component={ProfileScreen}       options={{ tabBarLabel: t('profile') }} />
     </Tab.Navigator>
   );
 }

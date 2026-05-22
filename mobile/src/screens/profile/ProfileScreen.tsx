@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Calendar, FileText, Bell, HelpCircle, Shield, MessageCircle, ChevronRight, LogOut, Pencil, X } from 'lucide-react-native';
+import { Calendar, FileText, Bell, HelpCircle, Shield, Globe, ChevronRight, ChevronLeft, LogOut, Pencil, X, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -14,7 +14,8 @@ import { useAuth } from '../../navigation/AppNavigator';
 import { colors, shadows } from '../../theme';
 import DocAvatar from '../../components/DocAvatar';
 import { supabase } from '../../lib/supabase';
-import { NOTIFICATIONS } from '../../data';
+import { changeLanguage, ALL_LANGUAGES } from '../../i18n';
+import { useRTL } from '../../context/RTLContext';
 
 type Nav = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList>,
@@ -25,6 +26,8 @@ export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const { user, signOut, updateUser } = useAuth();
   const { t, i18n } = useTranslation();
+  const { isRTL } = useRTL();
+  const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
   const [refreshing, setRefreshing] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [newName, setNewName] = useState(user?.name || '');
@@ -81,9 +84,14 @@ export default function ProfileScreen() {
 
   const initials = (user?.name || 'Ahmed Rubaie').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'tr' : 'en';
-    i18n.changeLanguage(newLang);
+  const [langModalVisible, setLangModalVisible] = useState(false);
+
+  const currentLangMeta = ALL_LANGUAGES.find(l => l.code === (i18n.language || 'en').slice(0, 2))
+    ?? ALL_LANGUAGES[0];
+
+  const handleLangSelect = async (code: string) => {
+    setLangModalVisible(false);
+    await changeLanguage(code);
   };
 
   const onRefresh = useCallback(async () => {
@@ -137,7 +145,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuLabel}>{m.label}</Text>
                 <Text style={styles.menuSub}>{m.sub}</Text>
               </View>
-              <ChevronRight size={18} color={colors.ink300} />
+              <ArrowIcon size={18} color={colors.ink300} />
             </TouchableOpacity>
           ))}
         </View>
@@ -146,8 +154,8 @@ export default function ProfileScreen() {
         <View style={styles.menuCard}>
           {[
             { Icon: HelpCircle,    label: t('help_center'),       onPress: () => navigation.navigate('Help') },
-            { Icon: Shield,        label: t('privacy'), onPress: () => navigation.navigate('Privacy') },
-            { Icon: MessageCircle, label: t('language'),           right: i18n.language === 'tr' ? t('turkish') : t('english'), onPress: toggleLanguage },
+            { Icon: Shield,        label: t('privacy'),            onPress: () => navigation.navigate('Privacy') },
+            { Icon: Globe,         label: t('language'),           right: currentLangMeta.nativeLabel, onPress: () => setLangModalVisible(true) },
           ].map((m, i, arr) => (
             <TouchableOpacity
               key={i}
@@ -160,7 +168,7 @@ export default function ProfileScreen() {
               </View>
               <Text style={[styles.menuLabel, { flex: 1 }]}>{m.label}</Text>
               {m.right && <Text style={styles.menuRight}>{m.right}</Text>}
-              <ChevronRight size={18} color={colors.ink300} />
+              <ArrowIcon size={18} color={colors.ink300} />
             </TouchableOpacity>
           ))}
         </View>
@@ -210,6 +218,55 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
+      </Modal>
+
+      {/* Language Selection Modal */}
+      <Modal visible={langModalVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setLangModalVisible(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('language')}</Text>
+              <TouchableOpacity onPress={() => setLangModalVisible(false)}>
+                <X size={24} color={colors.ink900} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ gap: 8 }}>
+              {ALL_LANGUAGES.map((lang) => {
+                const isSelected = currentLangMeta.code === lang.code;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[styles.langRow, isSelected && styles.langRowActive]}
+                    onPress={() => handleLangSelect(lang.code)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={styles.langFlag}>{lang.flag}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.langNative, isSelected && styles.langNativeActive]}>
+                        {lang.nativeLabel}
+                      </Text>
+                      <Text style={styles.langEnglish}>{lang.label}</Text>
+                    </View>
+                    {isSelected && (
+                      <View style={styles.langCheck}>
+                        <Check size={14} color="#fff" strokeWidth={3} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={styles.langNote}>
+              {t('language')} · EN | TR | العربية | کوردی
+            </Text>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
@@ -283,4 +340,39 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', ...shadows.button
   },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  // Language modal
+  langRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: colors.bg,
+    borderWidth: 1.5,
+    borderColor: colors.ink100,
+  },
+  langRowActive: {
+    borderColor: colors.teal700,
+    backgroundColor: colors.teal50,
+  },
+  langFlag: { fontSize: 24 },
+  langNative: { fontSize: 16, fontWeight: '700', color: colors.ink900 },
+  langNativeActive: { color: colors.teal700 },
+  langEnglish: { fontSize: 12, color: colors.ink400, fontWeight: '500', marginTop: 1 },
+  langCheck: {
+    width: 26,
+    height: 26,
+    borderRadius: 99,
+    backgroundColor: colors.teal700,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langNote: {
+    marginTop: 16,
+    textAlign: 'center',
+    fontSize: 11,
+    color: colors.ink400,
+    fontWeight: '500',
+  },
 });

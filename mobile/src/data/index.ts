@@ -88,7 +88,7 @@ export interface Day {
 
 export const SPECIALTIES: Specialty[] = [
   { id: 'dental', name: 'Dental', sub: 'Active (Kerkük)', icon: 'tooth', tint: '#eaf5f5', accent: '#0d7377', dbNames: ['Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti'] },
-  { id: 'general', name: 'General', sub: 'Active (Kerkük)', icon: 'stethoscope', tint: '#d4ecec', accent: '#0a5d60', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji'] },
+  { id: 'general', name: 'Laboratories', sub: 'Active (Kerkük)', icon: 'flask', tint: '#d4ecec', accent: '#0a5d60', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji', 'Laboratuvar', 'Tıbbi Laboratuvar', 'Tıbbi Analiz'] },
   { id: 'obgyn', name: 'OB-GYN', sub: 'Coming Soon', icon: 'user-round', tint: '#f5e1ec', accent: '#8a2a64', disabled: true },
   { id: 'derm', name: 'Dermatology', sub: 'Coming Soon', icon: 'layers', tint: '#fbefe2', accent: '#a5622b', disabled: true },
   { id: 'pulmo', name: 'Pulmonary', sub: 'Coming Soon', icon: 'wind', tint: '#e3edf0', accent: '#3d6a78', disabled: true },
@@ -100,20 +100,20 @@ export const SPECIALTIES: Specialty[] = [
 ];
 
 export const DOCTORS: Doctor[] = [
-  { id: 'd1', name: 'Dr. Layla (Prototip)', specialty: 'Dental · Orthodontist', rating: 4.9, reviews: 412, price: 35000, today: true, exp: '12 yrs', loc: 'Al-Mansour Clinic, Baghdad', initials: 'LJ', hue: 175 },
-  { id: 'd2', name: 'Dr. Omar (Prototip)', specialty: 'Dental · Oral Surgery', rating: 4.8, reviews: 287, price: 50000, today: true, exp: '9 yrs', loc: 'Tabeebi Clinic, Karrada', initials: 'OK', hue: 190 },
+  { id: 'd1', name: 'Dr. Layla (Prototip)', specialty: 'Dental · Orthodontist', rating: 4.9, reviews: 412, price: 35000, today: true, exp: '12 yrs', loc: 'Al-Nasr Clinic, Kirkuk', initials: 'LJ', hue: 175 },
+  { id: 'd2', name: 'Dr. Omar (Prototip)', specialty: 'Dental · Oral Surgery', rating: 4.8, reviews: 287, price: 50000, today: true, exp: '9 yrs', loc: 'Tabeebi Clinic, Shorja', initials: 'OK', hue: 190 },
   { id: 'd3', name: 'Dr. Ruqaya (Prototip)', specialty: 'Dental · Pediatric Dent.', rating: 4.7, reviews: 198, price: 25000, today: false, exp: '7 yrs', loc: 'Al-Waha Health Center', initials: 'RH', hue: 40 },
 ];
 
 export const APPOINTMENTS_UPCOMING: Appointment[] = [
   {
     id: 'a1', doctor: 'Dr. Layla (Prototip)', specialty: 'Dental · Orthodontist',
-    date: 'Tomorrow', time: '10:30 AM', status: 'confirmed', clinic: 'Al-Mansour Clinic',
+    date: 'Tomorrow', time: '10:30 AM', status: 'confirmed', clinic: 'Al-Nasr Clinic',
     initials: 'LJ', hue: 175, price: 35000,
   },
   {
     id: 'a2', doctor: 'Dr. Omar (Prototip)', specialty: 'Dental · Oral Surgery',
-    date: 'Apr 28', time: '3:00 PM', status: 'pending', clinic: 'Zayouna Private',
+    date: 'Apr 28', time: '3:00 PM', status: 'pending', clinic: 'Shorja Private',
     initials: 'OK', hue: 190, price: 60000,
   },
 ];
@@ -145,7 +145,7 @@ export const RESULTS: Result[] = [
 ];
 
 export const NOTIFICATIONS: Notification[] = [
-  { id: 'n1', type: 'reminder', title: 'Appointment tomorrow', body: 'Dr. Layla (Prototip) at 10:30 AM · Al-Mansour Clinic', time: '2h ago', unread: true },
+  { id: 'n1', type: 'reminder', title: 'Appointment tomorrow', body: 'Dr. Layla (Prototip) at 10:30 AM · Al-Nasr Clinic', time: '2h ago', unread: true },
   { id: 'n2', type: 'result', title: 'New result available', body: 'Dr. Omar (Prototip) uploaded your post-extraction report.', time: '5h ago', unread: true },
   { id: 'n3', type: 'confirm', title: 'Appointment confirmed', body: 'Dr. Omar (Prototip) · Apr 28 at 3:00 PM is confirmed.', time: 'Yesterday', unread: false },
   { id: 'n4', type: 'block', title: 'Late-cancel warning (Demo)', body: '2 more late cancels this month will temporarily block booking.', time: '2 days ago', unread: false },

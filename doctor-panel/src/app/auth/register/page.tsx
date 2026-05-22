@@ -3,14 +3,24 @@ import React, { useState, useRef, useCallback, useEffect, type ComponentType } f
 import { supabase } from '@/lib/supabase';
 import { setDoctorSession } from '@/hooks/useDoctor';
 
-const SPECIALTIES = [
-  'Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti',
-  'Kardiyoloji', 'Nöroloji', 'Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Pediatri',
-  'Ortopedi ve Travmatoloji', 'Göz Hastalıkları', 'Kulak Burun Boğaz (KBB)',
-  'Dermatoloji (Cildiye)', 'Kadın Hastalıkları ve Doğum', 'Üroloji',
-  'Psikiyatri', 'Radyoloji', 'Fizik Tedavi ve Rehabilitasyon',
-  'Acil Tıp', 'Gastroenteroloji', 'Endokrinoloji', 'Hematoloji', 'Onkoloji',
-];
+const SPECIALTIES_BY_CATEGORY = {
+  'Dental (Diş Hekimliği)': [
+    'Ortodonti',
+    'Genel Diş Hekimliği',
+    'Cerrahi Diş Hekimliği',
+    'Periodontoloji',
+    'Endodonti',
+  ],
+  'Laboratories (Laboratuvar & Klinikler)': [
+    'Laboratuvar',
+    'Tıbbi Laboratuvar',
+    'Tıbbi Analiz',
+    'Genel Cerrahi',
+    'İç Hastalıkları (Dahiliye)',
+    'Acil Tıp',
+    'Radyoloji',
+  ],
+};
 
 type Step = 'phone' | 'otp' | 'info' | 'location';
 
@@ -302,7 +312,15 @@ export default function RegisterPage() {
                 <label>Uzmanlık Alanı *</label>
                 <select className="field-select" value={specialty} onChange={e => setSpecialty(e.target.value)}>
                   <option value="">Seçiniz…</option>
-                  {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {Object.entries(SPECIALTIES_BY_CATEGORY).map(([category, list]) => (
+                    <optgroup key={category} label={category}>
+                      {list.map(s => (
+                        <option key={s} value={s}>
+                          {s} ({category.split(' ')[0]})
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
             </div>
