@@ -2,36 +2,49 @@
 import { ICal, IClock, ICheck, ICash, IUp, IGraph } from '@/components/ui/icons';
 
 export default function StatsGrid({ 
-  todayCount = 3, 
-  pendingCount = 1, 
+  pendingCount = 0, 
   completedCount = 0,
-  totalToday = 3 
+  totalToday = 0,
+  todayEarnings = 0,
+  yesterdayCount = 0
 }: { 
-  todayCount?: number; 
   pendingCount?: number; 
   completedCount?: number;
   totalToday?: number;
+  todayEarnings?: number;
+  yesterdayCount?: number;
 }) {
   const completionRate = totalToday > 0 ? Math.round((completedCount / totalToday) * 100) : 0;
+  const aptDiff = totalToday - yesterdayCount;
+  
+  let aptTrend = 'Dün ile aynı';
+  let aptTrendUp = true;
+  if (aptDiff > 0) {
+    aptTrend = `${aptDiff} dünden fazla`;
+    aptTrendUp = true;
+  } else if (aptDiff < 0) {
+    aptTrend = `${Math.abs(aptDiff)} dünden az`;
+    aptTrendUp = false;
+  }
 
   const stats = [
     {
       title: 'BUGÜNKÜ RANDEVULAR',
       value: totalToday.toString(),
-      trend: '3 dünden fazla',
+      trend: aptTrend,
       icon: ICal,
       color: '#0d7377',
       bg: '#e6f4f1',
-      trendUp: true
+      trendUp: aptTrendUp
     },
     {
       title: 'ONAY BEKLEYEN',
       value: pendingCount.toString(),
-      trend: '2 saat içinde yanıtlayın',
+      trend: pendingCount > 0 ? `${pendingCount} bekleyen randevu` : 'Tüm randevular yanıtlandı',
       icon: IClock,
       color: '#d59528',
       bg: '#fff8e6',
-      isWait: true
+      isWait: pendingCount === 0
     },
     {
       title: 'TAMAMLANAN',
@@ -44,12 +57,16 @@ export default function StatsGrid({
     },
     {
       title: 'BUGÜNKÜ KAZANÇ',
-      value: (totalToday * 35).toString() + 'K',
-      trend: 'IQD · %12 ↑ haftalık',
+      value: todayEarnings > 0 
+        ? (todayEarnings >= 1000 
+            ? `${Math.round(todayEarnings / 1000)}K IQD` 
+            : `${todayEarnings} IQD`) 
+        : '0 IQD',
+      trend: todayEarnings > 0 ? 'Gerçekleşen net kazanç' : 'Henüz kazanç oluşmadı',
       icon: ICash,
       color: '#5e35b1',
       bg: '#f3e5f5',
-      trendUp: true
+      trendUp: todayEarnings > 0
     }
   ];
 

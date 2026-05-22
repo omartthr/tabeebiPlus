@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Clock, MapPin, ChevronRight, BadgeCheck, Activity, Plus } from 'lucide-react-native';
+import { Clock, MapPin, ChevronRight, BadgeCheck, Activity, Plus, Sparkles } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
@@ -13,6 +13,7 @@ import { colors, shadows } from '../../theme';
 import { SPECIALTIES, APPOINTMENTS_UPCOMING } from '../../data';
 import DocAvatar from '../../components/DocAvatar';
 import SpecialtyIcon from '../../components/SpecialtyIcon';
+import DoctorCard from '../../components/DoctorCard';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -25,6 +26,83 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const [nextAppt, setNextAppt] = useState<Appointment | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [recommendedDoctors, setRecommendedDoctors] = useState<any[]>([]);
+  const [recsLoading, setRecsLoading] = useState(true);
+
+  const fetchRecommendations = useCallback(async () => {
+    if (!user?.id) {
+      setRecsLoading(false);
+      return;
+    }
+    setRecsLoading(true);
+
+    try {
+      const { data: pastApts } = await supabase
+        .from('appointments')
+        .select('rating, doctors(specialty)')
+        .eq('patient_id', user.id)
+        .gte('rating', 4);
+
+      const preferredSpecs = new Set<string>();
+      if (pastApts) {
+        pastApts.forEach((apt: any) => {
+          if (apt.doctors?.specialty) {
+            preferredSpecs.add(apt.doctors.specialty);
+          }
+        });
+      }
+
+      const { data: docs } = await supabase
+        .from('doctors')
+        .select('*')
+        .eq('is_active', true);
+
+      if (!docs) {
+        setRecommendedDoctors([]);
+        setRecsLoading(false);
+        return;
+      }
+
+      const scored = docs.map((d: any) => {
+        let score = (d.rating || 4.5) * 10;
+        score += Math.log((d.reviews || 0) + 1) * 5;
+        
+        if (preferredSpecs.has(d.specialty)) {
+          score += 30;
+        }
+        if (d.today) {
+          score += 15;
+        }
+
+        return {
+          id: d.id,
+          name: d.name,
+          specialty: d.specialty,
+          initials: d.initials || d.name.slice(0, 2).toUpperCase(),
+          hue: d.hue || 175,
+          rating: Number(d.rating) || 4.5,
+          reviews: d.reviews || 0,
+          price: d.price || 35000,
+          loc: d.loc || '',
+          exp: d.exp || '10 Yıl',
+          today: d.today,
+          registration_id: d.registration_id,
+          location_lat: d.location_lat,
+          location_lng: d.location_lng,
+          recommendationScore: score
+        };
+      });
+
+      const top3 = scored
+        .sort((a, b) => b.recommendationScore - a.recommendationScore)
+        .slice(0, 3);
+
+      setRecommendedDoctors(top3);
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+    }
+    setRecsLoading(false);
+  }, [user?.id]);
 
   const fetchNext = useCallback(async () => {
     if (!user?.id) return;
@@ -60,13 +138,16 @@ export default function HomeScreen() {
     }
   }, [user?.id]);
 
-  React.useEffect(() => { fetchNext(); }, [fetchNext]);
-
+  React.useEffect(() => { 
+    fetchNext(); 
+    fetchRecommendations();
+  }, [fetchNext, fetchRecommendations]);
+ 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchNext();
+    await Promise.all([fetchNext(), fetchRecommendations()]);
     setRefreshing(false);
-  }, [fetchNext]);
+  }, [fetchNext, fetchRecommendations]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('good_morning') : hour < 17 ? t('good_afternoon') : t('good_evening');
@@ -147,6 +228,28 @@ export default function HomeScreen() {
           ))}
         </View>
 
+        {/* Recommended Doctors section */}
+        {recommendedDoctors.length > 0 && (
+          <View style={{ marginTop: 24, paddingBottom: 16 }}>
+            <View style={styles.sectionHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={18} color={colors.teal700} strokeWidth={2.5} />
+                <Text style={styles.sectionTitle}>Sizin İçin Önerilen Hekimler</Text>
+              </View>
+              <Text style={styles.sectionSub}>Muayene geçmişinize ve en yüksek puanlı uzmanlara göre</Text>
+            </View>
+            <View style={styles.recsList}>
+              {recommendedDoctors.map(doc => (
+                <DoctorCard
+                  key={doc.id}
+                  doctor={doc}
+                  onPress={() => navigation.navigate('DoctorDetail', { doctor: doc })}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+ 
         {/* Trust strip */}
         <View style={styles.trustStrip}>
           <View style={styles.trustIcon}>
@@ -272,6 +375,7 @@ const styles = StyleSheet.create({
   specialtyName: { fontSize: 15, fontWeight: '700', color: colors.ink900, letterSpacing: -0.2 },
   specialtyCount: { fontSize: 12, color: colors.ink500, fontWeight: '500', marginTop: 2 },
 
+  recsList: { gap: 12, marginTop: 12 },
   trustStrip: {
     flexDirection: 'row',
     alignItems: 'center',

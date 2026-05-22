@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Clock, FileText, Check, Bell, Inbox } from 'lucide-react-native';
+import { Clock, FileText, Check, Bell, Inbox, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme';
 import { useAuth } from '../../navigation/AppNavigator';
 import { supabase } from '../../lib/supabase';
@@ -12,6 +13,7 @@ const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
   result:   { bg: colors.amber50,   fg: '#b37d1f',        Icon: FileText },
   confirm:  { bg: colors.green100,  fg: '#0d6b4a',        Icon: Check },
   block:    { bg: colors.orange100, fg: '#8f4a0d',        Icon: Bell },
+  rating:   { bg: colors.amber50,   fg: '#b37d1f',        Icon: Star },
 };
 
 function formatRelativeTime(dateStr: string | null) {
@@ -41,6 +43,7 @@ function formatRelativeTime(dateStr: string | null) {
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -159,7 +162,12 @@ export default function NotificationsScreen() {
               <TouchableOpacity
                 key={n.id}
                 activeOpacity={n.unread ? 0.7 : 1}
-                onPress={() => handleMarkOneRead(n.id, n.unread)}
+                onPress={() => {
+                  handleMarkOneRead(n.id, n.unread);
+                  if (n.type === 'rating') {
+                    navigation.navigate('MainTabs', { screen: 'Appointments' });
+                  }
+                }}
                 style={[styles.card, n.unread && styles.cardUnread]}
               >
                 <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>

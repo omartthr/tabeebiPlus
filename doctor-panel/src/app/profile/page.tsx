@@ -41,6 +41,8 @@ export default function ProfilePage() {
   const [locLng, setLocLng] = useState<number | null>(null);
   const [locAddr, setLocAddr] = useState('');
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [rating, setRating] = useState<number>(0);
+  const [reviewsCount, setReviewsCount] = useState<number>(0);
 
   const doctorId = doctor?.id;
 
@@ -57,7 +59,7 @@ export default function ProfilePage() {
 
       const { data: profData } = await supabase
         .from('doctor_registrations')
-        .select('price, exp_years, location_address, location_lat, location_lng')
+        .select('price, exp_years, location_address, location_lat, location_lng, doctors_id')
         .eq('id', doctorId)
         .maybeSingle();
 
@@ -68,6 +70,20 @@ export default function ProfilePage() {
       if (profData?.location_address) setLocAddr(profData.location_address);
       if (profData?.location_lat) setLocLat(profData.location_lat);
       if (profData?.location_lng) setLocLng(profData.location_lng);
+
+      if (profData?.doctors_id) {
+        const { data: docData } = await supabase
+          .from('doctors')
+          .select('rating, reviews')
+          .eq('id', profData.doctors_id)
+          .maybeSingle();
+
+        if (!cancelled && docData) {
+          setRating(Number(docData.rating) || 0);
+          setReviewsCount(docData.reviews || 0);
+        }
+      }
+
       setProfileLoaded(true);
     })();
 
@@ -203,15 +219,23 @@ export default function ProfilePage() {
             <h2 style={{ fontSize: 18, color: '#1a1a1a', marginBottom: 4 }}>Doktor Puanı</h2>
             <p style={{ color: '#666', fontSize: 13 }}>Hastalarınızdan aldığınız ortalama puan.</p>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
-              {[1, 2, 3, 4, 5].map(i => (
-                <svg key={i} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ddd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              ))}
+              {[1, 2, 3, 4, 5].map(i => {
+                const filled = i <= Math.round(rating);
+                return (
+                  <svg key={i} width="20" height="20" viewBox="0 0 24 24" fill={filled ? '#e6a63b' : 'none'} stroke={filled ? '#e6a63b' : '#ddd'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                );
+              })}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink-900)' }}>0.0 <span style={{ fontWeight: 500, color: 'var(--ink-400)', fontSize: 12 }}>(Henüz puan verilmedi)</span></div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--ink-900)' }}>
+              {rating > 0 ? rating.toFixed(1) : '0.0'} 
+              <span style={{ fontWeight: 500, color: 'var(--ink-400)', fontSize: 12, marginLeft: 6 }}>
+                ({reviewsCount > 0 ? `${reviewsCount} değerlendirme` : 'Henüz puan verilmedi'})
+              </span>
+            </div>
           </div>
         </div>
 

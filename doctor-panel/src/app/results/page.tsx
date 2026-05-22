@@ -2,6 +2,7 @@
 import { useRequireDoctor } from '@/hooks/useDoctor';
 import { supabase } from '@/lib/supabase';
 import { IDoc, ICheck, ISearch, Avatar, StatusBadge } from '@/components/ui/icons';
+import CustomConfirm from '@/components/ui/CustomConfirm';
 import { useState, useEffect, useMemo } from 'react';
 
 interface ResultRow {
@@ -28,6 +29,11 @@ export default function ResultsPage() {
   const [rows, setRows] = useState<ResultRow[]>([]);
   const [fetching, setFetching] = useState(true);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [savingNoReport, setSavingNoReport] = useState<string | null>(null);
+  const [confirmData, setConfirmData] = useState<{ visible: boolean; appointmentId: string | null }>({
+    visible: false,
+    appointmentId: null
+  });
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -107,6 +113,29 @@ export default function ResultsPage() {
       // no redirect, keep user on results
     };
     input.click();
+  };
+
+  const handleNoReportRequired = (id: string) => {
+    setConfirmData({ visible: true, appointmentId: id });
+  };
+
+  const executeNoReportRequired = async () => {
+    const id = confirmData.appointmentId;
+    if (!id) return;
+    setConfirmData({ visible: false, appointmentId: null });
+    setSavingNoReport(id);
+    const { error } = await supabase
+      .from('appointments')
+      .update({ report_uploaded: true })
+      .eq('id', id);
+    setSavingNoReport(null);
+    
+    if (error) {
+      console.error('Error completing without report:', error.message);
+      alert('İşlem başarısız: ' + error.message);
+    } else {
+      setRows(prev => prev.filter(r => r.id !== id));
+    }
   };
 
   if (loading || !doctor) return null;
@@ -194,10 +223,10 @@ export default function ResultsPage() {
 
               <div><StatusBadge status="completed" /></div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                 <button
                   onClick={() => handleUpload(r.id)}
-                  disabled={uploadingId === r.id}
+                  disabled={uploadingId === r.id || savingNoReport === r.id}
                   className="btn btn-sm btn-primary"
                   style={{
                     height: '36px', padding: '0 14px', fontSize: '13px',
@@ -205,6 +234,18 @@ export default function ResultsPage() {
                   }}
                 >
                   {uploadingId === r.id ? 'Yükleniyor...' : <><IDoc size={14} /> PDF Rapor Yükle</>}
+                </button>
+                <button
+                  onClick={() => handleNoReportRequired(r.id)}
+                  disabled={uploadingId === r.id || savingNoReport === r.id}
+                  className="btn btn-sm btn-outline"
+                  style={{
+                    height: '36px', padding: '0 14px', fontSize: '13px',
+                    borderColor: 'var(--ink-300)', color: 'var(--ink-600)',
+                    background: 'transparent', cursor: 'pointer',
+                  }}
+                >
+                  {savingNoReport === r.id ? 'Kapatılıyor...' : 'Rapor Gerekmiyor'}
                 </button>
               </div>
             </div>
@@ -216,6 +257,14 @@ export default function ResultsPage() {
         .result-row:hover { background-color: var(--ink-50); }
         .result-row:last-child { border-bottom: none; }
       `}</style>
+
+      <CustomConfirm
+        visible={confirmData.visible}
+        title="Rapor Gerekmiyor mu?"
+        message="Bu randevu için rapor gerekmediğini onaylıyor musunuz? Bu işlem randevuyu sonuçlar listesinden kaldıracaktır."
+        onConfirm={executeNoReportRequired}
+        onCancel={() => setConfirmData({ visible: false, appointmentId: null })}
+      />
     </div>
   );
 }

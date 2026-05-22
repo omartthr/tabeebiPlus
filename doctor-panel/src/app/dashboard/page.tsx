@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRequireDoctor } from '@/hooks/useDoctor';
 import { supabase } from '@/lib/supabase';
 import {
@@ -27,6 +27,7 @@ interface DbAppointment {
   price: number;
   patient_name: string | null;
   patient_phone: string | null;
+  patient_id?: string;
   patients: { id: string; name: string; phone: string; avatar_hue: number; patient_code: string | null } | null;
 }
 
@@ -40,7 +41,7 @@ interface Apt {
   status: AptStatus;
   notes: string | null;
   price: number;
-  patient: { name: string; initials: string; hue: number; phone: string; code: string | null };
+  patient: { id: string | null; name: string; initials: string; hue: number; phone: string; code: string | null };
 }
 
 function toInitials(name: string) {
@@ -80,7 +81,7 @@ function mapApt(row: DbAppointment): Apt {
     status: row.status,
     notes: row.notes,
     price: row.price ?? 0,
-    patient: { name: patName, initials: toInitials(patName), hue, phone: patPhone, code: row.patients?.patient_code ?? null },
+    patient: { id: row.patients?.id ?? row.patient_id ?? null, name: patName, initials: toInitials(patName), hue, phone: patPhone, code: row.patients?.patient_code ?? null },
   };
 }
 
@@ -221,15 +222,38 @@ function CalendarGrid({ appointments, selectedDay, onSelect, onAddClick }: {
 }
 
 /* ─── Drawer ─── */
-function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
+function AppointmentDrawer({ apt, onClose, onStatusChange, onReport, doctorName }: {
   apt: Apt; onClose: () => void; onStatusChange: (id: string, status: AptStatus) => void;
-  onReport: () => void;
+  onReport: (apt: Apt) => void; doctorName?: string;
 }) {
   const [saving, setSaving] = useState(false);
 
   const changeStatus = async (s: AptStatus) => {
     setSaving(true);
     await supabase.from('appointments').update({ status: s }).eq('id', apt.id);
+    
+    if (s === 'completed') {
+      if (apt.patient.id) {
+        console.log('Inserting rating notification for patient:', apt.patient.id);
+        const { error: notifErr } = await supabase.from('notifications').insert({
+          patient_id: apt.patient.id,
+          unread: true,
+          title: 'Muayeneniz Tamamlandı! ⭐',
+          body: `${doctorName || 'Doktorunuz'} ile olan randevunuz tamamlandı. Doktorunuzu değerlendirmek ister misiniz?`,
+          type: 'rating',
+          time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+          created_at: new Date().toISOString()
+        });
+        if (notifErr) {
+          console.error('Rating notification insert error:', notifErr);
+        } else {
+          console.log('Rating notification inserted successfully!');
+        }
+      } else {
+        console.warn('Cannot insert notification: patient.id is null. This is likely a manual appointment without a registered patient.');
+      }
+    }
+
     onStatusChange(apt.id, s);
     setSaving(false);
     onClose();
@@ -287,7 +311,7 @@ function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
               className="btn btn-danger" 
               style={{ flex: 1 }} 
               onClick={() => {
-                onReport();
+                onReport(apt);
                 onClose();
               }}
             >
@@ -297,9 +321,6 @@ function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
             <>
               <button className="btn btn-primary" style={{ flex: 1 }} disabled={saving || apt.status === 'confirmed'} onClick={() => changeStatus('confirmed')}>
                 Onayla
-              </button>
-              <button className="btn btn-outline" disabled={saving || apt.status === 'completed'} onClick={() => changeStatus('completed')}>
-                Tamamlandı
               </button>
               <button className="btn btn-danger" disabled={saving} onClick={() => changeStatus('cancelled')}>
                 <IX size={16} /> İptal
@@ -316,7 +337,19 @@ function AppointmentDrawer({ apt, onClose, onStatusChange, onReport }: {
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 8).padStart(2, '0'));
 const MINS  = ['00', '10', '20', '30', '40', '50'];
 
-function TimePicker({ value, onChange, selectedDate }: { value: string; onChange: (v: string) => void; selectedDate: string }) {
+function TimePicker({ 
+  value, 
+  onChange, 
+  selectedDate, 
+  occupiedTimes = [], 
+  allowedHours = [] 
+}: { 
+  value: string; 
+  onChange: (v: string) => void; 
+  selectedDate: string; 
+  occupiedTimes?: string[];
+  allowedHours?: string[];
+}) {
   const [open, setOpen] = useState(false);
   const [selH, selM] = value.split(':');
 
@@ -326,9 +359,10 @@ function TimePicker({ value, onChange, selectedDate }: { value: string; onChange
   const curMin = now.getMinutes();
 
   const filteredHours = useMemo(() => {
-    if (!isToday) return HOURS;
-    return HOURS.filter(h => parseInt(h) >= curHour);
-  }, [isToday, curHour]);
+    const baseHours = allowedHours.length > 0 ? allowedHours : HOURS;
+    if (!isToday) return baseHours;
+    return baseHours.filter(h => parseInt(h) >= curHour);
+  }, [isToday, curHour, allowedHours]);
 
   const filteredMins = useMemo(() => {
     if (!isToday) return MINS;
@@ -360,30 +394,46 @@ function TimePicker({ value, onChange, selectedDate }: { value: string; onChange
             {filteredHours.map(h => {
               const hNum = parseInt(h);
               const validMinsForH = isToday && hNum === curHour ? MINS.filter(m => parseInt(m) >= curMin) : MINS;
+              const allMinsOccupied = validMinsForH.every(m => occupiedTimes.includes(`${h}:${m}`));
               const nextMin = validMinsForH.includes(selM) ? selM : validMinsForH[0];
               return (
-                <div key={h} onClick={() => { onChange(`${h}:${nextMin}`); }}
+                <div key={h} onClick={() => { if (!allMinsOccupied) onChange(`${h}:${nextMin}`); }}
                   style={{
-                    padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    padding: '9px 14px', fontSize: 14, fontWeight: 600, 
+                    cursor: allMinsOccupied ? 'not-allowed' : 'pointer',
                     background: h === selH ? 'var(--teal-50)' : 'transparent',
-                    color: h === selH ? 'var(--teal-700)' : 'var(--ink-700)',
+                    color: allMinsOccupied ? 'var(--ink-300)' : (h === selH ? 'var(--teal-700)' : 'var(--ink-700)'),
+                    textDecoration: allMinsOccupied ? 'line-through' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
                   }}>
-                  {h}:00
+                  <span>{h}:00</span>
+                  {allMinsOccupied && <span style={{ fontSize: '10px', fontWeight: '500', color: 'var(--red-500)', background: '#FEF2F2', padding: '2px 6px', borderRadius: 4 }}>Dolu</span>}
                 </div>
               );
             })}
           </div>
-          <div style={{ flex: 1 }}>
-            {filteredMins.map(m => (
-              <div key={m} onClick={() => { onChange(`${selH}:${m}`); setOpen(false); }}
-                style={{
-                  padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                  background: m === selM ? 'var(--teal-50)' : 'transparent',
-                  color: m === selM ? 'var(--teal-700)' : 'var(--ink-700)',
-                }}>
-                :{m}
-              </div>
-            ))}
+          <div style={{ flex: 1, maxHeight: 200, overflowY: 'auto' }}>
+            {filteredMins.map(m => {
+              const isOccupied = occupiedTimes.includes(`${selH}:${m}`);
+              return (
+                <div key={m} onClick={() => { if (!isOccupied) { onChange(`${selH}:${m}`); setOpen(false); } }}
+                  style={{
+                    padding: '9px 14px', fontSize: 14, fontWeight: 600, 
+                    cursor: isOccupied ? 'not-allowed' : 'pointer',
+                    background: m === selM ? 'var(--teal-50)' : 'transparent',
+                    color: isOccupied ? 'var(--ink-300)' : (m === selM ? 'var(--teal-700)' : 'var(--ink-700)'),
+                    textDecoration: isOccupied ? 'line-through' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                  <span>:{m}</span>
+                  {isOccupied && <span style={{ fontSize: '10px', fontWeight: '500', color: 'var(--red-500)', background: '#FEF2F2', padding: '2px 6px', borderRadius: 4 }}>Dolu</span>}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -391,40 +441,98 @@ function TimePicker({ value, onChange, selectedDate }: { value: string; onChange
   );
 }
 
-function AddAppointmentModal({ doctor, onClose, onAdded, preselectedTime }: {
-  doctor: any; onClose: () => void; onAdded: (apt: Apt) => void; preselectedTime?: string;
+function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, preselectedTime }: {
+  doctor: any; existingApts?: Apt[]; onClose: () => void; onAdded: (apt: Apt) => void; preselectedTime?: string;
 }) {
   const now = new Date();
   const isTodayPast = now.getHours() > 19 || (now.getHours() === 19 && now.getMinutes() > 50);
   const initialDate = isTodayPast ? dateKey(addDays(TODAY, 1)) : dateKey(TODAY);
 
-  const getFirstValidTime = (selDate: string) => {
-    const isToday = selDate === dateKey(TODAY);
-    if (!isToday) return '08:00';
-    const curHour = now.getHours();
-    const curMin = now.getMinutes();
-    for (const h of HOURS) {
-      const hNum = parseInt(h);
-      if (hNum > curHour) return `${h}:00`;
-      if (hNum === curHour) {
-        for (const m of MINS) {
-          if (parseInt(m) >= curMin) return `${h}:${m}`;
-        }
-      }
-    }
-    return '08:00';
-  };
-
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [date, setDate] = useState(initialDate);
-  const [time, setTime] = useState(preselectedTime || getFirstValidTime(initialDate));
+  const [allowedHours, setAllowedHours] = useState<string[]>([]);
+  const lastSelectedDateRef = useRef('');
+  
+  const occupiedTimes = useMemo(() => {
+    return (existingApts ?? [])
+      .filter(a => dateKey(a.date) === date && a.status !== 'cancelled')
+      .map(a => a.time);
+  }, [existingApts, date]);
+
+  const getFirstValidTime = (selDate: string, hoursList: string[], occupied: string[]) => {
+    const isToday = selDate === dateKey(TODAY);
+    const activeHours = hoursList.length > 0 ? hoursList : ['09', '10', '11', '12', '13', '14', '15', '16', '17'];
+    const curHour = now.getHours();
+    const curMin = now.getMinutes();
+
+    for (const h of activeHours) {
+      const hNum = parseInt(h);
+      if (isToday && hNum < curHour) continue;
+      
+      for (const m of MINS) {
+        if (isToday && hNum === curHour && parseInt(m) < curMin) continue;
+        const timeStr = `${h}:${m}`;
+        if (!occupied.includes(timeStr)) {
+          return timeStr;
+        }
+      }
+    }
+    
+    return activeHours[0] ? `${activeHours[0]}:00` : '09:00';
+  };
+
+  const [time, setTime] = useState(preselectedTime || '09:00');
   const [reason, setReason] = useState('');
   const [price, setPrice] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [existingPatient, setExistingPatient] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Fetch allowed hours dynamically from doctor schedules
+  useEffect(() => {
+    if (!doctor) return;
+    
+    supabase
+      .from('doctor_schedules')
+      .select('schedule')
+      .eq('doctor_registration_id', doctor.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        let uniqueHours: string[] = [];
+        if (data?.schedule) {
+          const sched = data.schedule as any;
+          const dateObj = new Date(date);
+          const dayIndex = dateObj.getDay(); 
+          const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          const dayKeyStr = dayKeys[dayIndex];
+          const daySched = sched[dayKeyStr];
+          
+          if (daySched && daySched.isOpen) {
+            const startHours = daySched.slots.map((s: string) => {
+              const start = s.split(' - ')[0]; 
+              return start.split(':')[0]; 
+            });
+            uniqueHours = Array.from(new Set(startHours)).sort() as string[];
+          }
+        }
+        
+        if (uniqueHours.length === 0) {
+          uniqueHours = ['09', '10', '11', '12', '13', '14', '15', '16', '17'];
+        }
+        
+        setAllowedHours(uniqueHours);
+        
+        // ONLY reset the time to first valid time if the date has changed,
+        // or if we don't have a time selected yet!
+        if (lastSelectedDateRef.current !== date || !time || time === '09:00') {
+          const validTime = getFirstValidTime(date, uniqueHours, occupiedTimes);
+          setTime(preselectedTime || validTime);
+          lastSelectedDateRef.current = date;
+        }
+      });
+  }, [doctor, date]);
 
   useEffect(() => {
     if (!doctor.doctors_id) return;
@@ -451,7 +559,7 @@ function AddAppointmentModal({ doctor, onClose, onAdded, preselectedTime }: {
       .select('id')
       .eq('date', date)
       .eq('time', time)
-      .neq('status', 'cancelled') // iptal edilenler HARİÇ tüm randevuları (bekleyen, onaylanan, tamamlanan) sayalım
+      .neq('status', 'cancelled') 
       .or(`doctor_registration_id.eq.${doctor.id}${doctor.doctors_id ? `,doctor_id.eq.${doctor.doctors_id}` : ''}`)
       .maybeSingle();
 
@@ -498,7 +606,34 @@ function AddAppointmentModal({ doctor, onClose, onAdded, preselectedTime }: {
       console.error(error);
       return;
     }
-    if (apt) { onAdded(mapApt(apt as any)); onClose(); }
+    if (apt) { 
+      const isRegistered = existingPatient?.is_registered ?? false;
+      if (!isRegistered) {
+        const phoneToSend = phone.replace(/\D/g, '');
+        console.log(`[WhatsApp] Kayıt dışı hastaya yeni randevu bildirimi gönderiliyor: ${phoneToSend}`);
+        fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: phoneToSend,
+            appointmentId: apt.id,
+            type: 'created',
+            date: date,
+            time: time,
+            doctorName: `${doctor.name} ${doctor.surname || ''}`
+          })
+        }).then(async res => {
+          const data = await res.json();
+          if (!res.ok) console.error('WhatsApp gönderim hatası:', data.error);
+          else console.log('WhatsApp randevu bildirimi başarıyla gönderildi.');
+        }).catch(err => {
+          console.warn('[WhatsApp] Server API çağrısı başarısız oldu:', err.message || err);
+        });
+      }
+
+      onAdded(mapApt(apt as any)); 
+      onClose(); 
+    }
   };
 
   const inp: React.CSSProperties = {
@@ -555,12 +690,10 @@ function AddAppointmentModal({ doctor, onClose, onAdded, preselectedTime }: {
                 value={date} 
                 min={initialDate}
                 onChange={e => {
-                  const newDate = e.target.value;
-                  setDate(newDate);
-                  setTime(getFirstValidTime(newDate));
+                  setDate(e.target.value);
                 }} 
               />
-              <TimePicker value={time} onChange={setTime} selectedDate={date} />
+              <TimePicker value={time} onChange={setTime} selectedDate={date} occupiedTimes={occupiedTimes} allowedHours={allowedHours} />
             </div>
           </div>
           <div className="detail-section">
@@ -609,6 +742,60 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!doctor) return;
     
+    const checkAndProcessAutoCompletion = async (rows: any[]) => {
+      const now = new Date();
+      const updatedRows = [...rows];
+      
+      for (let i = 0; i < updatedRows.length; i++) {
+        const row = updatedRows[i];
+        if (row.status === 'confirmed' || row.status === 'pending') {
+          const dateStr = row.date; 
+          const timeStr = row.time; 
+          
+          let aptDateTime: Date;
+          if (dateStr.includes('-')) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const [h, min] = timeStr.split(':').map(Number);
+            aptDateTime = new Date(y, m - 1, d, h, min);
+          } else {
+            aptDateTime = new Date(dateStr + ' ' + timeStr);
+          }
+
+          if (aptDateTime.getTime() < now.getTime()) {
+            row.status = 'completed'; 
+
+            supabase.from('appointments')
+              .update({ status: 'completed' })
+              .eq('id', row.id)
+              .then(({ error }) => {
+                if (error) console.error('Auto complete error for id:', row.id, error.message);
+                else console.log('Appointment auto-completed:', row.id);
+              });
+
+            const patientId = row.patients?.id || row.patient_id;
+            if (patientId) {
+              const docName = doctor ? `Dr. ${doctor.name} ${doctor.surname || ''}` : 'Doktorunuz';
+              supabase.from('notifications')
+                .insert({
+                  patient_id: patientId,
+                  unread: true,
+                  title: 'Muayeneniz Tamamlandı! ⭐',
+                  body: `${docName} ile olan randevunuz tamamlandı. Doktorunuzu değerlendirmek ister misiniz?`,
+                  type: 'rating',
+                  time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+                  created_at: new Date().toISOString()
+                })
+                .then(({ error }) => {
+                  if (error) console.error('Auto complete notification error:', error.message);
+                  else console.log('Auto complete notification sent for patient:', patientId);
+                });
+            }
+          }
+        }
+      }
+      return updatedRows;
+    };
+
     const fetchData = () => {
       let query = supabase
         .from('appointments')
@@ -620,8 +807,10 @@ export default function DashboardPage() {
         query = query.eq('doctor_registration_id', doctor.id);
       }
 
-      query.then(({ data }) => {
-        setApts((data ?? []).map(mapApt));
+      query.then(async ({ data }) => {
+        const rowsToProcess = data ?? [];
+        const processedRows = await checkAndProcessAutoCompletion(rowsToProcess);
+        setApts(processedRows.map(mapApt));
         setFetching(false);
       });
     };
@@ -638,11 +827,15 @@ export default function DashboardPage() {
   };
 
   const todayKey = dateKey(TODAY);
+  const yesterdayKey = dateKey(addDays(TODAY, -1));
   const todayApts = apts.filter(a => a.dateKey === todayKey);
+  const yesterdayApts = apts.filter(a => a.dateKey === yesterdayKey);
   const todayStats = {
     total: todayApts.length,
     pending: todayApts.filter(a => a.status === 'pending').length,
     completed: todayApts.filter(a => a.status === 'completed').length,
+    earnings: todayApts.filter(a => a.status === 'completed').reduce((sum, a) => sum + a.price, 0),
+    yesterdayCount: yesterdayApts.length,
   };
 
   const dayApts = useMemo(() => {
@@ -678,6 +871,8 @@ export default function DashboardPage() {
         totalToday={todayStats.total}
         pendingCount={todayStats.pending}
         completedCount={todayStats.completed}
+        todayEarnings={todayStats.earnings}
+        yesterdayCount={todayStats.yesterdayCount}
       />
 
       <div className="panel fade-up">
@@ -713,7 +908,22 @@ export default function DashboardPage() {
           apt={selectedApt} 
           onClose={() => setSelectedApt(null)} 
           onStatusChange={handleStatusChange} 
-          onReport={() => showAlert('Şikayetiniz iletildi', 'Gereksiz veya asılsız şikayetlerin hesabınızın incelenmesine neden olabileceğini lütfen unutmayın.')}
+          doctorName={doctor ? `Dr. ${doctor.name} ${doctor.surname || ''}` : undefined}
+          onReport={async (a) => {
+            showAlert('Şikayetiniz iletildi', 'Gereksiz veya asılsız şikayetlerin hesabınızın incelenmesine neden olabileceğini lütfen unutmayın.');
+            if (a.patient.id) {
+              const docName = doctor ? `Dr. ${doctor.name} ${doctor.surname || ''}` : 'Doktorunuz';
+              await supabase.from('notifications').insert({
+                patient_id: a.patient.id,
+                unread: true,
+                title: 'Hesabınız Hakkında Uyarı ⚠️',
+                body: `${docName}, randevunuza katılımınız veya davranışınızla ilgili bir şikayet bildiriminde bulundu. Lütfen klinik kurallarına uyunuz.`,
+                type: 'block',
+                time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+                created_at: new Date().toISOString()
+              });
+            }
+          }}
         />
       )}
 
@@ -727,6 +937,7 @@ export default function DashboardPage() {
       {showAddModal && (
         <AddAppointmentModal
           doctor={doctor}
+          existingApts={apts}
           onClose={() => setShowAddModal(false)}
           onAdded={(apt) => { setApts(prev => [...prev, apt]); setSelectedDay(apt.date); }}
           preselectedTime={typeof showAddModal === 'string' ? showAddModal : undefined}

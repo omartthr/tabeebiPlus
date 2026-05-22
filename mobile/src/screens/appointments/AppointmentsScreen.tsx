@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, RefreshControl
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, Modal, TextInput, Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock } from 'lucide-react-native';
@@ -28,6 +28,45 @@ export default function AppointmentsScreen({ navigation }: any) {
     visible: false, title: '', message: '', type: 'info', onConfirm: () => { },
   });
 
+  const [rateModalVisible, setRateModalVisible] = useState(false);
+  const [ratingApt, setRatingApt] = useState<Appointment | null>(null);
+  const [selectedStars, setSelectedStars] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+
+  const handleOpenRateModal = (a: Appointment) => {
+    setRatingApt(a);
+    setSelectedStars(5);
+    setReviewText('');
+    setRateModalVisible(true);
+  };
+
+  const handleSubmitRating = async () => {
+    if (!ratingApt) return;
+    setSubmittingRating(true);
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({
+          rating: selectedStars,
+          review: reviewText || null
+        })
+        .eq('id', ratingApt.id);
+
+      if (error) {
+        Alert.alert('Hata', 'Değerlendirme kaydedilemedi: ' + error.message);
+      } else {
+        setRateModalVisible(false);
+        fetchApts();
+        Alert.alert('Teşekkürler', 'Değerlendirmeniz başarıyla iletildi!');
+      }
+    } catch (err: any) {
+      Alert.alert('Hata', 'Bir sorun oluştu: ' + err.message);
+    }
+    setSubmittingRating(false);
+  };
+
   const fetchApts = useCallback(async () => {
     if (!user?.id) return;
     const { data, error } = await supabase
@@ -52,6 +91,8 @@ export default function AppointmentsScreen({ navigation }: any) {
           hue: a.doctors?.hue || 175,
           price: a.price || a.doctors?.price || 0,
           doctorId: a.doctor_id,
+          rating: a.rating,
+          review: a.review,
         };
       });
       setApts(mapped);
@@ -202,6 +243,15 @@ export default function AppointmentsScreen({ navigation }: any) {
             )}
             {tab === 'past' && a.status === 'completed' && (
               <View style={styles.actions}>
+                {a.rating && a.rating > 0 ? (
+                  <View style={styles.ratedBadge}>
+                    <Text style={styles.ratedText}>⭐ {a.rating} / 5 Puan Verildi</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity style={[styles.actionBtn, styles.rateBtn]} onPress={() => handleOpenRateModal(a)}>
+                    <Text style={styles.rateBtnText}>⭐ Puan Ver</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'Results' })}>
                   <Text style={styles.actionBtnText}>{t('view_result')}</Text>
                 </TouchableOpacity>
@@ -224,6 +274,63 @@ export default function AppointmentsScreen({ navigation }: any) {
         onConfirm={alert.onConfirm}
         onCancel={() => setAlert(p => ({ ...p, visible: false }))}
       />
+
+      {/* Değerlendirme Modalı */}
+      <Modal
+        visible={rateModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setRateModalVisible(false)}
+      >
+        <View style={styles.modalBg}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Doktoru Değerlendir</Text>
+            <Text style={styles.modalSub}>{ratingApt?.doctor} ile olan randevunuzu puanlayın.</Text>
+
+            {/* Yıldız Seçimi */}
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map(star => (
+                <TouchableOpacity key={star} onPress={() => setSelectedStars(star)}>
+                  <Text style={{ fontSize: 36, color: star <= selectedStars ? '#e6a63b' : '#ccd6dd', marginHorizontal: 4 }}>
+                    ★
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Yorum Input */}
+            <TextInput
+              style={styles.reviewInput}
+              placeholder="Doktor ve muayene hakkında yorumunuzu yazın (isteğe bağlı)..."
+              placeholderTextColor={colors.ink400}
+              multiline
+              numberOfLines={4}
+              value={reviewText}
+              onChangeText={setReviewText}
+            />
+
+            {/* Butonlar */}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalCancelBtn]}
+                onPress={() => setRateModalVisible(false)}
+                disabled={submittingRating}
+              >
+                <Text style={styles.cancelBtnText}>Vazgeç</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalSubmitBtn]}
+                onPress={handleSubmitRating}
+                disabled={submittingRating}
+              >
+                <Text style={styles.submitBtnText}>
+                  {submittingRating ? 'Kaydediliyor...' : 'Gönder'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -275,4 +382,30 @@ const styles = StyleSheet.create({
   actionBtnText: { fontSize: 13, fontWeight: '700', color: colors.ink900 },
   cancelBtn: { borderColor: colors.red100 },
   cancelText: { color: colors.red500 },
+  modalBg: { flex: 1, backgroundColor: 'rgba(11,31,34,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { width: '100%', backgroundColor: colors.surface, borderRadius: 24, padding: 24, gap: 16, ...shadows.card },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: colors.ink900, textAlign: 'center' },
+  modalSub: { fontSize: 13, color: colors.ink500, textAlign: 'center', fontWeight: '500' },
+  starsRow: { flexDirection: 'row', justifyContent: 'center', marginVertical: 10 },
+  reviewInput: {
+    height: 100,
+    backgroundColor: colors.bg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.ink100,
+    padding: 12,
+    fontSize: 13,
+    color: colors.ink900,
+    textAlignVertical: 'top'
+  },
+  modalButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  modalBtn: { flex: 1, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  modalCancelBtn: { backgroundColor: colors.ink100 },
+  modalSubmitBtn: { backgroundColor: colors.teal700 },
+  cancelBtnText: { fontSize: 14, fontWeight: '700', color: colors.ink700 },
+  submitBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  ratedBadge: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10, backgroundColor: colors.teal50, justifyContent: 'center', flex: 1, alignItems: 'center' },
+  ratedText: { fontSize: 11, fontWeight: '700', color: colors.teal700 },
+  rateBtn: { backgroundColor: colors.amber50, borderColor: colors.amber200, borderWidth: 1 },
+  rateBtnText: { fontSize: 12, fontWeight: '700', color: '#b37d1f' },
 });

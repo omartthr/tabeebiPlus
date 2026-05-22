@@ -7,15 +7,23 @@ const TWILIO_WHATSAPP_NUMBER = Deno.env.get('TWILIO_WHATSAPP_NUMBER') || 'whatsa
 
 serve(async (req) => {
   try {
-    const { phone, appointmentId } = await req.json()
+    const { phone, appointmentId, type = 'result', date, time, doctorName } = await req.json()
     
     // Numarayı uluslararası formata çevirme (+964)
-    // Irak veya bulunduğunuz bölgeye göre + prefix'ini ayarlayabilirsiniz.
     const formattedPhone = phone.startsWith('+') ? phone : `+964${phone}`
 
-    const messageBody = `Merhaba! 🏥 Tabeebi+ doktorunuz muayene sonuçlarınızı sisteme yükledi. Sonuçlarınızı görmek, randevularınızı takip etmek ve profilinizi aktifleştirmek için Tabeebi+ uygulamasını indirin ve *${phone}* numaranızla giriş yapın. 
+    let messageBody = '';
+    if (type === 'created') {
+      messageBody = `Merhaba! 🏥 Tabeebi+ panelinden adınıza Dr. ${doctorName || ''} ile *${date}* günü saat *${time}* için bir muayene randevusu oluşturuldu. 
+
+Randevunuzu takip etmek ve onaylamak için Tabeebi+ uygulamasını indirin ve *${phone}* numaranızla giriş yapın. 
     
 📱 Uygulama Linki: https://tabeebi.plus/app`;
+    } else {
+      messageBody = `Merhaba! 🏥 Tabeebi+ doktorunuz muayene sonuçlarınızı sisteme yükledi. Sonuçlarınızı görmek, randevularınızı takip etmek ve profilinizi aktifleştirmek için Tabeebi+ uygulamasını indirin ve *${phone}* numaranızla giriş yapın. 
+    
+📱 Uygulama Linki: https://tabeebi.plus/app`;
+    }
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
     

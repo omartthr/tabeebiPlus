@@ -7,31 +7,29 @@ const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(URL, KEY);
 
 async function check() {
-  // Try sending an OTP first
-  const phone = '905378569440';
-  console.log('Sending OTP...');
-  const { data: sendData, error: sendErr } = await supabase.functions.invoke('send-otp', {
-    body: { phone, country_code: '90' }
-  });
-  console.log('Send OTP result:', sendData, sendErr);
-
-  // We can't easily get the OTP without reading the DB.
-  // Wait, I can read the OTP from phone_otps table since I am not using RLS on scratch if I use service role, 
-  // but I only have ANON key. Let's try selecting from phone_otps.
-  const { data: otps } = await supabase.from('phone_otps').select('otp').eq('phone', phone).order('created_at', { ascending: false }).limit(1);
-  if (!otps || otps.length === 0) {
-    console.log('Could not read OTP from DB');
+  const { data: apts } = await supabase.from('appointments').select('*').limit(1);
+  const apt = apts?.[0];
+  if (!apt) {
+    console.log('No appointments found to test with.');
     return;
   }
-  const code = otps[0].otp;
-  console.log('Found OTP in DB:', code);
-
-  console.log('Verifying OTP...');
-  const { data: verifyData, error: verifyErr } = await supabase.functions.invoke('verify-otp', {
-    body: { phone, code }
+  
+  console.log('Testing notification insert for patient:', apt.patient_id);
+  
+  const { data, error } = await supabase.from('notifications').insert({
+    patient_id: apt.patient_id,
+    unread: true,
+    title: 'Muayeneniz Tamamlandı! ⭐',
+    body: `Dr. Test ile olan randevunuz tamamlandı. Doktorunuzu değerlendirmek ister misiniz?`,
+    type: 'rating',
+    time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+    created_at: new Date().toISOString()
   });
   
-  console.log('Verify OTP result:', JSON.stringify(verifyData, null, 2));
-  console.log('Verify OTP error:', verifyErr);
+  if (error) {
+    console.error('Error inserting notification:', error);
+  } else {
+    console.log('Success inserting notification:', data);
+  }
 }
 check();
