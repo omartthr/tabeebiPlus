@@ -6,8 +6,7 @@
   "workspaces": [
     "backend",
     "doctor-panel",
-    "admin-panel",
-    "mobile"
+    "admin-panel"
   ],
   "scripts": {
     "dev:backend": "cd backend && npm run dev",
