@@ -19,6 +19,14 @@ export default {
   btn_login: 'I already have an account',
   terms_agree: 'By continuing you agree to our Terms and Privacy Policy',
 
+  // Login Screen
+  login_title: 'Log in',
+  login_subtitle: 'Log in to access your clinic and appointments.',
+  no_account: "Don't have an account? ",
+  register_link: 'Register',
+  account_not_found: 'Account Not Found',
+  account_not_found_desc: 'No account found with this number. Please register first.',
+
   // Register Screen
   create_account: 'Create account',
   lets_know_you: "Let's get to know you",

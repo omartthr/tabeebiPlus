@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, Alert,
+  KeyboardAvoidingView, Platform, Alert, Keyboard, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -91,6 +91,7 @@ export default function OTPScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     if (valid && !submitting) {
+      Keyboard.dismiss();
       const timer = setTimeout(() => handleVerify(), 500);
       return () => clearTimeout(timer);
     }
@@ -107,8 +108,9 @@ export default function OTPScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen}>
       <TopBar title={t('verify_number')} onBack={() => navigation.goBack()} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.content}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('check_messages')}</Text>
             <Text style={styles.subtitle}>
@@ -166,6 +168,7 @@ export default function OTPScreen({ route, navigation }: Props) {
             <Text style={styles.btnText}>{t('verify_continue')}</Text>
           </TouchableOpacity>
         </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

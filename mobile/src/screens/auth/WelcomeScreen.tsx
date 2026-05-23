@@ -29,7 +29,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         {/* Header (Logo + Language Pill Selector) */}
         <View style={styles.headerRow}>
-          <Logo variant="dark" width={220} height={50} />
+          <Logo variant="dark" width={140} height={34} style={{ marginLeft: -8 }} />
 
           {/* Language Selector Dropdown Button */}
           <TouchableOpacity

@@ -24,7 +24,7 @@ export default function RegisterScreen({ navigation }: Props) {
       <TopBar title={t('create_account')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       >
         <ScrollView
           style={styles.scroll}

@@ -106,8 +106,14 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('profile_title')}</Text>
       </View>
-      <View style={styles.content}>
-
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} />
+        }
+      >
         {/* Profile card */}
         <View style={styles.profileCard}>
           <DocAvatar initials={initials} hue={175} size={64} rounded={20} />
@@ -184,7 +190,7 @@ export default function ProfileScreen() {
           <Logo variant="light" width={120} height={28} showText={true} />
           <Text style={[styles.version, { marginTop: 4 }]}>v1.0.0</Text>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Edit Modal */}
       <Modal visible={editVisible} transparent animationType="fade">
@@ -280,6 +286,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { padding: 20, paddingBottom: 14 },
   title: { fontSize: 28, fontWeight: '700', color: colors.ink900, letterSpacing: -0.5 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
   content: { flex: 1, paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
   profileCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,

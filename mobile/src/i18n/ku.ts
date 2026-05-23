@@ -19,6 +19,14 @@ export default {
   btn_login: 'هەژمارم هەیە',
   terms_agree: 'بە بەردەوامبوون، ڕازی دەبیت بە مەرجەکان و سیاسەتی نهێنی',
 
+  // Login Screen
+  login_title: 'چوونە ژوورەوە',
+  login_subtitle: 'چوونە ژوورەوە بۆ گەیشتن بە نۆرینگە و کاتەکانی ژوانەکانت.',
+  no_account: 'هەژمارت نییە؟ ',
+  register_link: 'خۆتۆمارکردن',
+  account_not_found: 'هەژمار نەدۆزرایەوە',
+  account_not_found_desc: 'هیچ هەژمارێک بەم ژمارەیە نەدۆزرایەوە. تکایە سەرەتا خۆت تۆمار بکە.',
+
   // Register Screen
   create_account: 'دروستکردنی هەژمار',
   lets_know_you: 'با ئازات بناسینەوە',

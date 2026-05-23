@@ -19,6 +19,14 @@ export default {
   btn_login: 'لدي حساب بالفعل',
   terms_agree: 'بالمتابعة، أنت توافق على الشروط وسياسة الخصوصية',
 
+  // Login Screen
+  login_title: 'تسجيل الدخول',
+  login_subtitle: 'تسجيل الدخول للوصول إلى عيادتك ومواعيدك.',
+  no_account: 'ليس لديك حساب؟ ',
+  register_link: 'تسجيل',
+  account_not_found: 'الحساب غير موجود',
+  account_not_found_desc: 'لم يتم العثور على حساب بهذا الرقم. يرجى التسجيل أولاً.',
+
   // Register Screen
   create_account: 'إنشاء حساب',
   lets_know_you: 'دعنا نتعرف عليك',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
@@ -7,10 +7,12 @@ import { colors } from '../../theme';
 import { supabase } from '../../lib/supabase';
 import TopBar from '../../components/TopBar';
 import Logo from '../../components/Logo';
+import { useTranslation } from 'react-i18next';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [checking, setChecking] = useState(false);
   const valid = phone.replace(/\D/g, '').length >= 10;
@@ -29,11 +31,11 @@ export default function LoginScreen({ navigation }: Props) {
 
     if (!patient) {
       Alert.alert(
-        'Hesap Bulunamadı',
-        'Bu numara ile kayıtlı hesap bulunamadı. Lütfen önce kayıt olun.',
+        t('account_not_found'),
+        t('account_not_found_desc'),
         [
-          { text: 'Kayıt Ol', onPress: () => navigation.navigate('Register') },
-          { text: 'Tamam', style: 'cancel' },
+          { text: t('register_link'), onPress: () => navigation.navigate('Register') },
+          { text: t('ok'), style: 'cancel' },
         ]
       );
       return;
@@ -44,46 +46,48 @@ export default function LoginScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <TopBar title="Giriş Yap" onBack={() => navigation.goBack()} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Logo variant="light" width={240} height={60} />
-            <Text style={styles.subtitle}>Kliniğinize ve randevularınıza ulaşmak için giriş yapın.</Text>
+      <TopBar title={t('login_title')} onBack={() => navigation.goBack()} />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <Logo variant="light" width={240} height={60} />
+              <Text style={styles.subtitle}>{t('login_subtitle')}</Text>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('phone_number')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="750 123 4567"
+                keyboardType="phone-pad"
+                placeholderTextColor={colors.ink400}
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Telefon Numarası</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="750 123 4567"
-              keyboardType="phone-pad"
-              placeholderTextColor={colors.ink400}
-              value={phone}
-              onChangeText={setPhone}
-            />
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.btnPrimary, (!valid || checking) && styles.btnDisabled]}
-            disabled={!valid || checking}
-            onPress={handleContinue}
-          >
-            {checking
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.btnText}>Devam Et</Text>
-            }
-          </TouchableOpacity>
-
-          <View style={styles.registerRow}>
-            <Text style={styles.registerText}>Hesabınız yok mu? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerLink}>Kayıt Ol</Text>
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.btnPrimary, (!valid || checking) && styles.btnDisabled]}
+              disabled={!valid || checking}
+              onPress={handleContinue}
+            >
+              {checking
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.btnText}>{t('continue_btn')}</Text>
+              }
             </TouchableOpacity>
+
+            <View style={styles.registerRow}>
+              <Text style={styles.registerText}>{t('no_account')}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={styles.registerLink}>{t('register_link')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

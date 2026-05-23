@@ -163,7 +163,7 @@ export default function HomeScreen() {
           <Text style={styles.greet}>{greeting},</Text>
           <Text style={styles.name}>{firstName} 👋</Text>
         </View>
-        <Logo variant="light" width={160} height={36} showText={true} />
+        <Logo variant="light" width={40} height={40} showText={false} style={{ marginRight: 12 }} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}>

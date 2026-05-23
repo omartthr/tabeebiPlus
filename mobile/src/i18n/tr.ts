@@ -19,6 +19,14 @@ export default {
   btn_login: 'Zaten hesabım var',
   terms_agree: 'Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul etmiş olursunuz',
 
+  // Login Screen
+  login_title: 'Giriş Yap',
+  login_subtitle: 'Kliniğinize ve randevularınıza ulaşmak için giriş yapın.',
+  no_account: 'Hesabınız yok mu? ',
+  register_link: 'Kayıt Ol',
+  account_not_found: 'Hesap Bulunamadı',
+  account_not_found_desc: 'Bu numara ile kayıtlı hesap bulunamadı. Lütfen önce kayıt olun.',
+
   // Register Screen
   create_account: 'Hesap oluştur',
   lets_know_you: 'Sizi tanıyalım',
