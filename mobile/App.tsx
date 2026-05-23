@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, StatusBar, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { RTLProvider, useRTL } from './src/context/RTLContext';
+import SplashScreen from './src/screens/SplashScreen';
 import './src/i18n';
 
 /**
@@ -20,6 +21,12 @@ function RTLWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
+  if (!splashDone) {
+    return <SplashScreen onFinish={() => setSplashDone(true)} />;
+  }
+
   return (
     <RTLProvider>
       <SafeAreaProvider>

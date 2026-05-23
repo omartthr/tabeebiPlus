@@ -8,6 +8,10 @@
     "newArchEnabled": true,
     "platforms": ["ios", "android"],
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#0d7377",
+      "resizeMode": "cover"
+    },
     "ios": {
       "supportsTablet": true
     },
