@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRequireDoctor } from '@/hooks/useDoctor';
-import { supabase } from '@/lib/supabase';
+import { getDashboardAppointments, updateAppointmentStatus, insertNotificationAction, getDoctorScheduleAction, getDoctorPriceAction, lookupPatientAction, checkAppointmentCollisionAction, createTemporaryPatientAction, createAppointmentAction } from '@/actions/doctorActions';
 import {
   TODAY, TR_DAYS_SHORT, TR_DAYS_LONG, TR_MONTHS_LONG,
   fmtDateLong, dateKey, addDays,
@@ -230,12 +230,12 @@ function AppointmentDrawer({ apt, onClose, onStatusChange, onReport, doctorName 
 
   const changeStatus = async (s: AptStatus) => {
     setSaving(true);
-    await supabase.from('appointments').update({ status: s }).eq('id', apt.id);
+    await updateAppointmentStatus(apt.id, s);
     
     if (s === 'completed') {
       if (apt.patient.id) {
         console.log('Inserting rating notification for patient:', apt.patient.id);
-        const { error: notifErr } = await supabase.from('notifications').insert({
+        const { error: notifErr } = await insertNotificationAction({
           patient_id: apt.patient.id,
           unread: true,
           title: 'Muayeneniz Tamamlandı! ⭐',
@@ -490,15 +490,10 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
   const [existingPatient, setExistingPatient] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Fetch allowed hours dynamically from doctor schedules
   useEffect(() => {
     if (!doctor) return;
     
-    supabase
-      .from('doctor_schedules')
-      .select('schedule')
-      .eq('doctor_registration_id', doctor.id)
-      .maybeSingle()
+    getDoctorScheduleAction(doctor.id)
       .then(({ data }) => {
         let uniqueHours: string[] = [];
         if (data?.schedule) {
@@ -536,14 +531,14 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
 
   useEffect(() => {
     if (!doctor.doctors_id) return;
-    supabase.from('doctors').select('price').eq('id', doctor.doctors_id).maybeSingle()
+    getDoctorPriceAction(doctor.doctors_id)
       .then(({ data }) => { if (data?.price) setPrice(data.price); });
   }, [doctor.doctors_id]);
 
   const lookupPatient = async () => {
     const clean = phone.replace(/\D/g, '');
     if (clean.length < 7) return;
-    const { data } = await supabase.from('patients').select('*').eq('phone', clean).maybeSingle();
+    const { data } = await lookupPatientAction(clean);
     if (data) { setExistingPatient(data); setName(data.name); }
     else setExistingPatient(null);
   };
@@ -554,14 +549,7 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
     setErrorMsg('');
 
     // Çift randevu kontrolü
-    const { data: existingApt } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('date', date)
-      .eq('time', time)
-      .neq('status', 'cancelled') 
-      .or(`doctor_registration_id.eq.${doctor.id}${doctor.doctors_id ? `,doctor_id.eq.${doctor.doctors_id}` : ''}`)
-      .maybeSingle();
+    const { data: existingApt } = await checkAppointmentCollisionAction(date, time, doctor.id, doctor.doctors_id);
 
     if (existingApt) {
       setErrorMsg('Bu tarih ve saatte zaten dolu bir randevu var. Lütfen farklı bir saat seçin.');
@@ -571,10 +559,7 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
 
     let patientId = existingPatient?.id;
     if (!patientId) {
-      const { data: np, error: npError } = await supabase
-        .from('patients')
-        .insert({ name, phone: phone.replace(/\D/g, ''), avatar_hue: 175, is_registered: false })
-        .select('*').single();
+      const { data: np, error: npError } = await createTemporaryPatientAction(name, phone.replace(/\D/g, ''));
       
       if (npError) {
         console.warn('Geçici hasta oluşturulamadı (RLS engeli olabilir), randevuya isim kaydedilecek:', npError.message);
@@ -583,9 +568,7 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
       }
     }
 
-    const { data: apt, error } = await supabase
-      .from('appointments')
-      .insert({
+    const { data: apt, error } = await createAppointmentAction({
         date, time, duration: 30,
         reason: reason || null,
         price: price ?? 0,
@@ -596,9 +579,7 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
         patient_phone: phone.replace(/\D/g, ''), // RLS fail olursa diye yedek numara
         doctor_registration_id: doctor.id,
         doctor_id: doctor.doctors_id || null,
-      })
-      .select('*, patients(id, name, phone, avatar_hue, patient_code)')
-      .single();
+      });
 
     setSaving(false);
     if (error) {
@@ -764,9 +745,7 @@ export default function DashboardPage() {
           if (aptDateTime.getTime() < now.getTime()) {
             row.status = 'completed'; 
 
-            supabase.from('appointments')
-              .update({ status: 'completed' })
-              .eq('id', row.id)
+            updateAppointmentStatus(row.id, 'completed')
               .then(({ error }) => {
                 if (error) console.error('Auto complete error for id:', row.id, error.message);
                 else console.log('Appointment auto-completed:', row.id);
@@ -775,8 +754,7 @@ export default function DashboardPage() {
             const patientId = row.patients?.id || row.patient_id;
             if (patientId) {
               const docName = doctor ? `Dr. ${doctor.name} ${doctor.surname || ''}` : 'Doktorunuz';
-              supabase.from('notifications')
-                .insert({
+              insertNotificationAction({
                   patient_id: patientId,
                   unread: true,
                   title: 'Muayeneniz Tamamlandı! ⭐',
@@ -797,17 +775,8 @@ export default function DashboardPage() {
     };
 
     const fetchData = () => {
-      let query = supabase
-        .from('appointments')
-        .select('*, patients(id, name, phone, avatar_hue, patient_code)');
-
-      if (doctor.doctors_id) {
-        query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
-      } else {
-        query = query.eq('doctor_registration_id', doctor.id);
-      }
-
-      query.then(async ({ data }) => {
+      getDashboardAppointments(doctor.id, doctor.doctors_id)
+      .then(async ({ data }) => {
         const rowsToProcess = data ?? [];
         const processedRows = await checkAndProcessAutoCompletion(rowsToProcess);
         setApts(processedRows.map(mapApt));
@@ -913,7 +882,7 @@ export default function DashboardPage() {
             showAlert('Şikayetiniz iletildi', 'Gereksiz veya asılsız şikayetlerin hesabınızın incelenmesine neden olabileceğini lütfen unutmayın.');
             if (a.patient.id) {
               const docName = doctor ? `Dr. ${doctor.name} ${doctor.surname || ''}` : 'Doktorunuz';
-              await supabase.from('notifications').insert({
+              await insertNotificationAction({
                 patient_id: a.patient.id,
                 unread: true,
                 title: 'Hesabınız Hakkında Uyarı ⚠️',

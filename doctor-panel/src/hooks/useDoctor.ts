@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getDoctorById } from '@/actions/doctorActions';
 
 export type DoctorSession = {
   id: string;
@@ -48,11 +48,7 @@ export function useRequireDoctor() {
     }
 
     // Validate session against DB — catches deleted/changed registrations
-    supabase
-      .from('doctor_registrations')
-      .select('id, name, surname, specialty, clinic_name, status, doctors_id, location_address, location_lat, location_lng')
-      .eq('id', s.id)
-      .maybeSingle()
+    getDoctorById(s.id)
       .then(({ data: doc, error }) => {
         if (error) {
           console.error('Session validation error:', error);

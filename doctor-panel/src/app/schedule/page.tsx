@@ -1,5 +1,5 @@
 'use client';
-import { supabase } from '@/lib/supabase';
+import { getDoctorScheduleAction, getDashboardAppointments, updateDoctorScheduleAction } from '@/actions/doctorActions';
 import { useRequireDoctor } from '@/hooks/useDoctor';
 import { useState, useEffect, useMemo } from 'react';
 import { IClock, ICheck, ICal, IX, StatusBadge } from '@/components/ui/icons';
@@ -40,11 +40,7 @@ export default function SchedulePage() {
     let cancelled = false;
 
     // Fetch schedule
-    supabase
-      .from('doctor_schedules')
-      .select('schedule')
-      .eq('doctor_registration_id', doctor.id)
-      .maybeSingle()
+    getDoctorScheduleAction(doctor.id)
       .then(({ data }) => {
         if (!cancelled && data?.schedule) {
           setSchedule(data.schedule as any);
@@ -52,23 +48,14 @@ export default function SchedulePage() {
       });
 
     // Fetch appointments
-    let query = supabase
-      .from('appointments')
-      .select('id, date, time, reason, status, price, notes, patient_name, patient_phone, patients(name, phone, avatar_hue)')
-      .neq('status', 'cancelled');
-
-    if (doctor.doctors_id) {
-      query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
-    } else {
-      query = query.eq('doctor_registration_id', doctor.id);
-    }
-
-    query.then(({ data }) => {
-      if (!cancelled) {
-        setApts(data ?? []);
-        setFetchingApts(false);
-      }
-    });
+    getDashboardAppointments(doctor.id, doctor.doctors_id)
+      .then(({ data }) => {
+        if (!cancelled) {
+          const activeApts = (data ?? []).filter((a: any) => a.status !== 'cancelled');
+          setApts(activeApts);
+          setFetchingApts(false);
+        }
+      });
 
     return () => { cancelled = true; };
   }, [doctor]);
@@ -97,32 +84,12 @@ export default function SchedulePage() {
     if (!doctor) return;
     setSaving(true);
 
-    const { error: schedErr } = await supabase
-      .from('doctor_schedules')
-      .upsert({ doctor_registration_id: doctor.id, schedule, updated_at: new Date().toISOString() });
+    const { error: schedErr } = await updateDoctorScheduleAction(doctor.id, schedule);
 
     if (schedErr) {
       setSaving(false);
-      alert('Hata: ' + schedErr.message);
+      alert('Hata: ' + schedErr);
       return;
-    }
-
-    // Sync to doctors table if linked
-    const { data: reg } = await supabase
-      .from('doctor_registrations')
-      .select('doctors_id')
-      .eq('id', doctor.id)
-      .maybeSingle();
-
-    if (reg?.doctors_id) {
-      const { error: docErr } = await supabase
-        .from('doctors')
-        .update({ schedule })
-        .eq('id', reg.doctors_id);
-
-      if (docErr) {
-        console.error('doctors schedule sync error:', docErr.message);
-      }
     }
 
     setSaving(false);

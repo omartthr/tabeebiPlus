@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { IDash, ICal, IUsers, IDoc, IGraph, ISet, Avatar } from '@/components/ui/icons';
 import { getDoctorSession, type DoctorSession } from '@/hooks/useDoctor';
-import { supabase } from '@/lib/supabase';
+import { getPendingCountAction } from '@/actions/doctorActions';
 
 const NAV = [
   { href: '/dashboard',    icon: IDash,  label: 'Gösterge Paneli', badgeKey: 'pending' },
@@ -31,14 +31,8 @@ export default function Sidebar() {
       setDoctor(doc);
       if (doc) {
         // Fetch pending count
-        let q = supabase.from('appointments').select('id').eq('status', 'pending');
-        if (doc.doctors_id) {
-          q = q.or(`doctor_registration_id.eq.${doc.id},doctor_id.eq.${doc.doctors_id}`);
-        } else {
-          q = q.eq('doctor_registration_id', doc.id);
-        }
-        q.then(({ data }) => {
-          if (data && data.length > 0) setPendingBadge(data.length);
+        getPendingCountAction(doc.id, doc.doctors_id).then(({ count }) => {
+          if (count > 0) setPendingBadge(count);
         });
       }
     }

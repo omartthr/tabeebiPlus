@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect, type ComponentType } from 'react';
-import { supabase } from '@/lib/supabase';
 import { setDoctorSession } from '@/hooks/useDoctor';
+import { sendOtpAction, verifyOtpAction, getDoctorByPhone, registerDoctor, notifyDoctorAction } from '@/actions/doctorActions';
 
 const SPECIALTIES_BY_CATEGORY = {
   'Dental (Diş Hekimliği)': [
@@ -85,9 +85,7 @@ export default function RegisterPage() {
     if (clean.length < 9) { setError('Geçerli bir telefon numarası girin.'); return; }
     const fullPhone = countryCode + clean;
     setLoading(true);
-    const { error: fnErr } = await supabase.functions.invoke('send-otp', {
-      body: { phone: fullPhone, country_code: countryCode }
-    });
+    const { error: fnErr } = await sendOtpAction(fullPhone, countryCode);
     setLoading(false);
     if (fnErr) { setError('Kod gönderilemedi. Tekrar deneyin.'); return; }
     setPhone(fullPhone);
@@ -101,7 +99,7 @@ export default function RegisterPage() {
     if (code.length < 4) { setError('4 haneli kodu girin.'); return; }
     setLoading(true);
 
-    const { data, error: fnErr } = await supabase.functions.invoke('verify-otp', { body: { phone, code } });
+    const { data, error: fnErr } = await verifyOtpAction(phone, code);
     if (fnErr || !data?.valid) {
       setLoading(false);
       setError('Kod hatalı veya süresi dolmuş.');
@@ -112,11 +110,7 @@ export default function RegisterPage() {
     let existing = data?.doctor;
 
     if (!existing && data?.valid) {
-      const { data: fetchedDoc } = await supabase
-        .from('doctor_registrations')
-        .select('id, name, surname, specialty, status')
-        .eq('phone', phone)
-        .maybeSingle();
+      const fetchedDoc = await getDoctorByPhone(phone);
       existing = fetchedDoc;
     }
 
@@ -156,33 +150,27 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
 
-    const { data: inserted, error: dbErr } = await supabase
-      .from('doctor_registrations')
-      .insert({
-        phone,
-        name: name.trim(),
-        surname: surname.trim(),
-        birth_date: birthDate || null,
-        specialty,
-        clinic_name: clinic.trim() || null,
-        location_address: locAddr,
-        location_lat: locLat,
-        location_lng: locLng,
-        status: 'pending',
-      })
-      .select('id')
-      .single();
+    const { data: inserted, error: dbErr } = await registerDoctor({
+      phone,
+      name: name.trim(),
+      surname: surname.trim(),
+      birth_date: birthDate || null,
+      specialty,
+      clinic_name: clinic.trim() || null,
+      location_address: locAddr,
+      location_lat: locLat,
+      location_lng: locLng,
+      status: 'pending',
+    });
 
-    if (dbErr) {
+    if (dbErr || !inserted) {
       setLoading(false);
-      setError('Kayıt sırasında bir hata oluştu: ' + dbErr.message);
+      setError('Kayıt sırasında bir hata oluştu: ' + dbErr);
       return;
     }
 
     // Başvuru alındı bildirimi — fire and forget
-    supabase.functions.invoke('notify-doctor', {
-      body: { phone, name: name.trim(), type: 'received' },
-    });
+    notifyDoctorAction(phone, name.trim(), 'received');
 
     setLoading(false);
     setDoctorSession({ id: inserted.id, phone, name: name.trim(), surname: surname.trim(), specialty, status: 'pending' });

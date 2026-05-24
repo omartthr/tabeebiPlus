@@ -1,5 +1,5 @@
 'use client';
-import { supabase } from '@/lib/supabase';
+import { getDoctorStatisticsAction } from '@/actions/doctorActions';
 import { useRequireDoctor } from '@/hooks/useDoctor';
 import { useState, useEffect, useMemo } from 'react';
 import { IGraph, ICheck, IClock, IX, ICash } from '@/components/ui/icons';
@@ -12,17 +12,7 @@ export default function StatisticsPage() {
   useEffect(() => {
     if (!doctor) return;
     
-    let query = supabase
-      .from('appointments')
-      .select('id, price, status, reason, date');
-
-    if (doctor.doctors_id) {
-      query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
-    } else {
-      query = query.eq('doctor_registration_id', doctor.id);
-    }
-
-    query.then(({ data }) => {
+    getDoctorStatisticsAction(doctor.id, doctor.doctors_id).then(({ data }) => {
       setApts(data ?? []);
       setFetching(false);
     });

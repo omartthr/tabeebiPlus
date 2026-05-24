@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { checkDoctorExists, sendOtpAction, verifyOtpAction, getDoctorByPhone } from '@/actions/doctorActions';
 import { setDoctorSession } from '@/hooks/useDoctor';
 
 type Step = 'phone' | 'otp';
@@ -43,22 +43,16 @@ export default function LoginPage() {
     setLoading(true);
 
     // 1. Önce veritabanında bu numara kayıtlı mı kontrol et (Hızlı geri bildirim için)
-    const { data: doc, error: dbErr } = await supabase
-      .from('doctor_registrations')
-      .select('id')
-      .eq('phone', fullPhone)
-      .maybeSingle();
+    const doc = await checkDoctorExists(fullPhone);
 
-    if (dbErr || !doc) {
+    if (!doc) {
       setLoading(false);
       setError('Bu numaraya ait bir doktor kaydı bulunamadı. Lütfen önce kayıt olun.');
       return;
     }
 
     // 2. Kayıt varsa OTP gönder
-    const { error: fnErr } = await supabase.functions.invoke('send-otp', {
-      body: { phone: fullPhone, country_code: countryCode }
-    });
+    const { error: fnErr } = await sendOtpAction(fullPhone, countryCode);
 
     setLoading(false);
 
@@ -77,7 +71,7 @@ export default function LoginPage() {
     setLoading(true);
 
     // 1. Verify OTP
-    const { data: verifyData, error: verifyErr } = await supabase.functions.invoke('verify-otp', { body: { phone, code } });
+    const { data: verifyData, error: verifyErr } = await verifyOtpAction(phone, code);
     if (verifyErr || !verifyData?.valid) {
       setLoading(false);
       setError('Kod hatalı veya süresi dolmuş.');
@@ -88,11 +82,7 @@ export default function LoginPage() {
     let doc = verifyData?.doctor;
 
     if (!doc) {
-      const { data: fetchedDoc } = await supabase
-        .from('doctor_registrations')
-        .select('id, name, surname, specialty, status')
-        .eq('phone', phone)
-        .maybeSingle();
+      const fetchedDoc = await getDoctorByPhone(phone);
       doc = fetchedDoc;
     }
 

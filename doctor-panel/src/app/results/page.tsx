@@ -1,6 +1,6 @@
 'use client';
 import { useRequireDoctor } from '@/hooks/useDoctor';
-import { supabase } from '@/lib/supabase';
+import { getPendingResultsAction, markReportUploadedAction } from '@/actions/doctorActions';
 import { IDoc, ICheck, ISearch, Avatar, StatusBadge } from '@/components/ui/icons';
 import CustomConfirm from '@/components/ui/CustomConfirm';
 import { useState, useEffect, useMemo } from 'react';
@@ -39,18 +39,7 @@ export default function ResultsPage() {
   useEffect(() => {
     if (!doctor) return;
 
-    let query = supabase
-      .from('appointments')
-      .select('id, date, time, reason, price, patient_name, patient_phone, patients(name, phone, avatar_hue, patient_code)')
-      .eq('status', 'completed');
-
-    if (doctor.doctors_id) {
-      query = query.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
-    } else {
-      query = query.eq('doctor_registration_id', doctor.id);
-    }
-
-    query.or('report_uploaded.eq.false,report_uploaded.is.null').order('date', { ascending: false }).then(({ data }) => {
+    getPendingResultsAction(doctor.id, doctor.doctors_id).then(({ data }) => {
       const mapped: ResultRow[] = (data ?? []).map((a: any) => {
         const patName = a.patients?.name ?? a.patient_name ?? 'Bilinmeyen';
         return {
@@ -124,10 +113,7 @@ export default function ResultsPage() {
     if (!id) return;
     setConfirmData({ visible: false, appointmentId: null });
     setSavingNoReport(id);
-    const { error } = await supabase
-      .from('appointments')
-      .update({ report_uploaded: true })
-      .eq('id', id);
+    const { error } = await markReportUploadedAction(id);
     setSavingNoReport(null);
     
     if (error) {

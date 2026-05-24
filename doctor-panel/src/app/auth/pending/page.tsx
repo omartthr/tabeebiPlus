@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { getDoctorSession, clearDoctorSession } from '@/hooks/useDoctor';
-import { supabase } from '@/lib/supabase';
+import { getDoctorById } from '@/actions/doctorActions';
 
 export default function PendingPage() {
   const [name, setName] = useState('');
@@ -17,11 +17,7 @@ export default function PendingPage() {
     const s = getDoctorSession();
     if (!s) return;
     setChecking(true);
-    const { data } = await supabase
-      .from('doctor_registrations')
-      .select('status')
-      .eq('id', s.id)
-      .single();
+    const { data } = await getDoctorById(s.id);
     setChecking(false);
     if (data?.status === 'approved') {
       const updated = { ...s, status: 'approved' as const };

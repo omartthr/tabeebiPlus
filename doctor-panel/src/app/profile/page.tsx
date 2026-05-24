@@ -1,5 +1,5 @@
 'use client';
-import { supabase } from '@/lib/supabase';
+import { getDoctorScheduleAction, getDoctorRegistrationAction, getDoctorInfoAction, updateDoctorProfileAction } from '@/actions/doctorActions';
 import { useRequireDoctor, clearDoctorSession } from '@/hooks/useDoctor';
 import { useState, useEffect, useCallback } from 'react';
 import { IClock, ICheck } from '@/components/ui/icons';
@@ -51,17 +51,8 @@ export default function ProfilePage() {
     let cancelled = false;
 
     (async () => {
-      const { data: schedData } = await supabase
-        .from('doctor_schedules')
-        .select('schedule')
-        .eq('doctor_registration_id', doctorId)
-        .maybeSingle();
-
-      const { data: profData } = await supabase
-        .from('doctor_registrations')
-        .select('price, exp_years, location_address, location_lat, location_lng, doctors_id')
-        .eq('id', doctorId)
-        .maybeSingle();
+      const { data: schedData } = await getDoctorScheduleAction(doctorId);
+      const { data: profData } = await getDoctorRegistrationAction(doctorId);
 
       if (cancelled) return;
       if (schedData?.schedule) setSchedule(schedData.schedule as typeof DEFAULT_SCHEDULE);
@@ -72,12 +63,7 @@ export default function ProfilePage() {
       if (profData?.location_lng) setLocLng(profData.location_lng);
 
       if (profData?.doctors_id) {
-        const { data: docData } = await supabase
-          .from('doctors')
-          .select('rating, reviews')
-          .eq('id', profData.doctors_id)
-          .maybeSingle();
-
+        const { data: docData } = await getDoctorInfoAction(profData.doctors_id);
         if (!cancelled && docData) {
           setRating(Number(docData.rating) || 0);
           setReviewsCount(docData.reviews || 0);
@@ -121,41 +107,25 @@ export default function ProfilePage() {
     const priceNum = parseInt(price) || 0;
     const expNum = parseInt(expYears) || 1;
 
-    const { error: schedErr } = await supabase
-      .from('doctor_schedules')
-      .upsert({ doctor_registration_id: doctor.id, schedule, updated_at: new Date().toISOString() });
-
-    if (schedErr) {
-      setSaving(false);
-      alert('Hata: ' + schedErr.message);
-      return;
-    }
-
-    const { error: regErr } = await supabase
-      .from('doctor_registrations')
-      .update({
+    const { error, regData } = await updateDoctorProfileAction(
+      doctor.id,
+      {
         price: priceNum,
         exp_years: expNum,
         location_address: locAddr,
         location_lat: locLat,
         location_lng: locLng
-      })
-      .eq('id', doctor.id);
+      },
+      schedule
+    );
 
-    if (regErr) {
+    if (error) {
       setSaving(false);
-      alert('Hata (Profil): ' + regErr.message);
+      alert('Hata: ' + error);
       return;
     }
 
-    // Sync to doctors table if linked
-    const { data: reg } = await supabase
-      .from('doctor_registrations')
-      .select('*')
-      .eq('id', doctor.id)
-      .maybeSingle();
-
-    if (reg) {
+    if (regData) {
       // Update local session
       const { setDoctorSession } = await import('@/hooks/useDoctor');
       setDoctorSession({
@@ -165,30 +135,8 @@ export default function ProfilePage() {
         location_address: locAddr,
         location_lat: locLat,
         location_lng: locLng,
-        clinic_name: reg.clinic_name
+        clinic_name: regData.clinic_name
       } as any);
-
-      if (reg.doctors_id) {
-        const { error: docErr } = await supabase
-          .from('doctors')
-          .update({
-            name: `Dr. ${reg.name} ${reg.surname}`,
-            specialty: reg.specialty,
-            price: priceNum,
-            exp: expNum + ' yrs',
-            loc: reg.clinic_name || 'Kerkük',
-            registration_id: reg.id,
-            location_address: locAddr,
-            location_lat: locLat,
-            location_lng: locLng,
-            schedule,
-          })
-          .eq('id', reg.doctors_id);
-
-        if (docErr) {
-          console.error('doctors table sync error:', docErr.message);
-        }
-      }
     }
 
     setSaving(false);

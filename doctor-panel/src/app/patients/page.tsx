@@ -1,6 +1,6 @@
 'use client';
 import { useRequireDoctor } from '@/hooks/useDoctor';
-import { supabase } from '@/lib/supabase';
+import { getPatientHistoryAction, getDoctorPatientsAction } from '@/actions/doctorActions';
 import { ISearch, IPhone, IChevR, Avatar, IX, StatusBadge } from '@/components/ui/icons';
 import { useState, useEffect, useMemo } from 'react';
 
@@ -22,13 +22,7 @@ function PatientDrawer({ patient, doctor, onClose }: { patient: Patient; doctor:
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let q = supabase
-      .from('appointments')
-      .select('id, date, time, reason, status, notes, pdf_url')
-      .eq('patient_phone', patient.phone)
-      .order('date', { ascending: false });
-
-    q.then(({ data }) => {
+    getPatientHistoryAction(patient.phone).then(({ data }) => {
       setApts(data ?? []);
       setLoading(false);
     });
@@ -109,19 +103,7 @@ export default function PatientsPage() {
   useEffect(() => {
     if (!doctor) return;
 
-    let q = supabase
-      .from('appointments')
-      .select('reason, date, time, patient_name, patient_phone, patients(id, name, phone, avatar_hue)')
-      .eq('report_uploaded', true)
-      .order('date', { ascending: false });
-
-    if (doctor.doctors_id) {
-      q = q.or(`doctor_registration_id.eq.${doctor.id},doctor_id.eq.${doctor.doctors_id}`);
-    } else {
-      q = q.eq('doctor_registration_id', doctor.id);
-    }
-
-    q
+    getDoctorPatientsAction(doctor.id, doctor.doctors_id)
       .then(({ data }) => {
         if (!data) { setFetching(false); return; }
 
