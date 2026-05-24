@@ -4,7 +4,7 @@
     "slug": "tabeebi-mobile",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "platforms": [
       "ios",
       "android"

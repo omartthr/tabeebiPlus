@@ -12,6 +12,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://dyacmdoccwcmothwmqnf.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_rHyY9FRO0_ryks4-gWlRTQ_9d3lM6yt",
+        "EXPO_PUBLIC_DUMMY_PASSWORD": "Tabeebi-Secret-123!"
       }
     },
     "production": {}
