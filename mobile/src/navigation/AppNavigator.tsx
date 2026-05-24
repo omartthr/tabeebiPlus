@@ -12,7 +12,8 @@ import ConfirmedScreen from '../screens/appointments/ConfirmedScreen';
 import HelpScreen from '../screens/support/HelpScreen';
 import PrivacyScreen from '../screens/profile/PrivacyScreen';
 import { UserData } from '../types/navigation';
-import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TabeebiAPI } from '../lib/api';
 
 interface AuthContextValue {
   user: UserData | null;
@@ -52,179 +53,72 @@ export default function AppNavigator() {
 
   useEffect(() => {
     // Uygulama açılınca mevcut oturumu kontrol et
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) console.error('Oturum kontrol hatası:', error);
-      if (data?.session) {
-        loadPatient(data.session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setUser(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    checkSession();
   }, []);
 
-  // Supabase'den hasta bilgilerini çek
-  const loadPatient = async (authId: string) => {
-    const { data } = await supabase
-      .from('patients')
-      .select('id, name, phone, patient_code')
-      .eq('auth_id', authId)
-      .single();
-
-    if (data) setUser({ id: data.id, name: data.name, phone: data.phone, patient_code: data.patient_code });
-    setLoading(false);
+  const checkSession = async () => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data, error } = await TabeebiAPI.getMe(token);
+        if (data?.user) {
+          setUser(data.user);
+        } else {
+          await AsyncStorage.removeItem('auth_token');
+        }
+      }
+    } catch (e) {
+      console.error('Oturum kontrol hatası:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signIn = async (u: UserData): Promise<boolean> => {
     try {
-      const fakeEmail = `user${u.phone.replace(/[^0-9]/g, '')}@tabeebi.com`;
-      const fakePassword = process.env.EXPO_PUBLIC_DUMMY_PASSWORD || 'Fallback-Secret-123!';
-
       if (u.isLogin) {
         // GİRİŞ YAP (Login) Flow
-        let { data, error } = await supabase.auth.signInWithPassword({
-          email: fakeEmail,
-          password: fakePassword,
-        });
-
-        if (error) {
+        const { data, error } = await TabeebiAPI.login(u.phone);
+        
+        if (error || !data) {
           Alert.alert('Giriş Hatası', 'Bu numaraya ait bir hesap bulunamadı veya hatalı.');
           return false;
         }
 
-        if (data?.session) {
-          // Fetch real name from database
-          const { data: existing } = await supabase
-            .from('patients')
-            .select('id, name, phone, patient_code')
-            .eq('auth_id', data.session.user.id)
-            .maybeSingle();
-
-          if (existing) {
-            setUser({ id: existing.id, name: existing.name, phone: existing.phone, patient_code: existing.patient_code });
-          } else {
-            setUser({ name: 'Bilinmeyen Kullanıcı', phone: u.phone });
-          }
-        }
+        await AsyncStorage.setItem('auth_token', data.token);
+        setUser(data.user);
         return true;
       }
 
       // KAYIT OL (Register) Flow
-      // First check if user already exists
-      let { error: checkError } = await supabase.auth.signInWithPassword({
-        email: fakeEmail,
-        password: fakePassword,
-      });
-
-      if (!checkError) {
-        // Sign in succeeded, meaning account already exists!
-        Alert.alert('Kayıt Hatası', 'Bu telefon numarası zaten kayıtlı. Lütfen giriş yap sayfasını kullanın.');
-        await supabase.auth.signOut();
+      const { data, error } = await TabeebiAPI.register(u.phone, u.name || '');
+      
+      if (error || !data) {
+        Alert.alert('Kayıt Hatası', 'Bu telefon numarası başka bir hesap tarafından kullanılıyor olabilir.');
         return false;
       }
-
-      // Account doesn't exist, proceed with signup
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: fakeEmail,
-        password: fakePassword,
-      });
-
-      if (signUpError) {
-        Alert.alert('Kayıt Hatası', signUpError.message);
-        return false;
-      }
-
-      if (signUpData?.session) {
-        // Veritabanında daha önce doktor tarafından eklenmiş geçici hasta var mı diye bak (is_registered = false olan)
-        const { data: existingGuest } = await supabase
-          .from('patients')
-          .select('id, patient_code')
-          .eq('phone', u.phone)
-          .maybeSingle();
-
-        let finalPatientId: string | undefined;
-        let finalCode: string | null = null;
-
-        if (existingGuest) {
-          // Mevcut geçici hastayı gerçek hesaba dönüştür
-          const { data: updated, error: updateError } = await supabase.from('patients')
-            .update({ auth_id: signUpData.session.user.id, name: u.name, is_registered: true })
-            .eq('id', existingGuest.id)
-            .select('id, patient_code').single();
-          
-          if (!updateError && updated) {
-            finalPatientId = updated.id;
-            finalCode = updated.patient_code;
-          }
-        } else {
-          // Yepyeni bir hasta oluştur
-          const { data: inserted, error: insertError } = await supabase.from('patients').insert({
-            auth_id: signUpData.session.user.id,
-            phone: u.phone,
-            name: u.name,
-            is_registered: true
-          }).select('id, patient_code').single();
-
-          if (insertError && insertError.code === '23505') {
-            Alert.alert('Kayıt Hatası', 'Bu telefon numarası başka bir hesap tarafından kullanılıyor.');
-            await supabase.auth.signOut();
-            return false;
-          }
-          if (!insertError && inserted) {
-            finalPatientId = inserted.id;
-            finalCode = inserted.patient_code;
-          }
-        }
-
-        if (finalPatientId) {
-          // Doktor panelinden RLS yüzünden hasta ID'si boş kalmış randevular varsa, onları da bu ID'ye bağla
-          await supabase.from('appointments')
-            .update({ patient_id: finalPatientId })
-            .is('patient_id', null)
-            .eq('patient_phone', u.phone);
-
-          setUser({ id: finalPatientId, name: u.name || '', phone: u.phone, patient_code: finalCode });
-        } else {
-          Alert.alert('Veri Kayıt Hatası', 'Hasta bilgisi veritabanına kaydedilemedi.');
-          return false;
-        }
-      } else {
-        Alert.alert('Hata', 'Kayıt sırasında bir oturum oluşturulamadı.');
-        return false;
-      }
-
+      
+      await AsyncStorage.setItem('auth_token', data.token);
+      setUser(data.user);
       return true;
 
     } catch (e) {
       console.error('Beklenmedik hata:', e);
-      Alert.alert('Hata', 'Supabase ile bağlantı kurulamadı.');
+      Alert.alert('Hata', 'Sunucu ile bağlantı kurulamadı.');
       return false;
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut().catch(() => { });
+    await AsyncStorage.removeItem('auth_token');
     setUser(null);
   };
 
   const updateUser = async (updates: Partial<UserData>): Promise<boolean> => {
     if (!user?.id) return false;
     try {
-      const { error } = await supabase
-        .from('patients')
-        .update({ name: updates.name })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
+      // NOTE: Profil güncellemeleri de yakında Python API'ye taşınacak.
+      // Şimdilik sadece state güncelliyoruz.
       setUser(prev => prev ? { ...prev, ...updates } : null);
       return true;
     } catch (e) {

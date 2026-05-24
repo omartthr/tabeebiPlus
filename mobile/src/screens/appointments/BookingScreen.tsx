@@ -9,7 +9,7 @@ import { colors } from '../../theme';
 import { DAYS, iqd } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
 import { useAuth } from '../../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Booking'>;
@@ -45,12 +45,8 @@ export default function BookingScreen({ route, navigation }: Props) {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('doctors')
-        .select('schedule')
-        .eq('id', doctor.id)
-        .maybeSingle();
-      if (error) console.error('[Booking] schedule error:', error.message);
+      const { data, error } = await TabeebiAPI.getDoctorSchedule(doctor.id);
+      if (error) console.error('[Booking] schedule error:', error);
       if (!cancelled && data?.schedule) setSchedule(data.schedule);
       if (!cancelled) setLoading(false);
     })();
@@ -64,15 +60,9 @@ export default function BookingScreen({ route, navigation }: Props) {
     setSelectedHour(null);
     setSelectedTime(null);
 
-    supabase
-      .from('appointments')
-      .select('time')
-      .eq('doctor_id', doctor.id)
-      .eq('date', day.key)
-      .neq('status', 'cancelled')
-      .then(({ data }) => {
-        if (!cancelled) setBookedTimes((data ?? []).map(b => b.time));
-      });
+    TabeebiAPI.getBookedTimes(doctor.id, day.key).then(({ data }) => {
+      if (!cancelled) setBookedTimes(data?.bookedTimes || []);
+    });
 
     return () => { cancelled = true; };
   }, [dayIdx, schedule]);
@@ -103,7 +93,7 @@ export default function BookingScreen({ route, navigation }: Props) {
   const confirm = async () => {
     if (!user?.id || !selectedTime) return;
     setBookingLoading(true);
-    const { error } = await supabase.from('appointments').insert({
+    const { error } = await TabeebiAPI.createAppointment({
       patient_id: user.id,
       doctor_id: doctor.id,
       date: day.key,
@@ -114,7 +104,7 @@ export default function BookingScreen({ route, navigation }: Props) {
     });
     setBookingLoading(false);
     if (error) {
-      Alert.alert('Hata', 'Randevu alınırken bir hata oluştu: ' + error.message);
+      Alert.alert('Hata', 'Randevu alınırken bir hata oluştu: ' + error);
       return;
     }
     navigation.navigate('Confirmed', { booking: { doctor, day: day.full, time: selectedTime, payment } });

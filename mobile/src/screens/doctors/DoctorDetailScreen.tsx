@@ -10,7 +10,7 @@ import { iqd, DAYS } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 import Rating from '../../components/Rating';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'DoctorDetail'>;
 
@@ -36,12 +36,8 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
         return;
       }
 
-      // Get schedule directly using registration_id
-      const { data: sched } = await supabase
-        .from('doctor_schedules')
-        .select('schedule')
-        .eq('doctor_registration_id', regId)
-        .maybeSingle();
+      // Get schedule directly using registration_id via API
+      const { data: sched } = await TabeebiAPI.getDoctorScheduleByRegId(regId);
 
       if (cancelled) return;
 

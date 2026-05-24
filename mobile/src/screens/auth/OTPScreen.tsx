@@ -10,7 +10,7 @@ import { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
 import TopBar from '../../components/TopBar';
 import { colors } from '../../theme';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'>;
 
@@ -38,9 +38,8 @@ export default function OTPScreen({ route, navigation }: Props) {
   const sendOtp = async () => {
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke('send-otp', {
-        body: { phone: phone.replace(/\D/g, '').replace(/^0/, '') },
-      });
+      const cleanedPhone = phone.replace(/\D/g, '').replace(/^0/, '');
+      const { error } = await TabeebiAPI.sendOtp(cleanedPhone);
       if (error) Alert.alert('Hata', 'WhatsApp kodu gönderilemedi. Tekrar dene.');
     } catch {
       Alert.alert('Hata', 'Bağlantı hatası.');
@@ -65,9 +64,7 @@ export default function OTPScreen({ route, navigation }: Props) {
 
     try {
       const cleanedPhone = phone.replace(/\D/g, '').replace(/^0/, '');
-      const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: { phone: cleanedPhone, code: full },
-      });
+      const { data, error } = await TabeebiAPI.verifyOtp(cleanedPhone, full);
 
       if (error || !data?.valid) {
         Alert.alert('Hatalı Kod', 'Girdiğin kod yanlış veya süresi dolmuş.');

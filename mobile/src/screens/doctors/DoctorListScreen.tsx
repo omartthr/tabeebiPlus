@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { MainStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
 import { Doctor } from '../../data';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
 import TopBar from '../../components/TopBar';
 import DoctorCard from '../../components/DoctorCard';
 
@@ -22,32 +22,28 @@ export default function DoctorListScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('doctors')
-      .select('*')
-      .eq('is_active', true)
-      .in('specialty', specialty.dbNames || [])
-      .then(({ data }) => {
-        const mapped: Doctor[] = (data ?? []).map(d => ({
-          id: d.id,
-          name: d.name,
-          specialty: d.specialty,
-          rating: Number(d.rating) || 0,
-          reviews: d.reviews || 0,
-          price: d.price || 0,
-          today: d.today ?? false,
-          exp: d.exp || '1 yrs',
-          loc: d.loc || '',
-          initials: d.initials || d.name.slice(0, 2).toUpperCase(),
-          hue: d.hue || 175,
-          registration_id: d.registration_id || null,
-          location_address: d.location_address || null,
-          location_lat: d.location_lat || null,
-          location_lng: d.location_lng || null,
-        }));
-        setDoctors(mapped);
-        setLoading(false);
-      });
+    TabeebiAPI.getDoctors().then(({ data }) => {
+      const docs = (data?.doctors ?? []).filter((d: any) => specialty.dbNames?.includes(d.specialty));
+      const mapped: Doctor[] = docs.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        specialty: d.specialty,
+        rating: Number(d.rating) || 0,
+        reviews: d.reviews || 0,
+        price: d.price || 0,
+        today: d.today ?? false,
+        exp: d.exp || '1 yrs',
+        loc: d.loc || '',
+        initials: d.initials || d.name.slice(0, 2).toUpperCase(),
+        hue: d.hue || 175,
+        registration_id: d.registration_id || null,
+        location_address: d.location_address || null,
+        location_lat: d.location_lat || null,
+        location_lng: d.location_lng || null,
+      }));
+      setDoctors(mapped);
+      setLoading(false);
+    });
   }, []);
 
   const FILTERS = [

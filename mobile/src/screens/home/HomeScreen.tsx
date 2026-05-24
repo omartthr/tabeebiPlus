@@ -18,7 +18,8 @@ import Logo from '../../components/Logo';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appointment, DAYS } from '../../data';
 
 export default function HomeScreen() {
@@ -38,67 +39,15 @@ export default function HomeScreen() {
     setRecsLoading(true);
 
     try {
-      const { data: pastApts } = await supabase
-        .from('appointments')
-        .select('rating, doctors(specialty)')
-        .eq('patient_id', user.id)
-        .gte('rating', 4);
-
-      const preferredSpecs = new Set<string>();
-      if (pastApts) {
-        pastApts.forEach((apt: any) => {
-          if (apt.doctors?.specialty) {
-            preferredSpecs.add(apt.doctors.specialty);
-          }
-        });
-      }
-
-      const { data: docs } = await supabase
-        .from('doctors')
-        .select('*')
-        .eq('is_active', true);
-
-      if (!docs) {
-        setRecommendedDoctors([]);
-        setRecsLoading(false);
-        return;
-      }
-
-      const scored = docs.map((d: any) => {
-        let score = (d.rating || 4.5) * 10;
-        score += Math.log((d.reviews || 0) + 1) * 5;
-        
-        if (preferredSpecs.has(d.specialty)) {
-          score += 30;
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data } = await TabeebiAPI.getRecommendedDoctors(token);
+        if (data?.doctors) {
+          setRecommendedDoctors(data.doctors);
+        } else {
+          setRecommendedDoctors([]);
         }
-        if (d.today) {
-          score += 15;
-        }
-
-        return {
-          id: d.id,
-          name: d.name,
-          specialty: d.specialty,
-          initials: d.initials || d.name.slice(0, 2).toUpperCase(),
-          hue: d.hue || 175,
-          rating: Number(d.rating) || 4.5,
-          reviews: d.reviews || 0,
-          price: d.price || 35000,
-          loc: d.loc || '',
-          exp: d.exp || '10 Yıl',
-          today: d.today,
-          registration_id: d.registration_id,
-          location_lat: d.location_lat,
-          location_lng: d.location_lng,
-          recommendationScore: score
-        };
-      });
-
-      const top3 = scored
-        .sort((a, b) => b.recommendationScore - a.recommendationScore)
-        .slice(0, 3);
-
-      setRecommendedDoctors(top3);
+      }
     } catch (err) {
       console.error('Error fetching recommendations:', err);
     }
@@ -107,34 +56,30 @@ export default function HomeScreen() {
 
   const fetchNext = useCallback(async () => {
     if (!user?.id) return;
-    const now = new Date();
-    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-    const { data } = await supabase
-      .from('appointments')
-      .select('*, doctors(name, specialty, initials, hue, loc)')
-      .eq('patient_id', user.id)
-      .in('status', ['pending', 'confirmed'])
-      .gte('date', localDate)
-      .order('date', { ascending: true })
-      .order('time', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (data) {
-      const dayMatch = DAYS.find(d => d.key === data.date);
-      setNextAppt({
-        id: data.id,
-        doctor: data.doctors?.name || 'Unknown',
-        specialty: data.doctors?.specialty || '-',
-        date: dayMatch ? dayMatch.full : data.date,
-        time: data.time,
-        status: data.status,
-        initials: data.doctors?.initials || '??',
-        hue: data.doctors?.hue || 175,
-        clinic: data.doctors?.loc || 'Clinic',
-      });
-    } else {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data } = await TabeebiAPI.getNextAppointment(token);
+        if (data?.appointment) {
+          const appt = data.appointment;
+          const dayMatch = DAYS.find(d => d.key === appt.date);
+          setNextAppt({
+            id: appt.id,
+            doctor: appt.doctors?.name || 'Unknown',
+            specialty: appt.doctors?.specialty || '-',
+            date: dayMatch ? dayMatch.full : appt.date,
+            time: appt.time,
+            status: appt.status,
+            initials: appt.doctors?.initials || '??',
+            hue: appt.doctors?.hue || 175,
+            clinic: appt.doctors?.loc || 'Clinic',
+          });
+        } else {
+          setNextAppt(null);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching next appointment:', err);
       setNextAppt(null);
     }
   }, [user?.id]);

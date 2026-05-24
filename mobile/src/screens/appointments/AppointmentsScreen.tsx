@@ -9,7 +9,8 @@ import { colors, shadows } from '../../theme';
 import DocAvatar from '../../components/DocAvatar';
 import StatusBadge from '../../components/StatusBadge';
 import CustomAlert from '../../components/CustomAlert';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AppNavigator';
 import { Appointment, DAYS } from '../../data';
 import { MainStackParamList } from '../../types/navigation';
@@ -46,16 +47,13 @@ export default function AppointmentsScreen({ navigation }: any) {
     setSubmittingRating(true);
 
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({
-          rating: selectedStars,
-          review: reviewText || null
-        })
-        .eq('id', ratingApt.id);
+      const { error } = await TabeebiAPI.updateAppointment(ratingApt.id, {
+        rating: selectedStars,
+        review: reviewText || null
+      });
 
       if (error) {
-        Alert.alert(t('error'), t('rating_save_error') + error.message);
+        Alert.alert(t('error'), t('rating_save_error') + error);
       } else {
         setRateModalVisible(false);
         fetchApts();
@@ -69,16 +67,17 @@ export default function AppointmentsScreen({ navigation }: any) {
 
   const fetchApts = useCallback(async () => {
     if (!user?.id) return;
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*, doctors(id, name, specialty, initials, hue, price)')
-      .eq('patient_id', user.id)
-      .order('date', { ascending: false });
+    
+    const token = await AsyncStorage.getItem('auth_token');
+    if (!token) return;
+
+    const { data, error } = await TabeebiAPI.getMyAppointments(token);
 
     if (error) {
       console.error('Fetch appointments error:', error);
     } else {
-      const mapped: Appointment[] = (data ?? []).map(a => {
+      const appointmentsData = data?.appointments || [];
+      const mapped: Appointment[] = appointmentsData.map((a: any) => {
         const dayMatch = DAYS.find(d => d.key === a.date);
         return {
           id: a.id,
@@ -151,17 +150,16 @@ export default function AppointmentsScreen({ navigation }: any) {
       cancelText: t('no'),
       onConfirm: async () => {
         setAlert(p => ({ ...p, visible: false }));
-        const { error } = await supabase
-          .from('appointments')
-          .update({ status: 'cancelled' })
-          .eq('id', aptId);
+        
+        const { error } = await TabeebiAPI.updateAppointment(aptId, { status: 'cancelled' });
+        
         if (!error) {
           fetchApts();
         } else {
           setAlert({
             visible: true,
             title: t('error'),
-            message: error.message,
+            message: error,
             type: 'danger',
             onConfirm: () => setAlert(p => ({ ...p, visible: false })),
           });

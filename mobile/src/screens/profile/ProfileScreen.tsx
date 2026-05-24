@@ -13,7 +13,8 @@ import { MainStackParamList, TabParamList } from '../../types/navigation';
 import { useAuth } from '../../navigation/AppNavigator';
 import { colors, shadows } from '../../theme';
 import DocAvatar from '../../components/DocAvatar';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { changeLanguage, ALL_LANGUAGES } from '../../i18n';
 import { useRTL } from '../../context/RTLContext';
 import Logo from '../../components/Logo';
@@ -42,33 +43,21 @@ export default function ProfileScreen() {
   const fetchCounts = useCallback(async () => {
     if (!user?.id) return;
     
-    // Fetch upcoming bookings
-    const { count: bookingCount } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('patient_id', user.id)
-      .in('status', ['pending', 'confirmed']);
-
-    // Fetch results
-    const { count: resultCount } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('patient_id', user.id)
-      .eq('status', 'completed')
-      .eq('report_uploaded', true);
-
-    // Fetch unread notifications
-    const { count: notifCount } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('patient_id', user.id)
-      .eq('unread', true);
-
-    setCounts({
-      bookings: bookingCount || 0,
-      results: resultCount || 0,
-      notifications: notifCount || 0,
-    });
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data } = await TabeebiAPI.getPatientCounts(token);
+        if (data) {
+          setCounts({
+            bookings: data.bookings || 0,
+            results: data.results || 0,
+            notifications: data.notifications || 0,
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Fetch counts error:', e);
+    }
   }, [user?.id]);
 
   React.useEffect(() => {

@@ -40,6 +40,24 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Expo Go + New Architecture (Fabric) ile expo-av Video bileşeni çöküyor.
+  // Bu yüzden geliştirme (DEV) ortamında videoyu atlayıp direkt geçiş yapıyoruz.
+  if (__DEV__) {
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        onFinish();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }, []);
+
+    return (
+      <Animated.View style={[styles.container, { opacity: fadeOut, justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
+        {/* DEV ortamında video yerine basit bir bekleme ekranı */}
+      </Animated.View>
+    );
+  }
+
   return (
     <Animated.View style={[styles.container, { opacity: fadeOut }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
@@ -60,6 +78,6 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2b9192',
+    backgroundColor: '#0d7377',
   },
 });

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { colors } from '../../theme';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
 import TopBar from '../../components/TopBar';
 import Logo from '../../components/Logo';
 import { useTranslation } from 'react-i18next';
@@ -21,15 +21,11 @@ export default function LoginScreen({ navigation }: Props) {
     setChecking(true);
     const cleanPhone = phone.replace(/\D/g, '');
 
-    const { data: patient } = await supabase
-      .from('patients')
-      .select('id')
-      .eq('phone', cleanPhone)
-      .maybeSingle();
+    const { data: patient, error } = await TabeebiAPI.getPatient(cleanPhone);
 
     setChecking(false);
 
-    if (!patient) {
+    if (error || !patient) {
       Alert.alert(
         t('account_not_found'),
         t('account_not_found_desc'),

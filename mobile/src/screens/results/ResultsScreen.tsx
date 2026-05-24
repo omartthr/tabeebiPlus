@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FileText, Calendar, ExternalLink, ChevronDown } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AppNavigator';
 
 interface Result {
@@ -26,23 +27,23 @@ export default function ResultsScreen() {
 
   const fetchResults = useCallback(async () => {
     if (!user?.id) return;
-    const { data } = await supabase
-      .from('appointments')
-      .select('id, date, ai_summary, pdf_url, doctors(name, specialty)')
-      .eq('patient_id', user.id)
-      .eq('status', 'completed')
-      .eq('report_uploaded', true)
-      .order('created_at', { ascending: false });
-
-    const mapped: Result[] = (data ?? []).map((a: any) => ({
-      id: a.id,
-      date: a.date,
-      doctorName: a.doctors?.name ?? t('unknown_doctor'),
-      specialty: a.doctors?.specialty ?? '-',
-      aiSummary: a.ai_summary ?? null,
-      pdfUrl: a.pdf_url ?? null,
-    }));
-    setResults(mapped);
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data } = await TabeebiAPI.getPatientResults(token);
+        const mapped: Result[] = (data?.results ?? []).map((a: any) => ({
+          id: a.id,
+          date: a.date,
+          doctorName: a.doctors?.name ?? t('unknown_doctor'),
+          specialty: a.doctors?.specialty ?? '-',
+          aiSummary: a.ai_summary ?? null,
+          pdfUrl: a.pdf_url ?? null,
+        }));
+        setResults(mapped);
+      }
+    } catch (e) {
+      console.error('Fetch results error:', e);
+    }
   }, [user?.id]);
 
   useEffect(() => {

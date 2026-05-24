@@ -12,7 +12,8 @@ import { colors, shadows } from '../../theme';
 import { Ticket } from '../../data';
 import TopBar from '../../components/TopBar';
 import StatusBadge from '../../components/StatusBadge';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AppNavigator';
 import CustomAlert from '../../components/CustomAlert';
 import Logo from '../../components/Logo';
@@ -40,21 +41,19 @@ export default function HelpScreen({ navigation }: Props) {
   const fetchTickets = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const { data } = await supabase
-        .from('support_tickets')
-        .select('*')
-        .eq('patient_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (data) {
-        const mapped: Ticket[] = data.map(t => ({
-          id: t.id,
-          subject: t.subject,
-          status: t.status,
-          time: new Date(t.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }),
-          last: t.last_response || t.message
-        }));
-        setTickets(mapped);
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data } = await TabeebiAPI.getSupportTickets(token);
+        if (data?.tickets) {
+          const mapped: Ticket[] = data.tickets.map((t: any) => ({
+            id: t.id,
+            subject: t.subject,
+            status: t.status,
+            time: new Date(t.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }),
+            last: t.last_response || t.message
+          }));
+          setTickets(mapped);
+        }
       }
     } catch (e) {
       console.error('Fetch tickets error:', e);
@@ -78,22 +77,24 @@ export default function HelpScreen({ navigation }: Props) {
     setSent(true);
     
     try {
-      const { error } = await supabase.from('support_tickets').insert({
-        patient_id: user.id,
-        category,
-        subject: subject.trim(),
-        message: message.trim(),
-        status: 'open'
-      });
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { error } = await TabeebiAPI.createSupportTicket(token, {
+          category,
+          subject: subject.trim(),
+          message: message.trim(),
+          status: 'open'
+        });
 
-      if (!error) {
-        setSent(false); 
-        setSubject(''); 
-        setMessage(''); 
-        await fetchTickets();
-        setAlertVisible(true);
-      } else {
-        throw error;
+        if (!error) {
+          setSent(false); 
+          setSubject(''); 
+          setMessage(''); 
+          await fetchTickets();
+          setAlertVisible(true);
+        } else {
+          throw new Error(error);
+        }
       }
     } catch (error: any) {
       setSent(false);

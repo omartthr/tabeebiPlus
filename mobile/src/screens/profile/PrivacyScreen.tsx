@@ -6,7 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
 import { useAuth } from '../../navigation/AppNavigator';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PrivacyScreen() {
   const navigation = useNavigation();
@@ -26,11 +27,10 @@ export default function PrivacyScreen() {
           style: 'destructive',
           onPress: async () => {
             if (user?.id) {
-              // Soft-delete personal data via RLS update permission
-              await supabase
-                .from('patients')
-                .update({ name: 'Silinmiş Kullanıcı' })
-                .eq('id', user.id);
+              const token = await AsyncStorage.getItem('auth_token');
+              if (token) {
+                await TabeebiAPI.deleteAccount(token);
+              }
             }
             // Securely log out to return to Welcome/Auth screen
             await signOut();

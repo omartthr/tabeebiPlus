@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme';
 import { useAuth } from '../../navigation/AppNavigator';
-import { supabase } from '../../lib/supabase';
+import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TYPE_CONFIG: Record<string, { bg: string; fg: string; Icon: any }> = {
   reminder: { bg: colors.teal50,    fg: colors.teal700,  Icon: Clock },
@@ -56,16 +57,18 @@ export default function NotificationsScreen() {
     }
     if (showIndicator) setLoading(true);
     
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('patient_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Fetch notifications error:', error.message);
-    } else {
-      setNotifications(data ?? []);
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { data, error } = await TabeebiAPI.getNotifications(token);
+        if (error) {
+          console.error('Fetch notifications error:', error);
+        } else {
+          setNotifications(data?.notifications ?? []);
+        }
+      }
+    } catch (e) {
+      console.error('Fetch notifications error:', e);
     }
     setLoading(false);
     setRefreshing(false);
@@ -86,15 +89,17 @@ export default function NotificationsScreen() {
     // Optimistic UI update
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ unread: false })
-      .eq('patient_id', user.id)
-      .eq('unread', true);
-
-    if (error) {
-      console.error('Mark all as read error:', error.message);
-      // Rollback on error
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { error } = await TabeebiAPI.markNotificationsRead(token);
+        if (error) {
+          console.error('Mark all as read error:', error);
+          fetchNotifications(false);
+        }
+      }
+    } catch (e) {
+      console.error('Mark all as read error:', e);
       fetchNotifications(false);
     }
   };
@@ -105,13 +110,17 @@ export default function NotificationsScreen() {
     // Optimistic UI update
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ unread: false })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Mark notification as read error:', error.message);
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        const { error } = await TabeebiAPI.markNotificationsRead(token, id);
+        if (error) {
+          console.error('Mark notification as read error:', error);
+          fetchNotifications(false);
+        }
+      }
+    } catch (e) {
+      console.error('Mark notification as read error:', e);
       fetchNotifications(false);
     }
   };
