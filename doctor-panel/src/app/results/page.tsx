@@ -117,8 +117,8 @@ export default function ResultsPage() {
     setSavingNoReport(null);
     
     if (error) {
-      console.error('Error completing without report:', error.message);
-      alert('İşlem başarısız: ' + error.message);
+      console.error('Error completing without report:', error);
+      alert('İşlem başarısız: ' + error);
     } else {
       setRows(prev => prev.filter(r => r.id !== id));
     }

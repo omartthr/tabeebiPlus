@@ -562,7 +562,7 @@ function AddAppointmentModal({ doctor, existingApts = [], onClose, onAdded, pres
       const { data: np, error: npError } = await createTemporaryPatientAction(name, phone.replace(/\D/g, ''));
       
       if (npError) {
-        console.warn('Geçici hasta oluşturulamadı (RLS engeli olabilir), randevuya isim kaydedilecek:', npError.message);
+        console.warn('Geçici hasta oluşturulamadı (RLS engeli olabilir), randevuya isim kaydedilecek:', npError);
       } else {
         patientId = np?.id;
       }
@@ -747,7 +747,7 @@ export default function DashboardPage() {
 
             updateAppointmentStatus(row.id, 'completed')
               .then(({ error }) => {
-                if (error) console.error('Auto complete error for id:', row.id, error.message);
+                if (error) console.error('Auto complete error for id:', row.id, error);
                 else console.log('Appointment auto-completed:', row.id);
               });
 
@@ -764,7 +764,7 @@ export default function DashboardPage() {
                   created_at: new Date().toISOString()
                 })
                 .then(({ error }) => {
-                  if (error) console.error('Auto complete notification error:', error.message);
+                  if (error) console.error('Auto complete notification error:', error);
                   else console.log('Auto complete notification sent for patient:', patientId);
                 });
             }
