@@ -13,8 +13,10 @@
       "android": {
         "buildType": "apk"
       },
+      "node": "20.19.4",
       "env": {
-        "EAS_BUILD_SKIP_LOCKFILE_CHECK": "1"
+        "EAS_BUILD_SKIP_LOCKFILE_CHECK": "1",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     },
     "production": {}
