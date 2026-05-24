@@ -1,5 +1,4 @@
 const { getDefaultConfig } = require('expo/metro-config');
-const { withNativeWind } = require('nativewind/metro');
 const path = require('path');
 const fs = require('fs');
 
@@ -9,7 +8,6 @@ const workspaceRoot = path.resolve(projectRoot, '../');
 const config = getDefaultConfig(projectRoot);
 
 // Only add workspace root if we're actually in a monorepo dev environment
-// (not on EAS build server where the parent dir structure is different)
 const parentPkgPath = path.resolve(workspaceRoot, 'package.json');
 if (fs.existsSync(parentPkgPath)) {
   try {
@@ -40,4 +38,4 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, moduleName, platform);
 };
 
-module.exports = withNativeWind(config, { input: './src/styles/global.css' });
+module.exports = config;
