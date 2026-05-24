@@ -25,6 +25,7 @@ if (fs.existsSync(parentPkgPath)) {
 }
 
 // Fix semver sub-path imports that Metro can't resolve (needed by react-native-reanimated)
+// and stub out OpenTelemetry modules that use dynamic import() incompatible with Hermes
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === 'semver/functions/satisfies') {
     return { filePath: path.resolve(projectRoot, 'stubs/semver-satisfies.js'), type: 'sourceFile' };
@@ -34,6 +35,10 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   }
   if (moduleName === 'semver/ranges/outside') {
     return { filePath: path.resolve(projectRoot, 'stubs/semver-outside.js'), type: 'sourceFile' };
+  }
+  // Stub out OpenTelemetry - uses dynamic import() that Hermes cannot compile
+  if (moduleName.startsWith('@opentelemetry/') || moduleName === '@opentelemetry/api') {
+    return { filePath: path.resolve(projectRoot, 'stubs/otel-stub.js'), type: 'sourceFile' };
   }
   return context.resolveRequest(context, moduleName, platform);
 };
