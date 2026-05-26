@@ -25,7 +25,12 @@ export default function LoginScreen({ navigation }: Props) {
 
     setChecking(false);
 
-    if (error || !patient) {
+    if (error) {
+      Alert.alert(t('error', 'Error'), t('something_went_wrong', 'Something went wrong: ') + error);
+      return;
+    }
+
+    if (!patient) {
       Alert.alert(
         t('account_not_found'),
         t('account_not_found_desc'),

@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../navigation/AppNavigator';
 import { Appointment, DAYS } from '../../data';
 import { MainStackParamList } from '../../types/navigation';
+import { isAppointmentPast } from '../../utils/date';
 
 export default function AppointmentsScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -79,13 +80,17 @@ export default function AppointmentsScreen({ navigation }: any) {
       const appointmentsData = data?.appointments || [];
       const mapped: Appointment[] = appointmentsData.map((a: any) => {
         const dayMatch = DAYS.find(d => d.key === a.date);
+        
+        const isPastTime = isAppointmentPast(a.date, a.time);
+        const finalStatus = (isPastTime && (a.status === 'pending' || a.status === 'confirmed')) ? 'completed' : a.status;
+
         return {
           id: a.id,
           doctor: a.doctors?.name || t('unknown_doctor'),
           specialty: a.doctors?.specialty || '-',
           date: dayMatch ? dayMatch.full : a.date,
           time: a.time,
-          status: a.status,
+          status: finalStatus,
           initials: a.doctors?.initials || '??',
           hue: a.doctors?.hue || 175,
           price: a.price || a.doctors?.price || 0,

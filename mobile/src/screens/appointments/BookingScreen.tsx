@@ -11,6 +11,7 @@ import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 import { TabeebiAPI } from '../../lib/api';
 import { useAuth } from '../../navigation/AppNavigator';
+import { isAppointmentPast } from '../../utils/date';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Booking'>;
 
@@ -81,12 +82,12 @@ export default function BookingScreen({ route, navigation }: Props) {
     if (!selectedHour) return [];
     return gen10MinSlots(selectedHour).map(t => ({
       t,
-      booked: bookedTimes.includes(t),
+      booked: bookedTimes.includes(t) || isAppointmentPast(day.key, t),
     }));
-  }, [selectedHour, bookedTimes]);
+  }, [selectedHour, bookedTimes, day.key]);
 
   const isHourFull = (h: string) =>
-    gen10MinSlots(h).every(s => bookedTimes.includes(s));
+    gen10MinSlots(h).every(s => bookedTimes.includes(s) || isAppointmentPast(day.key, s));
 
   const canBook = selectedTime !== null && !bookingLoading;
 

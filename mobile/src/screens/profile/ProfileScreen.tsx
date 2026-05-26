@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { changeLanguage, ALL_LANGUAGES } from '../../i18n';
 import { useRTL } from '../../context/RTLContext';
 import Logo from '../../components/Logo';
+import { isAppointmentPast } from '../../utils/date';
 
 type Nav = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList>,
@@ -46,12 +47,24 @@ export default function ProfileScreen() {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
-        const { data } = await TabeebiAPI.getPatientCounts(token);
-        if (data) {
+        const [{ data: countData }, { data: aptData }] = await Promise.all([
+          TabeebiAPI.getPatientCounts(token),
+          TabeebiAPI.getMyAppointments(token)
+        ]);
+        
+        if (countData) {
+          let upcomingCount = countData.bookings || 0;
+          
+          if (aptData?.appointments) {
+            upcomingCount = aptData.appointments.filter((a: any) => {
+              return !isAppointmentPast(a.date, a.time) && (a.status === 'pending' || a.status === 'confirmed');
+            }).length;
+          }
+
           setCounts({
-            bookings: data.bookings || 0,
-            results: data.results || 0,
-            notifications: data.notifications || 0,
+            bookings: upcomingCount,
+            results: countData.results || 0,
+            notifications: countData.notifications || 0,
           });
         }
       }

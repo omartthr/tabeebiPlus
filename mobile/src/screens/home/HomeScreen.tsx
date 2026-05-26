@@ -21,6 +21,7 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appointment, DAYS } from '../../data';
+import { isAppointmentPast } from '../../utils/date';
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
@@ -62,6 +63,12 @@ export default function HomeScreen() {
         const { data } = await TabeebiAPI.getNextAppointment(token);
         if (data?.appointment) {
           const appt = data.appointment;
+          
+          if (isAppointmentPast(appt.date, appt.time)) {
+            setNextAppt(null);
+            return;
+          }
+
           const dayMatch = DAYS.find(d => d.key === appt.date);
           setNextAppt({
             id: appt.id,
