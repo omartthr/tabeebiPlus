@@ -38,4 +38,7 @@ export interface UserData {
   phone: string;
   isLogin?: boolean;
   patient_code?: string | null;
+  token?: string;
+  avatar_hue?: number;
+  is_registered?: boolean;
 }

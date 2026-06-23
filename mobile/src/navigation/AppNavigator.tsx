@@ -76,35 +76,15 @@ export default function AppNavigator() {
 
   const signIn = async (u: UserData): Promise<boolean> => {
     try {
-      if (u.isLogin) {
-        // GİRİŞ YAP (Login) Flow
-        const { data, error } = await TabeebiAPI.login(u.phone);
-        
-        if (error || !data) {
-          Alert.alert('Giriş Hatası', 'Bu numaraya ait bir hesap bulunamadı veya hatalı.');
-          return false;
-        }
-
-        await AsyncStorage.setItem('auth_token', data.token);
-        setUser(data.user);
-        return true;
+      // OTPScreen'den zaten doğrulanmış kullanıcı ve token geliyor
+      // Sadece state'e set ediyoruz
+      setUser(u);
+      if (u.token) {
+        await AsyncStorage.setItem('auth_token', u.token);
       }
-
-      // KAYIT OL (Register) Flow
-      const { data, error } = await TabeebiAPI.register(u.phone, u.name || '');
-      
-      if (error || !data) {
-        Alert.alert('Kayıt Hatası', 'Bu telefon numarası başka bir hesap tarafından kullanılıyor olabilir.');
-        return false;
-      }
-      
-      await AsyncStorage.setItem('auth_token', data.token);
-      setUser(data.user);
       return true;
-
     } catch (e) {
-      console.error('Beklenmedik hata:', e);
-      Alert.alert('Hata', 'Sunucu ile bağlantı kurulamadı.');
+      console.error('signIn error:', e);
       return false;
     }
   };

@@ -11,6 +11,7 @@ import { useAuth } from '../../navigation/AppNavigator';
 import TopBar from '../../components/TopBar';
 import { colors } from '../../theme';
 import { TabeebiAPI } from '../../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'>;
 
@@ -66,7 +67,8 @@ export default function OTPScreen({ route, navigation }: Props) {
       const cleanedPhone = phone.replace(/\D/g, '').replace(/^0/, '');
       const { data, error } = await TabeebiAPI.verifyOtp(cleanedPhone, full);
 
-      if (error || !data?.valid) {
+      // Backend'den token geldi mi kontrol et
+      if (error || !data?.token) {
         Alert.alert('Hatalı Kod', 'Girdiğin kod yanlış veya süresi dolmuş.');
         setDigits(['', '', '', '']);
         refs.current[0]?.focus();
@@ -74,14 +76,20 @@ export default function OTPScreen({ route, navigation }: Props) {
         return;
       }
 
-      const success = await signIn({ name, phone, isLogin });
-      if (!success) {
-        setSubmitting(false);
-        setDigits(['', '', '', '']);
-        refs.current[0]?.focus();
-      }
-    } catch {
-      Alert.alert('Hata', 'Doğrulama sırasında bir hata oluştu.');
+      // verifyOtp'den gelen token ve kullanıcıyı direkt kaydet (ikinci istek yok!)
+      await AsyncStorage.setItem('auth_token', data.token);
+      const p = data.patient;
+      await signIn({
+        id: p.id,
+        phone: p.phone,
+        name: p.name || name || '',
+        avatar_hue: p.avatar_hue,
+        is_registered: p.is_registered,
+        token: data.token,
+      });
+
+    } catch (e: any) {
+      Alert.alert('Hata', 'Doğrulama sırasında bir hata oluştu: ' + e?.message);
       setSubmitting(false);
     }
   };

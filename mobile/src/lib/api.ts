@@ -2,8 +2,9 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 
 // Geliştirme ortamında, Android emülatör 10.0.2.2 üzerinden localhost'a bağlanır
-// Fiziksel cihaz kullanıyorsan buraya bilgisayarının yerel IP adresini (örn: 192.168.1.5) yazmalısın.
-const BASE_URL = 'https://tabeebi-plus-backend.vercel.app';
+// Fiziksel cihaz kullanıyorsan buraya bilgisayarının yerel IP adresini (örn: 192.168.1.x) yazmalısın.
+// iOS Simülatör için: 'http://127.0.0.1:8000/api'
+const BASE_URL = 'http://172.16.3.213:8000/api'; // Gerçek Cihaz (Expo Go) için Yerel Ağ IP Adresi
 
 export const api = axios.create({
   baseURL: BASE_URL,
