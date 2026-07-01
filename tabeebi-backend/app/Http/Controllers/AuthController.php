@@ -81,11 +81,8 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'OTP sent successfully',
+            'message'    => 'OTP sent successfully',
             'expires_in' => '10 minutes',
-            // Geliştirme aşamasında testi kolaylaştırmak için kodu API cevabına ekliyoruz.
-            // (Canlıda sadece test_code satırını silebilirsin)
-            'test_code' => $code 
         ]);
     }
 

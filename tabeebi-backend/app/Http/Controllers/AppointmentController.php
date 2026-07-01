@@ -44,10 +44,18 @@ class AppointmentController extends Controller
         // Eğer hasta token ile login olmuşsa ID'sini request->user()'dan alırız
         $patientId = $request->user() ? $request->user()->id : null;
 
-        $appointment = Appointment::create(array_merge($request->all(), [
-            'patient_id' => $patientId,
-            'status' => 'pending'
-        ]));
+        $appointment = Appointment::create([
+            'patient_id'  => $patientId,
+            'doctor_id'   => $request->doctor_id,
+            'date'        => $request->date,
+            'time'        => $request->time,
+            'duration'    => $request->duration ?? 30,
+            'reason'      => $request->reason,
+            'notes'       => $request->notes,
+            'payment'     => $request->payment,
+            'clinic'      => $request->clinic,
+            'status'      => 'pending',
+        ]);
 
         // Randevu oluşturulduğunda WhatsApp'tan bilgi mesajı at (Twilio)
         $this->sendAppointmentWhatsApp($request, $appointment);
@@ -139,12 +147,19 @@ class AppointmentController extends Controller
     public function update(Request $request, $id)
     {
         $appointment = Appointment::find($id);
-        
+
         if (!$appointment) {
             return response()->json(['error' => 'Appointment not found'], 404);
         }
 
-        $appointment->update($request->all());
+        // Sahiplik kontrolü: sadece kendi randevusunu güncelleyebilir
+        $patientId = $request->user()?->id;
+        if ($patientId && $appointment->patient_id !== $patientId) {
+            return response()->json(['error' => 'Yetkisiz işlem'], 403);
+        }
+
+        // Sadece izin verilen alanlar güncellenebilir
+        $appointment->update($request->only(['status', 'notes', 'rating', 'review']));
 
         return response()->json($appointment);
     }

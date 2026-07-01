@@ -1,1 +1,0 @@
-// Firebase client SDK yapılandırması
