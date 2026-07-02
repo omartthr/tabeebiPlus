@@ -94,8 +94,7 @@
         <div class="auth-title">Klinik Konumu</div>
         <div class="auth-sub" style="margin-bottom:16px">Haritada kliniğinizin bulunduğu yere tıklayın.</div>
         <div class="map-label">Harita</div>
-        <MapPicker v-if="MapPickerComp" :onChange="handleMapChange" />
-        <div v-else style="height:240px;background:var(--ink-50);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--ink-400);font-size:14px">Harita yükleniyor…</div>
+        <MapPicker :onChange="handleMapChange" />
         <button class="btn btn-primary" style="width:100%;margin-top:20px;height:48px" @click="submit" :disabled="loading || !locLat">
           {{ loading ? 'Kaydediliyor…' : 'Başvuruyu Gönder' }}
         </button>
@@ -110,6 +109,7 @@ import { ref, computed, onMounted, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { sendOtpAction, verifyOtpAction, getDoctorByPhone, registerDoctor, notifyDoctorAction } from '@/actions/doctorActions'
 import { setDoctorSession } from '@/composables/useDoctor'
+import MapPicker from '@/components/MapPicker.vue'
 
 const router = useRouter()
 
@@ -137,11 +137,6 @@ const locLat      = ref<number | null>(null)
 const locLng      = ref<number | null>(null)
 const locAddr     = ref('')
 const otpRefs     = ref<HTMLInputElement[]>([])
-const MapPickerComp = shallowRef<any>(null)
-
-onMounted(() => {
-  import('@/components/MapPicker.vue').then(m => { MapPickerComp.value = m.default })
-})
 
 function handleOtpChange(i: number, val: string) {
   const d = val.replace(/\D/g, '').slice(-1)

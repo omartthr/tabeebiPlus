@@ -1,8 +1,12 @@
 <template>
-  <div>
-    <div ref="containerRef" style="height:240px;border-radius:14px;border:1.5px solid var(--ink-200);overflow:hidden" />
-    <div v-if="address" class="map-address">{{ address }}</div>
-    <div v-else class="map-address" style="color:var(--ink-400)">Konumunuzu seçmek için haritaya tıklayın</div>
+  <div class="map-picker-wrap">
+    <div ref="mapRef" style="height:240px;border-radius:14px;border:1.5px solid var(--ink-200);overflow:hidden;background:#f8f9fa;">
+      <div v-if="!isLoaded" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-400);font-size:14px;">
+        Google Haritalar yükleniyor...
+      </div>
+    </div>
+    <div v-if="address" class="map-address" style="margin-top:8px;font-size:13px;color:var(--ink-600);">📍 {{ address }}</div>
+    <div v-else class="map-address" style="margin-top:8px;font-size:13px;color:var(--ink-400);">Konumunuzu seçmek için haritaya tıklayın</div>
   </div>
 </template>
 
@@ -15,58 +19,76 @@ const props = defineProps<{
   initialLng?: number | null
 }>()
 
-const containerRef = ref<HTMLDivElement | null>(null)
+const mapRef = ref<HTMLDivElement | null>(null)
 const address = ref('')
-let mapInstance: any = null
-let markerInstance: any = null
+const isLoaded = ref(false)
 
-onMounted(async () => {
-  if (!containerRef.value) return
+let map: google.maps.Map | null = null
+let marker: google.maps.Marker | null = null
+let geocoder: google.maps.Geocoder | null = null
 
-  const L = (await import('leaflet')).default
-  await import('leaflet/dist/leaflet.css')
-
-  delete (L.Icon.Default.prototype as any)._getIconUrl
-  L.Icon.Default.mergeOptions({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  })
-
-  const center: [number, number] = props.initialLat && props.initialLng
-    ? [props.initialLat, props.initialLng]
-    : [35.4670, 44.3921]
-
-  const map = L.map(containerRef.value).setView(center, 13)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap',
-  }).addTo(map)
-
-  if (props.initialLat && props.initialLng) {
-    markerInstance = L.marker([props.initialLat, props.initialLng]).addTo(map)
+onMounted(() => {
+  if (!window.google) {
+    const script = document.createElement('script')
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMap`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+    ;(window as any).initGoogleMap = initMap
+  } else {
+    initMap()
   }
-
-  map.on('click', async (e: any) => {
-    const { lat, lng } = e.latlng
-    if (markerInstance) markerInstance.remove()
-    markerInstance = L.marker([lat, lng]).addTo(map)
-    try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=tr`)
-      const d = await r.json()
-      const addr = d.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`
-      address.value = addr
-      props.onChange(lat, lng, addr)
-    } catch {
-      const addr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`
-      address.value = addr
-      props.onChange(lat, lng, addr)
-    }
-  })
-
-  mapInstance = map
 })
 
+function initMap() {
+  if (!mapRef.value) return
+  isLoaded.value = true
+
+  const lat = props.initialLat ?? 35.4670 // default to Iraq (Kirkuk approx)
+  const lng = props.initialLng ?? 44.3921
+
+  map = new window.google.maps.Map(mapRef.value, {
+    center: { lat, lng },
+    zoom: 13,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+  })
+
+  geocoder = new window.google.maps.Geocoder()
+
+  if (props.initialLat && props.initialLng) {
+    marker = new window.google.maps.Marker({
+      position: { lat, lng },
+      map: map,
+    })
+  }
+
+  map.addListener('click', (e: any) => {
+    const clickedLat = e.latLng.lat()
+    const clickedLng = e.latLng.lng()
+
+    if (marker) marker.setMap(null)
+    marker = new window.google.maps.Marker({
+      position: e.latLng,
+      map: map,
+      animation: window.google.maps.Animation.DROP,
+    })
+
+    geocoder?.geocode({ location: e.latLng }, (results, status) => {
+      let addr = `${clickedLat.toFixed(5)}, ${clickedLng.toFixed(5)}`
+      if (status === 'OK' && results && results[0]) {
+        addr = results[0].formatted_address
+      }
+      address.value = addr
+      props.onChange(clickedLat, clickedLng, addr)
+    })
+  })
+}
+
 onUnmounted(() => {
-  if (mapInstance) { mapInstance.remove(); mapInstance = null }
+  if (marker) marker.setMap(null)
+  map = null
 })
 </script>
