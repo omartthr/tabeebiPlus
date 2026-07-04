@@ -237,9 +237,10 @@ function handleLogout() {
 watch(doctor, async (doc) => {
   if (!doc) return
   let cancelled = false
-  const schedRes = await getDoctorScheduleAction(doc.id)
-  if (cancelled) return
-  const profRes = await getDoctorRegistrationAction(doc.id)
+  const [schedRes, profRes] = await Promise.all([
+    getDoctorScheduleAction(doc.id),
+    getDoctorRegistrationAction(doc.id)
+  ])
   if (cancelled) return
   if (schedRes.data?.schedule) schedule.value = schedRes.data.schedule as any
   if (profRes.data?.price) price.value = String(profRes.data.price)
