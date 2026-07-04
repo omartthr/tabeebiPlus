@@ -67,12 +67,13 @@
       @cancel="confirmData.visible = false; confirmData.appointmentId = null"
     />
 
-    <style>
-    .result-row:hover { background-color: var(--ink-50); }
-    .result-row:last-child { border-bottom: none; }
-    </style>
   </div>
 </template>
+
+<style scoped>
+.result-row:hover { background-color: var(--ink-50); }
+.result-row:last-child { border-bottom: none; }
+</style>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'

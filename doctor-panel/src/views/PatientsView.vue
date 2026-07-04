@@ -90,12 +90,13 @@
       </div>
     </template>
 
-    <style>
-    .patient-row:hover { background-color: var(--ink-50); }
-    .patient-row:last-child { border-bottom: none; }
-    </style>
   </div>
 </template>
+
+<style scoped>
+.patient-row:hover { background-color: var(--ink-50); }
+.patient-row:last-child { border-bottom: none; }
+</style>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'

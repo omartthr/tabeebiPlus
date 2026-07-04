@@ -13,10 +13,14 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = withDefaults(defineProps<{
   initials: string
   hue?: number
   size?: number
   rounded?: number
-}>()
+}>(), {
+  hue: 175,
+  size: 40,
+  rounded: 12
+})
 </script>

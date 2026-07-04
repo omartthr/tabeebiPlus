@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading && doctor && profileLoaded" class="profile-container">
+  <div v-if="!loading && doctor" class="profile-container">
     <div class="topbar">
       <div class="greet">
         <h1>Profil & Ayarlar</h1>
@@ -7,7 +7,11 @@
       </div>
     </div>
 
-    <div style="padding:24px;display:flex;flex-direction:column;gap:24px;max-width:948px">
+    <div v-if="!profileLoaded" style="padding:60px 40px;text-align:center;color:var(--ink-400);font-size:16px;font-weight:600">
+      Bilgiler Yükleniyor...
+    </div>
+
+    <div v-else style="padding:24px;display:flex;flex-direction:column;gap:24px;max-width:948px">
 
       <!-- Doctor Rating -->
       <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:space-between">
@@ -233,10 +237,9 @@ function handleLogout() {
 watch(doctor, async (doc) => {
   if (!doc) return
   let cancelled = false
-  const [schedRes, profRes] = await Promise.all([
-    getDoctorScheduleAction(doc.id),
-    getDoctorRegistrationAction(doc.id),
-  ])
+  const schedRes = await getDoctorScheduleAction(doc.id)
+  if (cancelled) return
+  const profRes = await getDoctorRegistrationAction(doc.id)
   if (cancelled) return
   if (schedRes.data?.schedule) schedule.value = schedRes.data.schedule as any
   if (profRes.data?.price) price.value = String(profRes.data.price)

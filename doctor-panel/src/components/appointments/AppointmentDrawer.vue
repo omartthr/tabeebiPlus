@@ -66,7 +66,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue'
 type AptStatus = 'confirmed' | 'pending' | 'cancelled' | 'completed'
 
 interface Apt {
-  id: string; date: Date; time: string; duration: number; reason: string
+  id: string; date: Date; dateKey: string; time: string; duration: number; reason: string
   status: AptStatus; notes: string | null; price: number
   patient: { id: string | null; name: string; initials: string; hue: number; phone: string; code: string | null }
 }

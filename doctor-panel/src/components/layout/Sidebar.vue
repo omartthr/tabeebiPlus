@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { IDash, ICal, IUsers, IDoc, IGraph, ISet } from '@/components/ui/icons'
 import AvatarComp from '@/components/ui/AvatarComp.vue'
 import { getDoctorSession, type DoctorSession } from '@/composables/useDoctor'
@@ -57,12 +57,12 @@ function isActive(href: string) {
   return activePath.value.startsWith(href)
 }
 
-const initials = () => {
+const initials = computed(() => {
   if (!doctor.value) return '?'
   return ((doctor.value.name?.[0] ?? '') + (doctor.value.surname?.[0] ?? '')).toUpperCase()
-}
-const fullName  = () => doctor.value ? `Dr. ${doctor.value.name} ${doctor.value.surname}` : ''
-const specialty = () => doctor.value?.specialty ?? ''
+})
+const fullName  = computed(() => doctor.value ? `Dr. ${doctor.value.name} ${doctor.value.surname}` : '')
+const specialty = computed(() => doctor.value?.specialty ?? '')
 
 onMounted(() => {
   const path = window.location.pathname

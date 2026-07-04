@@ -1,6 +1,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getDoctorById, clearAuthToken } from '@/actions/doctorActions'
+import { getDoctorByPhone, clearAuthToken } from '@/actions/doctorActions'
 
 export type DoctorSession = {
   id: string
@@ -37,23 +37,22 @@ export function clearDoctorSession() {
 }
 
 export function useRequireDoctor() {
-  const doctor  = ref<DoctorSession | null>(null)
-  const loading = ref(true)
+  const session = getDoctorSession()
+  const doctor  = ref<DoctorSession | null>(session)
+  const loading = ref(false)
   const router  = useRouter()
 
   onMounted(async () => {
-    const s = getDoctorSession()
-    if (!s) {
+    if (!session) {
       router.replace('/auth/login')
       return
     }
 
-    const { data: doc, error } = await getDoctorById(s.id)
+    const doc = await getDoctorByPhone(session.phone)
+    const error = doc ? null : 'Not found'
 
     // On network error keep cached session alive so the UI stays usable offline.
     if (error && !error.startsWith('HTTP 4')) {
-      doctor.value = s
-      loading.value = false
       return
     }
 
@@ -67,7 +66,7 @@ export function useRequireDoctor() {
     const fresh: DoctorSession = {
       id:               doc.id,
       doctors_id:       doc.doctors_id ?? null,
-      phone:            s.phone,
+      phone:            session.phone,
       name:             doc.name,
       surname:          doc.surname,
       specialty:        doc.specialty,

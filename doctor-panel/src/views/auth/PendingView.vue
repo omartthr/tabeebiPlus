@@ -42,7 +42,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDoctorSession, clearDoctorSession } from '@/composables/useDoctor'
-import { getDoctorById } from '@/actions/doctorActions'
+import { getDoctorByPhone } from '@/actions/doctorActions'
 
 const router  = useRouter()
 const name    = ref('')
@@ -58,7 +58,7 @@ async function reCheck() {
   const s = getDoctorSession()
   if (!s) return
   checking.value = true
-  const { data } = await getDoctorById(s.id)
+  const data = await getDoctorByPhone(s.phone)
   checking.value = false
   if (data?.status === 'approved') {
     const updated = { ...s, status: 'approved' as const }
