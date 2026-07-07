@@ -8,6 +8,7 @@
 
 ### 📱 Hasta Mobil Uygulaması (React Native)
 - **OTP Tabanlı Giriş:** WhatsApp üzerinden doğrulama kodu ile şifresiz, güvenli giriş.
+- **AI Sağlık Asistanı:** Kişisel sağlık yardımcısı ile sohbet ve yapay zeka destekli sağlık soruları sorma paneli.
 - **Akıllı Randevu:** Doktorların müsaitlik durumuna göre canlı randevu alımı.
 - **Sonuç Takibi:** Muayene sonuçlarını ve doktor tarafından yüklenen PDF raporlarını anında görüntüleme.
 - **Bildirim Sistemi:** Randevu onayı, sonuç çıkması ve değerlendirme bildirimleri.
@@ -55,36 +56,6 @@ tabeebi+/
 └── mobile/             # React Native Hasta Uygulaması
 ```
 
----
-
-## ⚙️ Kurulum ve Çalıştırma
-
-### 1. Backend (Laravel)
-```bash
-cd tabeebi-backend
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan serve --host=0.0.0.0 --port=8000
-```
-
-### 2. Doktor Paneli (Vue.js)
-```bash
-cd doctor-panel-vue
-npm install
-cp .env.example .env   # VITE_API_BASE_URL=http://localhost:8000
-npm run dev
-```
-
-### 3. Mobil Uygulama
-```bash
-cd mobile
-npm install
-npx expo start --clear
-```
-
----
 
 ## 📄 Lisans
 
