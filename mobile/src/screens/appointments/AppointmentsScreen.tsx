@@ -409,6 +409,6 @@ const styles = StyleSheet.create({
   submitBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   ratedBadge: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10, backgroundColor: colors.teal50, justifyContent: 'center', flex: 1, alignItems: 'center' },
   ratedText: { fontSize: 11, fontWeight: '700', color: colors.teal700 },
-  rateBtn: { backgroundColor: colors.amber50, borderColor: colors.amber200, borderWidth: 1 },
+  rateBtn: { backgroundColor: colors.amber50, borderColor: colors.amber100, borderWidth: 1 },
   rateBtnText: { fontSize: 12, fontWeight: '700', color: '#b37d1f' },
 });

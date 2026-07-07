@@ -152,7 +152,7 @@ export default function NotificationsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.teal700]} tintColor={colors.teal700} />}
         >
           <Inbox size={48} color={colors.ink300} style={{ marginBottom: 12 }} />
-          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink600 }}>{t('no_notifications')}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink500 }}>{t('no_notifications')}</Text>
           <Text style={{ fontSize: 13, color: colors.ink400, textAlign: 'center', marginTop: 4, paddingHorizontal: 20 }}>
             {t('no_notifications_sub')}
           </Text>

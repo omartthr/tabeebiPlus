@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Calendar, FlaskConical, Bell, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,8 @@ export default function MainTabNavigator() {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
 
+  const isIOS = Platform.OS === 'ios';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -25,29 +27,57 @@ export default function MainTabNavigator() {
         tabBarActiveTintColor: colors.teal700,
         tabBarInactiveTintColor: colors.ink400,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.ink100,
-          borderTopWidth: 1,
-          paddingBottom: 20,
-          paddingTop: 8,
-          height: 70,
-          // Flip the tab bar inner content direction for RTL
+          position: 'absolute',
+          bottom: isIOS ? 28 : 16,
+          left: 16,
+          right: 16,
+          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          borderRadius: 24,
+          height: isIOS ? 80 : 70,
+          borderTopWidth: 0,
+          // Spacing and alignment
+          paddingBottom: isIOS ? 24 : 10,
+          paddingTop: 10,
+          // Premium shadow matching mockup
+          shadowColor: '#0b1f22',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.08,
+          shadowRadius: 20,
+          elevation: 10,
           flexDirection: isRTL ? 'row-reverse' : 'row',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: 10,
+          fontWeight: '700',
+          marginTop: 4,
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
-        tabBarIcon: ({ color }) => {
-          const icons: Record<string, React.ReactNode> = {
-            Home:          <Home size={24} color={color} />,
-            Appointments:  <Calendar size={24} color={color} />,
-            Results:       <FlaskConical size={24} color={color} />,
-            Notifications: <Bell size={24} color={color} />,
-            Profile:       <User size={24} color={color} />,
+        tabBarIcon: ({ focused }) => {
+          const iconSize = 20;
+          const activeColor = colors.teal700;
+          const inactiveColor = colors.ink400;
+
+          const iconMap: Record<string, React.ReactNode> = {
+            Home:          <Home size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
+            Appointments:  <Calendar size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
+            Results:       <FlaskConical size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
+            Notifications: <Bell size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
+            Profile:       <User size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
           };
-          return icons[route.name] ?? null;
+
+          if (focused) {
+            return (
+              <View style={tabStyles.activeIconBg}>
+                {iconMap[route.name]}
+              </View>
+            );
+          }
+
+          return (
+            <View style={tabStyles.inactiveIconBg}>
+              {iconMap[route.name]}
+            </View>
+          );
         },
       })}
     >
@@ -59,3 +89,20 @@ export default function MainTabNavigator() {
     </Tab.Navigator>
   );
 }
+
+const tabStyles = StyleSheet.create({
+  activeIconBg: {
+    width: 44,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: '#E6F9F0', // Soft mint green from mockup
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inactiveIconBg: {
+    width: 44,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

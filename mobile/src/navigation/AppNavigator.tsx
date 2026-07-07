@@ -59,12 +59,25 @@ export default function AppNavigator() {
   const checkSession = async () => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
+      const cachedUser = await AsyncStorage.getItem('tabeebi_user');
+
       if (token) {
+        // Önce kaydedilmiş kullanıcıyı hemen göster (anında açılış)
+        if (cachedUser) {
+          try {
+            setUser(JSON.parse(cachedUser));
+          } catch {}
+        }
+
+        // Arka planda doğrula
         const { data, error } = await TabeebiAPI.getMe(token);
         if (data?.user) {
           setUser(data.user);
-        } else {
+          await AsyncStorage.setItem('tabeebi_user', JSON.stringify(data.user));
+        } else if (!cachedUser) {
+          // Hem cache yok hem backend reddetti → çıkış yap
           await AsyncStorage.removeItem('auth_token');
+          await AsyncStorage.removeItem('tabeebi_user');
         }
       }
     } catch (e) {
@@ -77,11 +90,12 @@ export default function AppNavigator() {
   const signIn = async (u: UserData): Promise<boolean> => {
     try {
       // OTPScreen'den zaten doğrulanmış kullanıcı ve token geliyor
-      // Sadece state'e set ediyoruz
       setUser(u);
       if (u.token) {
         await AsyncStorage.setItem('auth_token', u.token);
       }
+      // Kullanıcı verisini de kaydet (oturum kalıcılığı)
+      await AsyncStorage.setItem('tabeebi_user', JSON.stringify(u));
       return true;
     } catch (e) {
       console.error('signIn error:', e);
@@ -91,6 +105,7 @@ export default function AppNavigator() {
 
   const signOut = async () => {
     await AsyncStorage.removeItem('auth_token');
+    await AsyncStorage.removeItem('tabeebi_user');
     setUser(null);
   };
 

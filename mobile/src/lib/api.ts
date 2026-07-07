@@ -4,7 +4,8 @@ import { Platform } from 'react-native';
 // Geliştirme ortamında, Android emülatör 10.0.2.2 üzerinden localhost'a bağlanır
 // Fiziksel cihaz kullanıyorsan buraya bilgisayarının yerel IP adresini (örn: 192.168.1.x) yazmalısın.
 // iOS Simülatör için: 'http://127.0.0.1:8000/api'
-const BASE_URL = 'http://172.16.3.213:8000/api'; // Gerçek Cihaz (Expo Go) için Yerel Ağ IP Adresi
+// Gerçek Cihaz (Expo Go) için Yerel Ağ IP Adresi veya Canlı Sunucu
+const BASE_URL = 'https://tabeebiplus-production.up.railway.app/api'; 
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -64,8 +65,10 @@ export const TabeebiAPI = {
 
   getMe: async (token: string) => {
     try {
-      const response = await api.get(`/auth/me?token=${token}`);
-      return { data: response.data, error: null };
+      const response = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { data: { user: response.data }, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
     }

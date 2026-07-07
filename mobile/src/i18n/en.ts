@@ -249,5 +249,7 @@ export default {
   about_us_label: 'ABOUT US',
   about_us_text: 'Tabeebi+ is a modern health platform that provides easy access to specialist doctors across Kirkuk. Our goal is to accelerate healthcare processes by digitizing communication between patients and doctors.',
   complaint_success_msg: 'Your complaint has been submitted successfully. We will review it and get back to you as soon as possible.',
-  ok: 'OK',
+  ai_health_assistant: 'AI Health Assistant',
+  ai_companion: 'Your personal health companion. Ask anything, anytime.',
+  ask_ai_btn: 'Ask AI',
 };

@@ -249,5 +249,7 @@ export default {
   about_us_label: 'BİZ KİMİZ',
   about_us_text: 'Tabeebi+, Kerkük genelinde uzman doktorlara kolayca ulaşmanızı sağlayan modern bir sağlık platformudur. Amacımız, hasta ve doktor arasındaki iletişimi dijitalleştirerek sağlık süreçlerini hızlandırmaktır.',
   complaint_success_msg: 'Şikayetiniz başarıyla iletildi. En kısa sürede inceleyip size dönüş yapacağız.',
-  ok: 'Tamam',
+  ai_health_assistant: 'AI Sağlık Asistanı',
+  ai_companion: 'Kişisel sağlık yardımcınız. İstediğiniz zaman sorun.',
+  ask_ai_btn: "AI'a Sor",
 };
