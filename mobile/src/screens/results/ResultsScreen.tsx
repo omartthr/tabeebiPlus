@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Calendar, ExternalLink, ChevronDown } from 'lucide-react-native';
+import { FileText, Calendar, ChevronDown, ExternalLink } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
 import { TabeebiAPI } from '../../lib/api';
@@ -31,7 +31,6 @@ export default function ResultsScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         const { data } = await TabeebiAPI.getPatientResults(token);
-        // Supports both array directly and results wrapped in object
         const resultsArray = Array.isArray(data) ? data : (data?.results ?? []);
         
         const mapped: Result[] = resultsArray.map((a: any) => ({
@@ -62,11 +61,12 @@ export default function ResultsScreen() {
 
   const formatDate = (d: string) => {
     if (!d) return '-';
-    if (d.includes('-')) {
-      const dt = new Date(d);
-      return dt.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    try {
+      const date = new Date(d);
+      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return d;
     }
-    return d;
   };
 
   return (
@@ -116,9 +116,15 @@ export default function ResultsScreen() {
                   <View style={styles.expandDivider} />
 
                   {r.pdfUrl ? (
-                    <TouchableOpacity style={styles.pdfBtn} onPress={() => Linking.openURL(r.pdfUrl!)} activeOpacity={0.8}>
+                    <TouchableOpacity
+                      style={styles.pdfBtn}
+                      onPress={() => Linking.openURL(r.pdfUrl!)}
+                      activeOpacity={0.8}
+                    >
                       <ExternalLink size={16} color={colors.teal700} />
-                      <Text style={styles.pdfBtnText}>{t('view_report_pdf')}</Text>
+                      <Text style={styles.pdfBtnText}>
+                        {t('view_report_pdf')}
+                      </Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.noReportBox}>
