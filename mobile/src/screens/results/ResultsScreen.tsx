@@ -31,12 +31,15 @@ export default function ResultsScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         const { data } = await TabeebiAPI.getPatientResults(token);
-        const mapped: Result[] = (data?.results ?? []).map((a: any) => ({
+        // Supports both array directly and results wrapped in object
+        const resultsArray = Array.isArray(data) ? data : (data?.results ?? []);
+        
+        const mapped: Result[] = resultsArray.map((a: any) => ({
           id: a.id,
           date: a.date,
-          doctorName: a.doctors?.name ?? t('unknown_doctor'),
-          specialty: a.doctors?.specialty ?? '-',
-          aiSummary: a.ai_summary ?? null,
+          doctorName: a.doctor?.name ?? t('unknown_doctor'),
+          specialty: a.doctor?.specialty ?? '-',
+          aiSummary: a.diagnosis || a.notes || null,
           pdfUrl: a.pdf_url ?? null,
         }));
         setResults(mapped);
