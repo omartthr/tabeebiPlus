@@ -48,7 +48,8 @@ export default function BookingScreen({ route, navigation }: Props) {
       setLoading(true);
       const { data, error } = await TabeebiAPI.getDoctorSchedule(doctor.id);
       if (error) console.error('[Booking] schedule error:', error);
-      if (!cancelled && data?.schedule) setSchedule(data.schedule);
+      const sched = (data && (data.schedule || (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length > 0))) ? (data.schedule || data) : null;
+      if (!cancelled && sched) setSchedule(sched);
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };

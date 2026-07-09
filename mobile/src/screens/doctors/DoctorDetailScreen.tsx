@@ -36,18 +36,18 @@ export default function DoctorDetailScreen({ route, navigation }: Props) {
         return;
       }
 
-      // Get schedule directly using registration_id via API
-      const { data: sched } = await TabeebiAPI.getDoctorScheduleByRegId(regId);
+      // Get schedule directly using doctor.id via public API
+      const { data: sched } = await TabeebiAPI.getDoctorSchedule(doctor.id);
 
       if (cancelled) return;
 
-      if (sched?.schedule) {
-        setSchedule(sched.schedule);
+      if (sched) {
+        setSchedule(sched);
 
         // Find next available day with slots
         for (const day of DAYS) {
           const dayKey = day.day.toLowerCase();
-          const daySched = sched.schedule[dayKey];
+          const daySched = sched[dayKey];
           if (daySched && daySched.isOpen && daySched.slots.length > 0) {
             setNextDay(day);
             setNextSlots(daySched.slots.slice(0, 6));
