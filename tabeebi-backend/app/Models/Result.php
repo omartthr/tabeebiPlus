@@ -26,7 +26,7 @@ class Result extends Model
     public function getPdfUrlAttribute()
     {
         if ($this->appointment?->pdf_url) {
-            return url('/storage/reports/' . $this->appointment->id);
+            return url('/api/reports/' . $this->appointment->id);
         }
         return null;
     }

@@ -36,7 +36,7 @@ class DoctorPanelController extends Controller
             'notes'           => $a->notes,
             'price'           => $a->price ?? 0,
             'report_uploaded' => (bool) $a->report_uploaded,
-            'pdf_url'         => $a->pdf_url ? url('/storage/reports/' . $a->id) : null,
+            'pdf_url'         => $a->pdf_url ? url('/api/reports/' . $a->id) : null,
             'patient_name'    => $a->patient_name,
             'patient_phone'   => $a->patient_phone,
             'patients'        => $p ? [
