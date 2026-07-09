@@ -14,7 +14,7 @@ class ResultController extends Controller
     {
         $patientId = $request->user()->id;
 
-        $results = Result::with('doctor')
+        $results = Result::with(['doctor', 'appointment'])
             ->where('patient_id', $patientId)
             ->orderBy('created_at', 'desc')
             ->get();

@@ -21,8 +21,20 @@ class Result extends Model
         'unread' => 'boolean',
     ];
 
+    protected $appends = ['pdf_url'];
+
+    public function getPdfUrlAttribute()
+    {
+        return $this->appointment?->pdf_url;
+    }
+
     public function doctor()
     {
         return $this->belongsTo(Doctor::class);
+    }
+
+    public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
     }
 }

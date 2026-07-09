@@ -37,12 +37,18 @@ class AppointmentController extends Controller
             'doctor_id' => 'required|uuid',
             'date' => 'required|date_format:Y-m-d',
             'time' => 'required|string',
-            'payment' => 'required|string'
-            // Gerekli diğer kolonları ihtiyaca göre ekleyebiliriz
+            'payment' => 'required|string',
+            'price' => 'nullable|numeric'
         ]);
 
         // Eğer hasta token ile login olmuşsa ID'sini request->user()'dan alırız
         $patientId = $request->user() ? $request->user()->id : null;
+
+        $price = $request->price;
+        if (!$price) {
+            $doctor = \App\Models\Doctor::find($request->doctor_id);
+            $price = $doctor ? $doctor->price : 0;
+        }
 
         $appointment = Appointment::create([
             'patient_id'  => $patientId,
@@ -54,6 +60,7 @@ class AppointmentController extends Controller
             'notes'       => $request->notes,
             'payment'     => $request->payment,
             'clinic'      => $request->clinic,
+            'price'       => $price,
             'status'      => 'pending',
         ]);
 

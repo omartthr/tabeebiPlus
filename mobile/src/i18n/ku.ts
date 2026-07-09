@@ -231,6 +231,7 @@ export default {
   ai_summary: 'پوختەی زیرەکی دەستکرد',
   summary_not_ready: 'پوختەکە هێشتا دروست نەکراوە.',
   view_report_pdf: 'بینینی ڕاپۆرت (PDF)',
+  no_report_available: 'پشکنینی پزیشکی ئەنجامدرا. هیچ ڕاپۆرتێک بەردەست نییە.',
   complaint_failed: 'ناردنی سکاڵاکە سەرکەوتوو نەبوو.',
   no_complaints_yet: 'تا ئێستا هیچ سکاڵایەکت نییە.',
 

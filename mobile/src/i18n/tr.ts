@@ -231,6 +231,7 @@ export default {
   ai_summary: 'AI Özeti',
   summary_not_ready: 'Özet henüz oluşturulmadı.',
   view_report_pdf: 'Raporu Görüntüle (PDF)',
+  no_report_available: 'Muayene yapıldı. Rapor bulunmamaktadır.',
   complaint_failed: 'Şikayet gönderilemedi.',
   no_complaints_yet: 'Henüz bir şikayetiniz yok.',
 

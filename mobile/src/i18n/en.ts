@@ -231,6 +231,7 @@ export default {
   ai_summary: 'AI Summary',
   summary_not_ready: 'Summary not generated yet.',
   view_report_pdf: 'View Report (PDF)',
+  no_report_available: 'Medical examination completed. No report available.',
   complaint_failed: 'Failed to submit complaint.',
   no_complaints_yet: 'You have no complaints yet.',
 

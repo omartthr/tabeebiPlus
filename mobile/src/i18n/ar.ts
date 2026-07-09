@@ -231,6 +231,7 @@ export default {
   ai_summary: 'ملخص الذكاء الاصطناعي',
   summary_not_ready: 'لم يتم إنشاء الملخص بعد.',
   view_report_pdf: 'عرض التقرير (PDF)',
+  no_report_available: 'تم إجراء الفحص الطبي. لا يوجد تقرير متاح.',
   complaint_failed: 'فشل في إرسال الشكوى.',
   no_complaints_yet: 'ليس لديك أي شكاوى حتى الآن.',
 

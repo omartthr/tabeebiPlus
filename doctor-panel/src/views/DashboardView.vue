@@ -64,7 +64,7 @@
             <AvatarComp :initials="a.patient.initials" :hue="a.patient.hue" :size="44" :rounded="12" />
             <div class="appt-info">
               <div class="name">{{ a.patient.name }}</div>
-              <div class="reason">{{ a.reason }}</div>
+              <div class="reason">{{ a.reason && a.reason !== '-' ? a.reason : a.patient.phone }}</div>
             </div>
             <StatusBadge :status="a.status" />
             <IChevR :size="16" color="var(--ink-400)" />
@@ -85,7 +85,7 @@
                 <AvatarComp :initials="a.patient.initials" :hue="a.patient.hue" :size="36" :rounded="10" />
                 <div style="flex:1">
                   <div style="font-size:13px;font-weight:700;color:var(--ink-900)">{{ a.patient.name }}</div>
-                  <div style="font-size:11px;color:var(--ink-400);font-weight:500">{{ a.reason }}</div>
+                  <div style="font-size:11px;color:var(--ink-400);font-weight:500">{{ a.reason && a.reason !== '-' ? a.reason : a.patient.phone }}</div>
                 </div>
                 <StatusBadge :status="a.status" />
               </div>
@@ -175,7 +175,7 @@ function mapApt(row: any): Apt {
   } else { d = new Date(row.date); dk = row.date }
   return {
     id: row.id, date: d, dateKey: dk, time: row.time, duration: row.duration ?? 30,
-    reason: row.reason ?? '-', status: row.status, notes: row.notes, price: row.price ?? 0,
+    reason: row.reason ?? '-', status: row.status, notes: row.notes, price: Number(row.price ?? 0),
     patient: { id: row.patients?.id ?? row.patient_id ?? null, name: patName, initials: toInitials(patName), hue, phone: row.patients?.phone ?? row.patient_phone ?? '-', code: row.patients?.patient_code ?? null },
   }
 }
@@ -190,7 +190,7 @@ const todayStats = computed(() => {
     total:          todayApts.length,
     pending:        todayApts.filter(a => a.status === 'pending').length,
     completed:      todayApts.filter(a => a.status === 'completed').length,
-    earnings:       todayApts.filter(a => a.status === 'completed').reduce((s, a) => s + a.price, 0),
+    earnings:       todayApts.filter(a => a.status === 'completed').reduce((s, a) => s + Number(a.price || 0), 0),
     yesterdayCount: yesterdayApts.length,
   }
 })

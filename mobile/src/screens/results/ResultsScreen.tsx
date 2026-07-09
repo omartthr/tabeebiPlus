@@ -115,22 +115,15 @@ export default function ResultsScreen() {
                 <View style={styles.expanded}>
                   <View style={styles.expandDivider} />
 
-                  {r.aiSummary ? (
-                    <>
-                      <Text style={styles.expandLabel}>{t('ai_summary')}</Text>
-                      <View style={styles.summaryBox}>
-                        <Text style={styles.summaryText}>{r.aiSummary}</Text>
-                      </View>
-                    </>
-                  ) : (
-                    <Text style={{ fontSize: 13, color: colors.ink400, marginBottom: 10 }}>{t('summary_not_ready')}</Text>
-                  )}
-
-                  {r.pdfUrl && (
+                  {r.pdfUrl ? (
                     <TouchableOpacity style={styles.pdfBtn} onPress={() => Linking.openURL(r.pdfUrl!)} activeOpacity={0.8}>
                       <ExternalLink size={16} color={colors.teal700} />
                       <Text style={styles.pdfBtnText}>{t('view_report_pdf')}</Text>
                     </TouchableOpacity>
+                  ) : (
+                    <View style={styles.noReportBox}>
+                      <Text style={styles.noReportText}>{t('no_report_available')}</Text>
+                    </View>
                   )}
                 </View>
               )}
@@ -163,4 +156,6 @@ const styles = StyleSheet.create({
   summaryText: { fontSize: 13, color: colors.ink700, fontWeight: '500', lineHeight: 20 },
   pdfBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1.5, borderColor: colors.teal700, justifyContent: 'center' },
   pdfBtnText: { fontSize: 14, fontWeight: '700', color: colors.teal700 },
+  noReportBox: { backgroundColor: colors.ink50, borderRadius: 12, padding: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.ink100 },
+  noReportText: { fontSize: 13, color: colors.ink500, fontWeight: '500', textAlign: 'center' },
 });
