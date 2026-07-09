@@ -9,6 +9,8 @@ class Doctor extends Model
 {
     use HasUuids;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'name', 'specialty', 'initials', 'hue', 'rating', 'reviews',
         'price', 'loc', 'exp', 'today', 'is_active', 'registration_id',
