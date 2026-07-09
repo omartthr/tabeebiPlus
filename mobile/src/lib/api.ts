@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Geliştirme ortamında, Android emülatör 10.0.2.2 üzerinden localhost'a bağlanır
 // Fiziksel cihaz kullanıyorsan buraya bilgisayarının yerel IP adresini (örn: 192.168.1.x) yazmalısın.
@@ -13,6 +14,20 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Automatically inject sanctum token from AsyncStorage into all requests
+api.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export const TabeebiAPI = {
   getPatient: async (phone: string) => {
@@ -103,7 +118,7 @@ export const TabeebiAPI = {
 
   getMyAppointments: async (token: string) => {
     try {
-      const response = await api.get(`/appointments/me?token=${token}`);
+      const response = await api.get('/appointments/my-appointments');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -121,7 +136,7 @@ export const TabeebiAPI = {
 
   getNextAppointment: async (token: string) => {
     try {
-      const response = await api.get(`/appointments/next?token=${token}`);
+      const response = await api.get('/appointments/next');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -130,7 +145,7 @@ export const TabeebiAPI = {
 
   getRecommendedDoctors: async (token: string) => {
     try {
-      const response = await api.get(`/doctors/recommended?token=${token}`);
+      const response = await api.get('/doctors/recommended');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -148,7 +163,7 @@ export const TabeebiAPI = {
 
   getPatientCounts: async (token: string) => {
     try {
-      const response = await api.get(`/patient/counts?token=${token}`);
+      const response = await api.get('/patient/counts');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -157,7 +172,7 @@ export const TabeebiAPI = {
 
   getNotifications: async (token: string) => {
     try {
-      const response = await api.get(`/notifications?token=${token}`);
+      const response = await api.get('/notifications');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -166,7 +181,7 @@ export const TabeebiAPI = {
 
   markNotificationsRead: async (token: string, id?: string) => {
     try {
-      const response = await api.patch(`/notifications/mark-read?token=${token}`, id ? { id } : {});
+      const response = await api.patch('/notifications/mark-read', id ? { id } : {});
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -175,7 +190,7 @@ export const TabeebiAPI = {
 
   getPatientResults: async (token: string) => {
     try {
-      const response = await api.get(`/results?token=${token}`);
+      const response = await api.get('/results');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -193,7 +208,7 @@ export const TabeebiAPI = {
 
   getSupportTickets: async (token: string) => {
     try {
-      const response = await api.get(`/support_tickets?token=${token}`);
+      const response = await api.get('/support_tickets');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -202,7 +217,7 @@ export const TabeebiAPI = {
 
   createSupportTicket: async (token: string, ticket: any) => {
     try {
-      const response = await api.post(`/support_tickets?token=${token}`, ticket);
+      const response = await api.post('/support_tickets', ticket);
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -211,7 +226,7 @@ export const TabeebiAPI = {
 
   deleteAccount: async (token: string) => {
     try {
-      const response = await api.delete(`/account?token=${token}`);
+      const response = await api.delete('/account');
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };

@@ -25,6 +25,7 @@ Route::middleware('throttle:5,1')->group(function () {
 Route::post('/auth/register', [AuthController::class, 'register']);
 
 // --- Doktor Listesi (Public) ---
+Route::get('/doctors/recommended',  [DoctorController::class, 'recommended']);
 Route::get('/doctors',              [DoctorController::class, 'index']);
 Route::get('/doctors/{id}',         [DoctorController::class, 'show']);
 Route::get('/doctors/{id}/schedule',[DoctorController::class, 'schedule']);
