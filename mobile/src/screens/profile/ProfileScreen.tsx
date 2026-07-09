@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Calendar, FileText, Bell, HelpCircle, Shield, Globe, ChevronRight, ChevronLeft, LogOut, Pencil, X, Check } from 'lucide-react-native';
+import { Calendar, FileText, HelpCircle, Shield, Globe, ChevronRight, ChevronLeft, LogOut, Pencil, X, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -139,7 +139,6 @@ export default function ProfileScreen() {
           {[
             { Icon: Calendar,  bg: colors.teal50,    iconColor: colors.teal700, label: t('my_bookings'),     sub: `${counts.bookings} ${t('upcoming')}`,  screen: 'Appointments' as const },
             { Icon: FileText,  bg: colors.amber50,   iconColor: '#b37d1f',       label: t('my_results'),     sub: `${counts.results} ${t('reports')}`,   screen: 'Results' as const },
-            { Icon: Bell,      bg: '#ede7f5',         iconColor: '#5b3b9f',       label: t('notifications'),  sub: `${counts.notifications} ${t('unread')}`,    screen: 'Notifications' as const },
           ].map((m, i, arr) => (
             <TouchableOpacity
               key={i}

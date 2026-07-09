@@ -1,24 +1,29 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Calendar, FlaskConical, Bell, User } from 'lucide-react-native';
+import { Home, Calendar, FlaskConical, Sparkles, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../theme';
 import { TabParamList } from '../types/navigation';
 import { useRTL } from '../context/RTLContext';
 import HomeScreen from '../screens/home/HomeScreen';
 import AppointmentsScreen from '../screens/appointments/AppointmentsScreen';
+import AIChatScreen from '../screens/ai/AIChatScreen';
 import ResultsScreen from '../screens/results/ResultsScreen';
-import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator<TabParamList>();
+const isIOS = Platform.OS === 'ios';
 
 export default function MainTabNavigator() {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
+  // useWindowDimensions is reactive — changes take effect on every render/reload
+  const { width: screenW } = useWindowDimensions();
 
-  const isIOS = Platform.OS === 'ios';
+  const barW = Math.min(240, screenW * 0.65);   // max 240dp, at most 65% of screen
+  const margin = (screenW - barW) / 2;             // equal left & right margin
+  const tabH = isIOS ? 68 : 58;
 
   return (
     <Tab.Navigator
@@ -28,81 +33,127 @@ export default function MainTabNavigator() {
         tabBarInactiveTintColor: colors.ink400,
         tabBarStyle: {
           position: 'absolute',
-          bottom: isIOS ? 28 : 16,
-          left: 16,
-          right: 16,
-          backgroundColor: 'rgba(255, 255, 255, 0.98)',
-          borderRadius: 24,
-          height: isIOS ? 80 : 70,
+          bottom: 14,
+          left: 0,
+          right: 0,
+          // marginHorizontal centers the pill — works with position absolute
+          marginHorizontal: Math.round(screenW * 0.125),
+          height: tabH,
           borderTopWidth: 0,
-          // Spacing and alignment
-          paddingBottom: isIOS ? 24 : 10,
-          paddingTop: 10,
-          // Premium shadow matching mockup
-          shadowColor: '#0b1f22',
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.08,
+          borderRadius: 28,
+          backgroundColor: 'rgba(246, 251, 250, 0.94)',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.8)',
+          paddingBottom: isIOS ? 14 : 6,
+          paddingTop: 6,
+          paddingHorizontal: 0,
+          shadowColor: '#0b4d4f',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.12,
           shadowRadius: 20,
-          elevation: 10,
+          elevation: 14,
           flexDirection: isRTL ? 'row-reverse' : 'row',
         },
+        // Remove the default full-width background behind the pill bar
+        tabBarBackground: () => <View style={{ backgroundColor: 'transparent', flex: 1 }} />,
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: '700',
-          marginTop: 4,
+          marginTop: 1,
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
         tabBarIcon: ({ focused }) => {
-          const iconSize = 20;
+          const iconSize = 18;
           const activeColor = colors.teal700;
-          const inactiveColor = colors.ink400;
+          const inactiveColor = colors.ink300;
 
-          const iconMap: Record<string, React.ReactNode> = {
-            Home:          <Home size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
-            Appointments:  <Calendar size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
-            Results:       <FlaskConical size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
-            Notifications: <Bell size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
-            Profile:       <User size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.4 : 1.8} />,
-          };
-
-          if (focused) {
+          /* ——— CENTER AI BUTTON ——— */
+          if (route.name === 'AIChat') {
             return (
-              <View style={tabStyles.activeIconBg}>
-                {iconMap[route.name]}
+              <View style={tabStyles.aiOuter}>
+                <View style={tabStyles.aiInner}>
+                  <View style={tabStyles.aiRing} />
+                  <Sparkles size={19} color="#fff" strokeWidth={1.8} />
+                </View>
               </View>
             );
           }
 
-          return (
-            <View style={tabStyles.inactiveIconBg}>
-              {iconMap[route.name]}
-            </View>
-          );
+          const iconMap: Record<string, React.ReactNode> = {
+            Home: <Home size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.5 : 1.7} />,
+            Appointments: <Calendar size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.5 : 1.7} />,
+            Results: <FlaskConical size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.5 : 1.7} />,
+            Profile: <User size={iconSize} color={focused ? activeColor : inactiveColor} strokeWidth={focused ? 2.5 : 1.7} />,
+          };
+
+          if (focused) {
+            return <View style={tabStyles.activePill}>{iconMap[route.name]}</View>;
+          }
+          return <View style={tabStyles.iconWrap}>{iconMap[route.name]}</View>;
         },
       })}
     >
-      <Tab.Screen name="Home"          component={HomeScreen}          options={{ tabBarLabel: t('home') }} />
-      <Tab.Screen name="Appointments"  component={AppointmentsScreen}  options={{ tabBarLabel: t('bookings') }} />
-      <Tab.Screen name="Results"       component={ResultsScreen}       options={{ tabBarLabel: t('results') }} />
-      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: t('alerts') }} />
-      <Tab.Screen name="Profile"       component={ProfileScreen}       options={{ tabBarLabel: t('profile') }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('home') }} />
+      <Tab.Screen name="Appointments" component={AppointmentsScreen} options={{ tabBarLabel: t('bookings') }} />
+      <Tab.Screen
+        name="AIChat"
+        component={AIChatScreen}
+        options={{
+          tabBarLabel: t('ai_tab'),
+          tabBarLabelStyle: { fontSize: 9, fontWeight: '800', color: colors.teal700, marginTop: 1 },
+        }}
+      />
+      <Tab.Screen name="Results" component={ResultsScreen} options={{ tabBarLabel: t('results') }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: t('profile') }} />
     </Tab.Navigator>
   );
 }
 
 const tabStyles = StyleSheet.create({
-  activeIconBg: {
-    width: 44,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: '#E6F9F0', // Soft mint green from mockup
+  iconWrap: {
+    width: 30,
+    height: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  inactiveIconBg: {
-    width: 44,
-    height: 34,
+  activePill: {
+    width: 36,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: colors.teal50,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  /* ——— Premium AI button ——— */
+  aiOuter: {
+    marginTop: -14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 18,
+    backgroundColor: colors.teal700,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#0d7377',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 14,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
+  },
+  aiRing: {
+    position: 'absolute',
+    top: -18,
+    left: -18,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.10)',
   },
 });

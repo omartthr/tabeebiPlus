@@ -20,8 +20,8 @@ export type MainStackParamList = {
 export type TabParamList = {
   Home: undefined;
   Appointments: undefined;
+  AIChat: undefined;
   Results: undefined;
-  Notifications: undefined;
   Profile: undefined;
 };
 
