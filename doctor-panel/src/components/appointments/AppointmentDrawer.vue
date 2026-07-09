@@ -48,7 +48,8 @@
         <button class="btn btn-danger" style="flex:1" @click="$emit('report', apt); $emit('close')">Şikayet Et</button>
       </template>
       <template v-else>
-        <button class="btn btn-primary" style="flex:1" :disabled="saving || apt.status === 'confirmed'" @click="changeStatus('confirmed')">Onayla</button>
+        <button v-if="apt.status === 'confirmed'" class="btn" style="flex:1;background:var(--teal-600);color:#ffffff;border:none" :disabled="saving" @click="changeStatus('completed')">Tamamlandı</button>
+        <button v-else class="btn btn-primary" style="flex:1" :disabled="saving" @click="changeStatus('confirmed')">Onayla</button>
         <button class="btn btn-danger" :disabled="saving" @click="changeStatus('cancelled')"><IX :size="16" /> İptal</button>
       </template>
     </div>
