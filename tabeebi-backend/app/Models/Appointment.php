@@ -9,6 +9,8 @@ class Appointment extends Model
 {
     use HasUuids;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'patient_id', 'doctor_id', 'doctor_registration_id', 'date', 'time',
         'duration', 'status', 'payment', 'clinic', 'notes', 'reason', 'price',
