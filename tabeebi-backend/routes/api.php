@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum')->prefix('doctor-panel')->group(function () {
     Route::post('/appointments/manual',                [DoctorPanelController::class, 'createManualAppointment']);
     Route::patch('/appointments/{id}/status',          [DoctorPanelController::class, 'updateAppointmentStatus']);
     Route::patch('/appointments/{id}/report-uploaded', [DoctorPanelController::class, 'markReportUploaded']);
+    Route::post('/analyze-report',                      [DoctorPanelController::class, 'analyzeReport']);
 
     // Hastalar
     Route::get('/patients',             [DoctorPanelController::class, 'getPatients']);

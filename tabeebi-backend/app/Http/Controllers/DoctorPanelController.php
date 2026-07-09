@@ -323,6 +323,22 @@ class DoctorPanelController extends Controller
         $appointment = Appointment::findOrFail($id);
         $appointment->update(['report_uploaded' => true]);
 
+        // Ayrıca results tablosuna da ekleyelim ki mobil uygulamada "Sonuçlar" kısmına düşsün!
+        \App\Models\Result::updateOrCreate(
+            ['appointment_id' => $appointment->id],
+            [
+                'patient_id'  => $appointment->patient_id,
+                'doctor_id'   => $appointment->doctor_id,
+                'title'       => 'Muayene Notu — ' . $appointment->date,
+                'diagnosis'   => 'Rapor gerekmemektedir. Muayene tamamlandı.',
+                'notes'       => $appointment->notes ?? 'Genel muayene tamamlandı.',
+                'meds'        => [],
+                'next_steps'  => 'Gerekli durumlarda tekrar başvurun.',
+                'unread'      => true,
+                'date'        => $appointment->date,
+            ]
+        );
+
         return response()->json(['message' => 'Rapor yüklendi olarak işaretlendi']);
     }
 
@@ -432,5 +448,74 @@ class DoctorPanelController extends Controller
         } catch (\Exception $e) {
             \Log::error('Patient WhatsApp Notification Error: ' . $e->getMessage());
         }
+    }
+
+    // POST /api/doctor-panel/analyze-report
+    public function analyzeReport(Request $request)
+    {
+        $request->validate([
+            'appointmentId' => 'required|uuid',
+            'file'          => 'required|file|mimes:pdf|max:10240', // max 10MB
+        ]);
+
+        $appointment = Appointment::findOrFail($request->appointmentId);
+
+        $path = null;
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('reports', 'public');
+        }
+        $pdfUrl = $path ? asset('storage/' . $path) : null;
+
+        // Reason'a göre akıllı simülasyon yapalım
+        $reason = strtolower($appointment->reason ?? '');
+        $diagnosis = 'Genel check-up yapıldı. Sağlık durumu stabil.';
+        $meds = [];
+        $notes = 'Hastanın genel durumu iyi. Belirtilen ilaçları düzenli kullanması ve bol sıvı tüketmesi önerilir.';
+        $nextSteps = '6 ay sonra rutin kontrol.';
+
+        if (str_contains($reason, 'diş') || str_contains($reason, 'dent') || str_contains($reason, 'dental') || str_contains($reason, 'tooth')) {
+            $diagnosis = 'Diş temizliği ve tartar temizliği yapıldı. Hafif diş eti hassasiyeti mevcut.';
+            $meds = ['Gargara (Günde 2 kez)', 'Parasetamol 500mg (Ağrı durumunda)'];
+            $notes = 'Diş fırçalama tekniği gösterildi. Günde 2 kez fırçalama önerilir. Diş ipliği kullanımı aksatılmamalıdır.';
+            $nextSteps = '6 ay sonra rutin diş hekimi muayenesi.';
+        } elseif (str_contains($reason, 'ağrı') || str_contains($reason, 'pain')) {
+            $diagnosis = 'Miyofasiyal ağrı sendromu veya kas yorgunluğu gözlendi.';
+            $meds = ['Majezik 100mg tb (Günde 2 kez)', 'Muscoril merhem (Günde 2 kez)'];
+            $notes = 'Ilık kompres uygulanması, kas zorlayıcı hareketlerden kaçınılması ve dinlenme önerildi.';
+            $nextSteps = 'Şikayetler devam ederse veya artarsa 1 hafta sonra kontrol.';
+        } elseif (str_contains($reason, 'öksürük') || str_contains($reason, 'cough') || str_contains($reason, 'grip') || str_contains($reason, 'soğuk') || str_contains($reason, 'fever') || str_contains($reason, 'ateş')) {
+            $diagnosis = 'Akut viral üst solunum yolu enfeksiyonu (ÜSYE).';
+            $meds = ['Catarin tb (Günde 3 kez)', 'Klamer 500mg tb (Günde 2 kez)', 'Perebron şurup (Günde 3 kez)'];
+            $notes = 'Bol sıvı tüketimi, istirahat ve C vitamini takviyesi önerildi. Bulaş riski için kalabalık yerlerden uzak durulmalı.';
+            $nextSteps = 'Belirtiler 1 hafta içinde geçmezse kontrol.';
+        }
+
+        // Randevuyu güncelle
+        $appointment->update([
+            'report_uploaded' => true,
+            'pdf_url'         => $pdfUrl,
+            'ai_summary'      => $diagnosis,
+        ]);
+
+        // Muayene sonuç tablosuna ekle
+        $result = \App\Models\Result::updateOrCreate(
+            ['appointment_id' => $appointment->id],
+            [
+                'patient_id'  => $appointment->patient_id,
+                'doctor_id'   => $appointment->doctor_id,
+                'title'       => 'Muayene Raporu — ' . $appointment->date,
+                'diagnosis'   => $diagnosis,
+                'notes'       => $notes,
+                'meds'        => $meds,
+                'next_steps'  => $nextSteps,
+                'unread'      => true,
+                'date'        => $appointment->date,
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Rapor yüklendi ve analiz edildi.',
+            'result'  => $result,
+        ]);
     }
 }

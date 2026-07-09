@@ -120,11 +120,29 @@ function handleUpload(id: string) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('appointmentId', id)
-    const res = await fetch('/api/analyze-report', { method: 'POST', body: formData })
-    const data = await res.json()
-    uploadingId.value = null
-    if (!res.ok) { alert('Yükleme başarısız:\n' + data.error); return }
-    rows.value = rows.value.filter(r => r.id !== id)
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+      const token = localStorage.getItem('tabeebi_doctor_token') || ''
+      const res = await fetch(`${apiUrl}/doctor-panel/analyze-report`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: formData
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert('Yükleme başarısız:\n' + (data.error || data.message || 'Bir hata oluştu'));
+        return
+      }
+      rows.value = rows.value.filter(r => r.id !== id)
+    } catch (err: any) {
+      alert('Bağlantı hatası:\n' + err.message)
+    } finally {
+      uploadingId.value = null
+    }
   }
   input.click()
 }

@@ -9,6 +9,8 @@ class Result extends Model
 {
     use HasUuids;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'patient_id', 'doctor_id', 'appointment_id', 'title', 'diagnosis',
         'notes', 'meds', 'next_steps', 'unread', 'date'
