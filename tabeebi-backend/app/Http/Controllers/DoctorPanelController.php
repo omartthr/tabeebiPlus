@@ -36,7 +36,7 @@ class DoctorPanelController extends Controller
             'notes'           => $a->notes,
             'price'           => $a->price ?? 0,
             'report_uploaded' => (bool) $a->report_uploaded,
-            'pdf_url'         => $a->pdf_url,
+            'pdf_url'         => $a->pdf_url ? url('/storage/reports/' . $a->id) : null,
             'patient_name'    => $a->patient_name,
             'patient_phone'   => $a->patient_phone,
             'patients'        => $p ? [
@@ -460,11 +460,11 @@ class DoctorPanelController extends Controller
 
         $appointment = Appointment::findOrFail($request->appointmentId);
 
-        $path = null;
+        $pdfUrl = null;
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('reports', 'public');
+            $file = $request->file('file');
+            $pdfUrl = 'data:application/pdf;base64,' . base64_encode(file_get_contents($file->getRealPath()));
         }
-        $pdfUrl = $path ? asset('storage/' . $path) : null;
 
         // Reason'a göre akıllı simülasyon yapalım
         $reason = strtolower($appointment->reason ?? '');
