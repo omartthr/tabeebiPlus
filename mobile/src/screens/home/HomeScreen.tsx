@@ -47,7 +47,8 @@ export default function HomeScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         const { data } = await TabeebiAPI.getRecommendedDoctors(token);
-        setRecommendedDoctors(data?.doctors ?? []);
+        const docs = Array.isArray(data) ? data : (data?.doctors ?? []);
+        setRecommendedDoctors(docs);
       }
     } catch (err) { console.error('Recs error:', err); }
     setRecsLoading(false);
@@ -59,16 +60,16 @@ export default function HomeScreen() {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         const { data } = await TabeebiAPI.getNextAppointment(token);
-        if (data?.appointment) {
-          const a = data.appointment;
+        const a = (data && (data.appointment || data.id)) ? (data.appointment || data) : null;
+        if (a) {
           if (isAppointmentPast(a.date, a.time)) { setNextAppt(null); return; }
           const dayMatch = DAYS.find(d => d.key === a.date);
           setNextAppt({
-            id: a.id, doctor: a.doctors?.name || 'Unknown',
-            specialty: a.doctors?.specialty || '-',
+            id: a.id, doctor: a.doctor?.name || 'Unknown',
+            specialty: a.doctor?.specialty || '-',
             date: dayMatch ? dayMatch.full : a.date, time: a.time,
-            status: a.status, initials: a.doctors?.initials || '??',
-            hue: a.doctors?.hue || 175, clinic: a.doctors?.loc || 'Clinic',
+            status: a.status, initials: a.doctor?.initials || '??',
+            hue: a.doctor?.hue || 175, clinic: a.doctor?.loc || 'Clinic',
           });
         } else { setNextAppt(null); }
       }

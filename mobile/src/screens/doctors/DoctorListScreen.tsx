@@ -23,7 +23,8 @@ export default function DoctorListScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     TabeebiAPI.getDoctors().then(({ data }) => {
-      const docs = (data?.doctors ?? []).filter((d: any) => specialty.dbNames?.includes(d.specialty));
+      const doctorsArray = Array.isArray(data) ? data : (data?.doctors ?? []);
+      const docs = doctorsArray.filter((d: any) => specialty.dbNames?.includes(d.specialty));
       const mapped: Doctor[] = docs.map((d: any) => ({
         id: d.id,
         name: d.name,

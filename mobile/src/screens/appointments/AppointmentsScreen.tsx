@@ -77,7 +77,7 @@ export default function AppointmentsScreen({ navigation }: any) {
     if (error) {
       console.error('Fetch appointments error:', error);
     } else {
-      const appointmentsData = data?.appointments || [];
+      const appointmentsData = Array.isArray(data) ? data : (data?.appointments || []);
       const mapped: Appointment[] = appointmentsData.map((a: any) => {
         const dayMatch = DAYS.find(d => d.key === a.date);
         
@@ -86,14 +86,14 @@ export default function AppointmentsScreen({ navigation }: any) {
 
         return {
           id: a.id,
-          doctor: a.doctors?.name || t('unknown_doctor'),
-          specialty: a.doctors?.specialty || '-',
+          doctor: a.doctor?.name || t('unknown_doctor'),
+          specialty: a.doctor?.specialty || '-',
           date: dayMatch ? dayMatch.full : a.date,
           time: a.time,
           status: finalStatus,
-          initials: a.doctors?.initials || '??',
-          hue: a.doctors?.hue || 175,
-          price: a.price || a.doctors?.price || 0,
+          initials: a.doctor?.initials || '??',
+          hue: a.doctor?.hue || 175,
+          price: a.price || a.doctor?.price || 0,
           doctorId: a.doctor_id,
           rating: a.rating,
           review: a.review,
