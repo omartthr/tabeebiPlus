@@ -11,6 +11,10 @@ class DoctorSchedule extends Model
     // Tablo sadece updated_at tutuyor, created_at yok
     public $timestamps = false;
 
+    protected $primaryKey = 'doctor_registration_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = ['doctor_registration_id', 'schedule', 'updated_at'];
 
     protected $casts = [
