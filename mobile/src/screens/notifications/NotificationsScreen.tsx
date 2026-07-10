@@ -5,7 +5,7 @@ import { Clock, FileText, Check, Bell, Inbox, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -25,9 +25,9 @@ export const colors = {
   ink200: '#d5e8e7',   // subtle borders
   ink100: '#eaf3f3',   // very light backgrounds
 
-  // ── App backgrounds (white-based, turquoise is accent only) ─────────────────
-  bg:      '#F8FAFA',   // main background — near white
-  surface: '#ffffff',   // card surface — pure white
+  // ── App backgrounds ────────────────────────────────────────────────────────────
+  bg:      '#FFFFFF',   // main background — pure white
+  surface: '#FFFFFF',   // card surface — pure white
 
   // ── Semantic ─────────────────────────────────────────────────────────────────
   green500: '#17a673',

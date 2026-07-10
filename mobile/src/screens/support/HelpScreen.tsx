@@ -14,7 +14,7 @@ import TopBar from '../../components/TopBar';
 import StatusBadge from '../../components/StatusBadge';
 import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import CustomAlert from '../../components/CustomAlert';
 import Logo from '../../components/Logo';
 

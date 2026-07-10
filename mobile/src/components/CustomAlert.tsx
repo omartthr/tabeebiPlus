@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, Modal, TouchableOpacity, Animated, Dimensions
 } from 'react-native';
 import { colors, shadows } from '../theme';
-import { AlertTriangle, Info, X } from 'lucide-react-native';
+import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react-native';
 
 interface CustomAlertProps {
   visible: boolean;
@@ -13,7 +13,7 @@ interface CustomAlertProps {
   onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
-  type?: 'warning' | 'danger' | 'info';
+  type?: 'warning' | 'danger' | 'info' | 'success';
 }
 
 const { width } = Dimensions.get('window');
@@ -49,6 +49,7 @@ export default function CustomAlert({
     switch (type) {
       case 'danger': return <X size={28} color={colors.red500} />;
       case 'warning': return <AlertTriangle size={28} color={colors.amber600} />;
+      case 'success': return <CheckCircle2 size={28} color={colors.green500} />;
       default: return <Info size={28} color={colors.teal700} />;
     }
   };
@@ -57,6 +58,7 @@ export default function CustomAlert({
     switch (type) {
       case 'danger': return colors.red100;
       case 'warning': return colors.amber100;
+      case 'success': return colors.green100;
       default: return colors.teal100;
     }
   };
@@ -91,6 +93,7 @@ export default function CustomAlert({
                 styles.btn, 
                 styles.confirmBtn, 
                 type === 'danger' && { backgroundColor: colors.red500 },
+                type === 'success' && { backgroundColor: colors.green500 },
                 !cancelText && { flex: 0, paddingHorizontal: 40 }
               ]} 
               onPress={onConfirm}

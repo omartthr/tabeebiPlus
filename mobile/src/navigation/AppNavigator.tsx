@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -12,24 +12,9 @@ import ConfirmedScreen from '../screens/appointments/ConfirmedScreen';
 import HelpScreen from '../screens/support/HelpScreen';
 import PrivacyScreen from '../screens/profile/PrivacyScreen';
 import { UserData } from '../types/navigation';
+import { AuthContext } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TabeebiAPI } from '../lib/api';
-
-interface AuthContextValue {
-  user: UserData | null;
-  signIn: (u: UserData) => Promise<boolean>;
-  signOut: () => Promise<void>;
-  updateUser: (updates: Partial<UserData>) => Promise<boolean>;
-}
-
-export const AuthContext = createContext<AuthContextValue>({
-  user: null,
-  signIn: async () => false,
-  signOut: async () => { },
-  updateUser: async () => false,
-});
-
-export const useAuth = () => useContext(AuthContext);
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 

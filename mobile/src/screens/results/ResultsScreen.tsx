@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
 import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 
 interface Result {
   id: string;
@@ -162,6 +162,6 @@ const styles = StyleSheet.create({
   summaryText: { fontSize: 13, color: colors.ink700, fontWeight: '500', lineHeight: 20 },
   pdfBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1.5, borderColor: colors.teal700, justifyContent: 'center' },
   pdfBtnText: { fontSize: 14, fontWeight: '700', color: colors.teal700 },
-  noReportBox: { backgroundColor: colors.ink50, borderRadius: 12, padding: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.ink100 },
+  noReportBox: { backgroundColor: colors.ink100, borderRadius: 12, padding: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.ink100 },
   noReportText: { fontSize: 13, color: colors.ink500, fontWeight: '500', textAlign: 'center' },
 });

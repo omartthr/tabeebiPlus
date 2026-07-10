@@ -11,7 +11,7 @@ import StatusBadge from '../../components/StatusBadge';
 import CustomAlert from '../../components/CustomAlert';
 import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import { Appointment, DAYS } from '../../data';
 import { MainStackParamList } from '../../types/navigation';
 import { isAppointmentPast } from '../../utils/date';
@@ -24,7 +24,7 @@ export default function AppointmentsScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [alert, setAlert] = useState<{
-    visible: boolean; title: string; message: string; type: 'info' | 'warning' | 'danger';
+    visible: boolean; title: string; message: string; type: 'info' | 'warning' | 'danger' | 'success';
     confirmText?: string; cancelText?: string; onConfirm: () => void;
   }>({
     visible: false, title: '', message: '', type: 'info', onConfirm: () => { },
@@ -58,7 +58,14 @@ export default function AppointmentsScreen({ navigation }: any) {
       } else {
         setRateModalVisible(false);
         fetchApts();
-        Alert.alert(t('thanks'), t('rating_success'));
+        setAlert({
+          visible: true,
+          title: t('thanks'),
+          message: t('rating_success'),
+          type: 'success',
+          confirmText: t('ok'),
+          onConfirm: () => setAlert(p => ({ ...p, visible: false })),
+        });
       }
     } catch (err: any) {
       Alert.alert(t('error'), t('something_went_wrong') + err.message);

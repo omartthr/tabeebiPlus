@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import Svg, { Defs, LinearGradient as SvgGradient, Stop, Rect } from 'react-native-svg';
 import { MainStackParamList } from '../../types/navigation';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
 import { SPECIALTIES } from '../../data';
 import SpecialtyIcon from '../../components/SpecialtyIcon';
@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appointment, DAYS } from '../../data';
 import { isAppointmentPast } from '../../utils/date';
 import HeroCarousel from '../../components/HeroCarousel';
+import GlassSurface from '../../components/GlassSurface';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -94,12 +95,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={S.safe}>
-      {/* Subtle mesh blobs — keeps white feel with turquoise hint */}
-      <View style={StyleSheet.absoluteFill}>
-        <View style={[S.meshBlob, { backgroundColor: '#d4f4f0', top: -80, left: -60, width: 260, height: 260 }]} />
-        <View style={[S.meshBlob, { backgroundColor: '#e0f8f5', top: 200, right: -100, width: 280, height: 280 }]} />
-        <View style={[S.meshBlob, { backgroundColor: '#d4f4f0', bottom: 120, left: -100, width: 260, height: 260 }]} />
-      </View>
+
 
       <ScrollView
         style={S.scroll}
@@ -272,17 +268,11 @@ export default function HomeScreen() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const S = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFA' },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
   scroll: { flex: 1 },
   content: { paddingBottom: 16 },
 
-  // Subtle mesh blobs
-  meshBlob: {
-    position: 'absolute',
-    borderRadius: 160,
-    opacity: 0.35,
-    transform: [{ scale: 1.1 }],
-  },
+  meshBlob: { position: 'absolute' },
 
   // Header Section
   header: {

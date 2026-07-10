@@ -5,7 +5,7 @@ import { ChevronLeft, Shield, Lock, Bell, MapPin, Trash2 } from 'lucide-react-na
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '../../theme';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

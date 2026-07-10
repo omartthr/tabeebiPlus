@@ -8,16 +8,17 @@ use Illuminate\Http\Request;
 class DoctorController extends Controller
 {
     /**
-     * Tüm onaylı doktorları listeler
+     * Tum onayli doktorlari listeler.
+     * specialties=Ortodonti,Laboratuvar ile kategori bazli onerili siralama yapar.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $doctors = Doctor::where('is_active', true)->get();
+        $doctors = $this->buildRecommendedQuery($request)->get();
         return response()->json($doctors);
     }
 
     /**
-     * Tekil doktor detayını getirir
+     * Tekil doktor detayini getirir
      */
     public function show($id)
     {
@@ -29,7 +30,7 @@ class DoctorController extends Controller
     }
 
     /**
-     * Doktorun çalışma saatlerini (JSON formatında) getirir
+     * Doktorun calisma saatlerini (JSON formatinda) getirir
      */
     public function schedule($id)
     {
@@ -39,23 +40,48 @@ class DoctorController extends Controller
             return response()->json(['error' => 'Doctor not found'], 404);
         }
 
-        // Eğer doctor_schedules tablosu kullanılıyorsa oradan da çekilebilir.
-        // Ama şemaya göre schedule alanı doctors tablosunda da var. 
-        // Şimdilik doctors tablosundaki JSON objesini dönüyoruz.
         return response()->json($doctor->schedule ?? []);
     }
 
     /**
-     * Önerilen doktorları getirir
+     * Onerilen doktorlari getirir. Kategori verilirse once o kategorinin en iyileri gelir.
      */
-    public function recommended()
+    public function recommended(Request $request)
     {
-        // Şimdilik en yüksek puanlı veya rastgele 5 aktif doktoru getirelim
-        $doctors = Doctor::where('is_active', true)
-            ->orderBy('rating', 'desc')
+        $doctors = $this->buildRecommendedQuery($request)
             ->take(5)
             ->get();
             
         return response()->json($doctors);
+    }
+
+    private function buildRecommendedQuery(Request $request)
+    {
+        $specialties = $this->specialtiesFromRequest($request);
+
+        return Doctor::where('is_active', true)
+            ->when(!empty($specialties), function ($query) use ($specialties) {
+                $query->whereIn('specialty', $specialties);
+            })
+            ->orderByRaw('rating IS NULL')
+            ->orderByDesc('rating')
+            ->orderByDesc('reviews')
+            ->orderByDesc('today')
+            ->orderBy('name');
+    }
+
+    private function specialtiesFromRequest(Request $request): array
+    {
+        $raw = $request->query('specialties', $request->query('specialty'));
+
+        if (is_array($raw)) {
+            return array_values(array_filter($raw));
+        }
+
+        if (is_string($raw) && trim($raw) !== '') {
+            return array_values(array_filter(array_map('trim', explode(',', $raw))));
+        }
+
+        return [];
     }
 }

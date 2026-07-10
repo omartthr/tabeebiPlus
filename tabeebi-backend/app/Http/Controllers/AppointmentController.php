@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Doctor;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
@@ -165,9 +166,36 @@ class AppointmentController extends Controller
             return response()->json(['error' => 'Yetkisiz işlem'], 403);
         }
 
-        // Sadece izin verilen alanlar güncellenebilir
-        $appointment->update($request->only(['status', 'notes', 'rating', 'review']));
+        $validated = $request->validate([
+            'status' => 'sometimes|string|in:pending,confirmed,completed,cancelled',
+            'notes' => 'sometimes|nullable|string',
+            'rating' => 'sometimes|nullable|integer|min:1|max:5',
+            'review' => 'sometimes|nullable|string|max:2000',
+        ]);
+
+        // Sadece izin verilen alanlar guncellenebilir
+        $appointment->update($validated);
+
+        if (array_key_exists('rating', $validated) && $appointment->doctor_id) {
+            $this->refreshDoctorRating($appointment->doctor_id);
+        }
 
         return response()->json($appointment);
+    }
+
+    /**
+     * Doktor puanini tum puanlanmis randevularin ortalamasindan yeniden hesaplar.
+     */
+    private function refreshDoctorRating(string $doctorId): void
+    {
+        $stats = Appointment::where('doctor_id', $doctorId)
+            ->whereNotNull('rating')
+            ->selectRaw('AVG(rating) as average_rating, COUNT(*) as review_count')
+            ->first();
+
+        Doctor::where('id', $doctorId)->update([
+            'rating' => $stats && $stats->review_count > 0 ? round((float) $stats->average_rating, 1) : null,
+            'reviews' => $stats ? (int) $stats->review_count : 0,
+        ]);
     }
 }

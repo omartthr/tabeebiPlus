@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, TabParamList } from '../../types/navigation';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import { colors, shadows } from '../../theme';
 import DocAvatar from '../../components/DocAvatar';
 import { TabeebiAPI } from '../../lib/api';

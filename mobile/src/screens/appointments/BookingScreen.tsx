@@ -10,7 +10,7 @@ import { DAYS, iqd } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
 import { TabeebiAPI } from '../../lib/api';
-import { useAuth } from '../../navigation/AppNavigator';
+import { useAuth } from '../../context/AuthContext';
 import { isAppointmentPast } from '../../utils/date';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Booking'>;

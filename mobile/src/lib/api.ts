@@ -10,6 +10,7 @@ const BASE_URL = 'https://tabeebiplus-production.up.railway.app/api';
 
 export const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -143,9 +144,11 @@ export const TabeebiAPI = {
     }
   },
 
-  getRecommendedDoctors: async (token: string) => {
+  getRecommendedDoctors: async (token?: string, specialties?: string[]) => {
     try {
-      const response = await api.get('/doctors/recommended');
+      const response = await api.get('/doctors/recommended', {
+        params: specialties?.length ? { specialties } : undefined,
+      });
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
@@ -197,9 +200,11 @@ export const TabeebiAPI = {
     }
   },
 
-  getDoctors: async () => {
+  getDoctors: async (specialties?: string[]) => {
     try {
-      const response = await api.get('/doctors');
+      const response = await api.get('/doctors', {
+        params: specialties?.length ? { specialties } : undefined,
+      });
       return { data: response.data, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };

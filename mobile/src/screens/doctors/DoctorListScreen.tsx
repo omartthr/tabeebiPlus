@@ -22,9 +22,12 @@ export default function DoctorListScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    TabeebiAPI.getDoctors().then(({ data }) => {
+    setLoading(true);
+    TabeebiAPI.getDoctors(specialty.dbNames).then(({ data }) => {
       const doctorsArray = Array.isArray(data) ? data : (data?.doctors ?? []);
-      const docs = doctorsArray.filter((d: any) => specialty.dbNames?.includes(d.specialty));
+      const docs = specialty.dbNames?.length
+        ? doctorsArray.filter((d: any) => specialty.dbNames?.includes(d.specialty))
+        : doctorsArray;
       const mapped: Doctor[] = docs.map((d: any) => ({
         id: d.id,
         name: d.name,
@@ -44,8 +47,8 @@ export default function DoctorListScreen({ route, navigation }: Props) {
       }));
       setDoctors(mapped);
       setLoading(false);
-    });
-  }, []);
+    }).catch(() => setLoading(false));
+  }, [specialty.dbNames]);
 
   const FILTERS = [
     { id: 'all',   label: t('all_doctors') },
