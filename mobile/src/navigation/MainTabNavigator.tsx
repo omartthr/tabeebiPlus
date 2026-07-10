@@ -37,7 +37,7 @@ export default function MainTabNavigator() {
           left: 0,
           right: 0,
           // marginHorizontal centers the pill — works with position absolute
-          marginHorizontal: Math.round(screenW * 0.125),
+          marginHorizontal: 20,
           height: tabH,
           borderTopWidth: 0,
           borderRadius: 28,

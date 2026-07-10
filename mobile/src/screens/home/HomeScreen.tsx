@@ -21,6 +21,7 @@ import { TabeebiAPI } from '../../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appointment, DAYS } from '../../data';
 import { isAppointmentPast } from '../../utils/date';
+import HeroCarousel from '../../components/HeroCarousel';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -126,57 +127,87 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ─── AI HERO CARD ─── */}
-        <ImageBackground
-          source={require('../../../assets/images/ai_card_bg.png')}
-          style={S.heroCard}
-          imageStyle={{ borderRadius: 28 }}
-        >
-          {/* Dynamic Localized Text Container */}
-          <View style={S.heroTextContainer}>
-            <Text style={S.heroTitle}>{t('ai_health_assistant')}</Text>
-            <Text style={S.heroSub}>
-              {t('ai_companion')}
-            </Text>
-          </View>
-
-          {/* CTA Button at the bottom-left */}
-          <TouchableOpacity style={S.heroCta} activeOpacity={0.9}>
-            <MessageSquare size={14} color={colors.teal700} strokeWidth={2.4} />
-            <Text style={S.heroCtaLabel}>{t('ask_ai_btn')}</Text>
-          </TouchableOpacity>
-        </ImageBackground>
-
-        {/* ─── UPCOMING APPOINTMENT ─── */}
-        {nextAppt && (
-          <TouchableOpacity style={S.apptCard} activeOpacity={0.85}>
-            <View style={S.apptHeader}>
-              <Text style={S.apptLabel}>{t('upcoming_appt')}</Text>
-              <View style={S.apptDateBadge}>
-                <View style={S.apptDateDot} />
-                <Text style={S.apptDateText}>{nextAppt.date}</Text>
+        {/* ─── HERO CAROUSEL (AI Card + Upcoming Appointment) ─── */}
+        <HeroCarousel
+          height={CARD_BG_H}
+          autoplay
+          autoplayDelay={4500}
+          loop
+          items={[
+            /* Slide 1: AI Health Assistant */
+            <ImageBackground
+              key="ai"
+              source={require('../../../assets/images/ai_card_bg.png')}
+              style={{
+                width: CARD_BG_W,
+                height: CARD_BG_H,
+                paddingHorizontal: 20,
+                paddingTop: 40,
+                paddingBottom: 18,
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+              }}
+              imageStyle={{ borderRadius: 28 }}
+            >
+              <View style={S.heroTextContainer}>
+                <Text style={S.heroTitle}>{t('ai_health_assistant')}</Text>
+                <Text style={S.heroSub}>{t('ai_companion')}</Text>
               </View>
-            </View>
-            <View style={S.apptBody}>
-              <DocAvatar initials={nextAppt.initials} hue={nextAppt.hue} size={44} rounded={12} />
-              <View style={S.apptInfo}>
-                <Text style={S.apptDoc} numberOfLines={1}>{nextAppt.doctor}</Text>
-                <Text style={S.apptSpec} numberOfLines={1}>{nextAppt.specialty}</Text>
-                <View style={S.apptMeta}>
-                  <View style={S.metaChip}>
-                    <Clock size={11} color="rgba(255,255,255,0.85)" />
-                    <Text style={S.metaChipText}>{nextAppt.time}</Text>
+              <TouchableOpacity style={S.heroCta} activeOpacity={0.9}>
+                <MessageSquare size={14} color={colors.teal700} strokeWidth={2.4} />
+                <Text style={S.heroCtaLabel}>{t('ask_ai_btn')}</Text>
+              </TouchableOpacity>
+            </ImageBackground>,
+
+            /* Slide 2: Upcoming Appointment */
+            <View
+              key="appt"
+              style={{
+                width: CARD_BG_W,
+                height: CARD_BG_H,
+                borderRadius: 24,
+                backgroundColor: colors.teal900,
+                padding: 18,
+                justifyContent: nextAppt ? 'flex-start' : 'center',
+              }}
+            >
+              {nextAppt ? (
+                <>
+                  <View style={S.apptHeader}>
+                    <Text style={S.apptLabel}>{t('upcoming_appt')}</Text>
+                    <View style={S.apptDateBadge}>
+                      <View style={S.apptDateDot} />
+                      <Text style={S.apptDateText}>{nextAppt.date}</Text>
+                    </View>
                   </View>
-                  <View style={S.metaChip}>
-                    <MapPin size={11} color="rgba(255,255,255,0.85)" />
-                    <Text style={S.metaChipText} numberOfLines={1}>{nextAppt.clinic}</Text>
+                  <View style={S.apptBody}>
+                    <DocAvatar initials={nextAppt.initials} hue={nextAppt.hue} size={44} rounded={12} />
+                    <View style={S.apptInfo}>
+                      <Text style={S.apptDoc} numberOfLines={1}>{nextAppt.doctor}</Text>
+                      <Text style={S.apptSpec} numberOfLines={1}>{nextAppt.specialty}</Text>
+                      <View style={S.apptMeta}>
+                        <View style={S.metaChip}>
+                          <Clock size={11} color="rgba(255,255,255,0.85)" />
+                          <Text style={S.metaChipText}>{nextAppt.time}</Text>
+                        </View>
+                        <View style={S.metaChip}>
+                          <MapPin size={11} color="rgba(255,255,255,0.85)" />
+                          <Text style={S.metaChipText} numberOfLines={1}>{nextAppt.clinic}</Text>
+                        </View>
+                      </View>
+                    </View>
+                    <ChevronRight size={18} color="rgba(255,255,255,0.5)" />
                   </View>
+                </>
+              ) : (
+                <View style={{ alignItems: 'center', gap: 8 }}>
+                  <Text style={[S.apptLabel, { textAlign: 'center' }]}>{t('upcoming_appt')}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '500' }}>{t('no_upcoming_appts')}</Text>
                 </View>
-              </View>
-              <ChevronRight size={18} color="rgba(255,255,255,0.5)" />
-            </View>
-          </TouchableOpacity>
-        )}
+              )}
+            </View>,
+          ]}
+        />
 
         {/* ─── BROWSE BY SPECIALTY ─── */}
         <View style={S.sectionRow}>
@@ -291,20 +322,15 @@ const S = StyleSheet.create({
   avatarLetter: { fontSize: 18, fontWeight: '700', color: '#FFF' },
 
   heroCard: {
-    marginHorizontal: HP,
-    marginBottom: 20,
     borderRadius: 28,
-    height: CARD_BG_H, // Dynamically computed height
+    height: '100%',
+    width: '100%',
     paddingHorizontal: 20,
-    paddingTop: 40, // Vertically aligns text with the star sparkle center
+    paddingTop: 40,
     paddingBottom: 18,
-    justifyContent: 'space-between', // Ensures text is at the top, CTA at the bottom
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
     overflow: 'hidden',
-    ...Platform.select({
-      ios: { shadowColor: '#0D7377', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.25, shadowRadius: 20 },
-      android: { elevation: 8 },
-    }),
   },
   heroCta: {
     flexDirection: 'row',
@@ -341,15 +367,11 @@ const S = StyleSheet.create({
 
   // Upcoming Appointment Card
   apptCard: {
-    marginHorizontal: HP,
-    marginBottom: 24,
+    width: '100%',
+    height: '100%',
     borderRadius: 24,
     backgroundColor: colors.teal900,
     padding: 18,
-    ...Platform.select({
-      ios: { shadowColor: colors.teal900, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 18 },
-      android: { elevation: 8 },
-    }),
   },
   apptHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
