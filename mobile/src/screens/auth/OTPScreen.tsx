@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.teal700,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0d7377',
+    shadowColor: '#1a7a73',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 10,

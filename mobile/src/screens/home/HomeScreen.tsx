@@ -94,11 +94,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={S.safe}>
-      {/* Mesh Background Blobs to match Iconly Premium Mockup */}
+      {/* Subtle mesh blobs — keeps white feel with turquoise hint */}
       <View style={StyleSheet.absoluteFill}>
-        <View style={[S.meshBlob, { backgroundColor: '#E0F7FA', top: -80, left: -60, width: 280, height: 280 }]} />
-        <View style={[S.meshBlob, { backgroundColor: '#E8F5E9', top: 180, right: -120, width: 320, height: 320 }]} />
-        <View style={[S.meshBlob, { backgroundColor: '#E0F2F1', bottom: 120, left: -100, width: 300, height: 300 }]} />
+        <View style={[S.meshBlob, { backgroundColor: '#d4f4f0', top: -80, left: -60, width: 260, height: 260 }]} />
+        <View style={[S.meshBlob, { backgroundColor: '#e0f8f5', top: 200, right: -100, width: 280, height: 280 }]} />
+        <View style={[S.meshBlob, { backgroundColor: '#d4f4f0', bottom: 120, left: -100, width: 260, height: 260 }]} />
       </View>
 
       <ScrollView
@@ -276,11 +276,11 @@ const S = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingBottom: 16 },
 
-  // Background blobs for mesh gradient effect
+  // Subtle mesh blobs
   meshBlob: {
     position: 'absolute',
     borderRadius: 160,
-    opacity: 0.45,
+    opacity: 0.35,
     transform: [{ scale: 1.1 }],
   },
 
@@ -299,9 +299,12 @@ const S = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBtn: {
     width: 46, height: 46, borderRadius: 23,
-    backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(153,225,217,0.4)',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 10 },
+      ios: { shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 10 },
       android: { elevation: 3 },
     }),
   },
@@ -407,7 +410,7 @@ const S = StyleSheet.create({
   },
   specCard: {
     width: CARD_W,
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     paddingHorizontal: 10,
     paddingVertical: 14,
@@ -415,13 +418,13 @@ const S = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
+    borderColor: 'rgba(153, 225, 217, 0.3)',
     ...Platform.select({
-      ios: { shadowColor: '#0B1F22', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12 },
+      ios: { shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 12 },
       android: { elevation: 2 },
     }),
   },
-  specCardOff: { backgroundColor: '#F9FAFA', borderColor: 'rgba(0,0,0,0.015)' },
+  specCardOff: { backgroundColor: '#F9FAFA', borderColor: 'rgba(0,0,0,0.04)' },
   specIcon: {
     width: 40, height: 40, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
@@ -442,6 +445,7 @@ const S = StyleSheet.create({
   specCity: { fontSize: 11, fontWeight: '600', color: colors.ink400 },
   specArrow: {
     width: 22, height: 22, borderRadius: 11,
-    backgroundColor: '#F3F5F5', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(153,225,217,0.25)',
+    alignItems: 'center', justifyContent: 'center',
   },
 });

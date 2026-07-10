@@ -10,7 +10,7 @@ interface Props {
   color?: string;
 }
 
-export default function SpecialtyIcon({ kind, size = 26, color = '#0d7377' }: Props) {
+export default function SpecialtyIcon({ kind, size = 26, color = '#1a7a73' }: Props) {
   const props = { size, color };
   switch (kind) {
     case 'tooth':        return <Smile {...props} />;

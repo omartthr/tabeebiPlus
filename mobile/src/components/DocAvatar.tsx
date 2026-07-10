@@ -10,14 +10,14 @@ interface Props {
 
 function hslBg(hue: number) {
   const backgrounds: Record<number, { bg: string; fg: string }> = {
-    175: { bg: '#c8eaea', fg: '#0a5d60' },
+    175: { bg: '#b8ede9', fg: '#135e59' },
     190: { bg: '#bce4ea', fg: '#0a4d60' },
     40:  { bg: '#f0dfc0', fg: '#7a5c10' },
     160: { bg: '#c0e8d8', fg: '#1a6b50' },
     15:  { bg: '#f0d0c8', fg: '#7a2a20' },
     210: { bg: '#c0d8f0', fg: '#2a4a7a' },
   };
-  return backgrounds[hue] || { bg: '#c8eaea', fg: '#0a5d60' };
+  return backgrounds[hue] || { bg: '#b8ede9', fg: '#135e59' };
 }
 
 export default function DocAvatar({ initials, hue = 175, size = 64, rounded = 14 }: Props) {

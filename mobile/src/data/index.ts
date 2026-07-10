@@ -87,8 +87,8 @@ export interface Day {
 }
 
 export const SPECIALTIES: Specialty[] = [
-  { id: 'dental', name: 'Dental', sub: 'Active (Kerkük)', icon: 'tooth', tint: '#eaf5f5', accent: '#0d7377', dbNames: ['Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti'] },
-  { id: 'general', name: 'Laboratories', sub: 'Active (Kerkük)', icon: 'flask', tint: '#d4ecec', accent: '#0a5d60', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji', 'Laboratuvar', 'Tıbbi Laboratuvar', 'Tıbbi Analiz'] },
+  { id: 'dental', name: 'Dental', sub: 'Active (Kerkük)', icon: 'tooth', tint: '#edfaf8', accent: '#1a7a73', dbNames: ['Ortodonti', 'Genel Diş Hekimliği', 'Cerrahi Diş Hekimliği', 'Periodontoloji', 'Endodonti'] },
+  { id: 'general', name: 'Laboratories', sub: 'Active (Kerkük)', icon: 'flask', tint: '#c2ede9', accent: '#135e59', dbNames: ['Genel Cerrahi', 'İç Hastalıkları (Dahiliye)', 'Acil Tıp', 'Radyoloji', 'Laboratuvar', 'Tıbbi Laboratuvar', 'Tıbbi Analiz'] },
   { id: 'obgyn', name: 'OB-GYN', sub: 'Coming Soon', icon: 'user-round', tint: '#f5e1ec', accent: '#8a2a64', disabled: true },
   { id: 'derm', name: 'Dermatology', sub: 'Coming Soon', icon: 'layers', tint: '#fbefe2', accent: '#a5622b', disabled: true },
   { id: 'pulmo', name: 'Pulmonary', sub: 'Coming Soon', icon: 'wind', tint: '#e3edf0', accent: '#3d6a78', disabled: true },

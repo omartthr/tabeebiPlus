@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20, paddingBottom: 24, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.ink100 },
   footerLabel: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3 },
   footerPrice: { fontSize: 18, fontWeight: '700', color: colors.ink900 },
-  bookBtn: { flex: 1, height: 54, borderRadius: 100, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#0d7377', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },
+  bookBtn: { flex: 1, height: 54, borderRadius: 100, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },
   bookBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
   locationCard: { backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.ink100, overflow: 'hidden' },
   locationMapBanner: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: colors.teal50 },

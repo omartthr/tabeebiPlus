@@ -11,7 +11,7 @@ const map: Record<string, { bg: string; dot: string; fg: string; key: string }> 
   confirmed: { bg: colors.green100, dot: '#17a673', fg: '#0d6b4a', key: 'status_confirmed' },
   pending:   { bg: colors.amber100, dot: '#d59528', fg: '#8a5a0d', key: 'status_pending' },
   cancelled: { bg: colors.red100,   dot: '#d9534a', fg: '#912a23', key: 'status_cancelled' },
-  completed: { bg: colors.teal100,  dot: '#0d7377', fg: colors.teal800, key: 'status_completed' },
+  completed: { bg: colors.teal100,  dot: '#1a7a73', fg: colors.teal800, key: 'status_completed' },
   blocked:   { bg: colors.orange100,dot: '#e88a3b', fg: '#8f4a0d', key: 'status_pending' },
   open:      { bg: colors.amber100, dot: '#d59528', fg: '#8a5a0d', key: 'status_open' },
   resolved:  { bg: colors.green100, dot: '#17a673', fg: '#0d6b4a', key: 'status_resolved' },

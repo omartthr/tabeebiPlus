@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { colors } from '../theme';
 import { StyleSheet, StatusBar, Animated } from 'react-native';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 
@@ -78,6 +79,6 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0d7377',
+    backgroundColor: colors.teal700,
   },
 });

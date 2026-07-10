@@ -144,7 +144,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0d7377',
+    backgroundColor: '#1a7a73',
   },
   inner: {
     flex: 1,

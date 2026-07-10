@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   dayScroll: { flexGrow: 0 },
   dayContent: { gap: 8 },
   dayBtn: { minWidth: 62, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.ink200, alignItems: 'center', gap: 2 },
-  dayBtnActive: { backgroundColor: colors.teal700, borderWidth: 0, shadowColor: '#0d7377', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 5 },
+  dayBtnActive: { backgroundColor: colors.teal700, borderWidth: 0, shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 5 },
   dayName: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3 },
   dayNum: { fontSize: 20, fontWeight: '700', color: colors.ink900, letterSpacing: -0.3 },
   dayMonth: { fontSize: 10, fontWeight: '600', color: colors.ink500 },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   totalKey: { fontSize: 15, fontWeight: '700', color: colors.ink900 },
   totalVal: { fontSize: 15, fontWeight: '700', color: colors.ink900 },
   footer: { padding: 20, paddingBottom: 24, backgroundColor: colors.bg },
-  bookBtn: { height: 54, borderRadius: 100, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#0d7377', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },
+  bookBtn: { height: 54, borderRadius: 100, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },
   bookBtnDisabled: { backgroundColor: colors.ink200, shadowOpacity: 0 },
   bookBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 });
