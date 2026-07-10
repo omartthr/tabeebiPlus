@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CreditCard, Banknote, Check, ChevronRight } from 'lucide-react-native';
@@ -9,6 +9,7 @@ import { colors } from '../../theme';
 import { DAYS, iqd } from '../../data';
 import TopBar from '../../components/TopBar';
 import DocAvatar from '../../components/DocAvatar';
+import GlassSurface from '../../components/GlassSurface';
 import { TabeebiAPI } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { isAppointmentPast } from '../../utils/date';
@@ -241,23 +242,32 @@ export default function BookingScreen({ route, navigation }: Props) {
             <Text style={styles.summaryVal}>IQD {iqd(doctor.price)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>{t('service_fee')}</Text>
-            <Text style={styles.summaryVal}>IQD 2,000</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.summaryRow}>
             <Text style={styles.totalKey}>{t('total')}</Text>
-            <Text style={styles.totalVal}>IQD {iqd(doctor.price + 2000)}</Text>
+            <Text style={styles.totalVal}>IQD {iqd(Number(doctor.price) || 0)}</Text>
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={[styles.bookBtn, !canBook && styles.bookBtnDisabled]} disabled={!canBook} onPress={confirm} activeOpacity={0.85}>
-          <Text style={styles.bookBtnText}>
-            {bookingLoading ? t('processing') : selectedTime ? `${selectedTime} — ${t('confirm_booking')}` : t('confirm_booking')}
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.footerWrap} pointerEvents="box-none">
+        <GlassSurface
+          width="100%"
+          height={78}
+          borderRadius={30}
+          intensity={55}
+          style={styles.footerGlass}
+        >
+          <View style={styles.footerContent}>
+            <View style={styles.footerSummary}>
+              <Text style={styles.footerLabel}>{selectedTime ? day.full : t('summary')}</Text>
+              <Text style={styles.footerPrice}>{selectedTime ?? `IQD ${iqd(Number(doctor.price) || 0)}`}</Text>
+            </View>
+            <TouchableOpacity style={[styles.bookBtn, !canBook && styles.bookBtnDisabled]} disabled={!canBook} onPress={confirm} activeOpacity={0.86}>
+              <Text style={styles.bookBtnText} numberOfLines={1} adjustsFontSizeToFit>
+                {bookingLoading ? t('processing') : t('confirm_booking')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </GlassSurface>
       </View>
     </SafeAreaView>
   );
@@ -266,16 +276,16 @@ export default function BookingScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   scroll: { flex: 1 },
-  content: { padding: 20, gap: 10 },
-  doctorRecap: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.ink100, marginBottom: 8 },
+  content: { padding: 20, gap: 10, paddingBottom: 118 },
+  doctorRecap: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: colors.ink100, marginBottom: 8 },
   doctorName: { fontSize: 14, fontWeight: '700', color: colors.ink900 },
   specialty: { fontSize: 12, color: colors.ink500, fontWeight: '500' },
   sectionLabel: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 10 },
   emptyText: { fontSize: 13, color: colors.ink400 },
   dayScroll: { flexGrow: 0 },
   dayContent: { gap: 8 },
-  dayBtn: { minWidth: 62, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.ink200, alignItems: 'center', gap: 2 },
-  dayBtnActive: { backgroundColor: colors.teal700, borderWidth: 0, shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 5 },
+  dayBtn: { minWidth: 66, paddingVertical: 11, paddingHorizontal: 8, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.ink200, alignItems: 'center', gap: 2 },
+  dayBtnActive: { backgroundColor: colors.teal700, borderWidth: 0, shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 14, elevation: 5 },
   dayName: { fontSize: 11, fontWeight: '600', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.3 },
   dayNum: { fontSize: 20, fontWeight: '700', color: colors.ink900, letterSpacing: -0.3 },
   dayMonth: { fontSize: 10, fontWeight: '600', color: colors.ink500 },
@@ -299,7 +309,7 @@ const styles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { fontSize: 11, color: colors.ink500, fontWeight: '600' },
   paymentOptions: { gap: 10, marginBottom: 8 },
-  payOpt: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.ink200 },
+  payOpt: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.ink200 },
   payOptActive: { backgroundColor: colors.teal50, borderColor: colors.teal700 },
   payIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: colors.ink100, alignItems: 'center', justifyContent: 'center' },
   payIconActive: { backgroundColor: colors.teal700 },
@@ -307,15 +317,20 @@ const styles = StyleSheet.create({
   paySub: { fontSize: 12, color: colors.ink500, fontWeight: '500', marginTop: 2 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.ink300, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   radioActive: { backgroundColor: colors.teal700, borderColor: colors.teal700 },
-  summary: { backgroundColor: colors.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.ink100, gap: 10, marginTop: 8 },
+  summary: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.ink100, gap: 10, marginTop: 8 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
   summaryKey: { fontSize: 13, fontWeight: '600', color: colors.ink700 },
   summaryVal: { fontSize: 13, fontWeight: '600', color: colors.ink900 },
   divider: { height: 1, backgroundColor: colors.ink100 },
   totalKey: { fontSize: 15, fontWeight: '700', color: colors.ink900 },
   totalVal: { fontSize: 15, fontWeight: '700', color: colors.ink900 },
-  footer: { padding: 20, paddingBottom: 24, backgroundColor: colors.bg },
-  bookBtn: { height: 54, borderRadius: 100, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },
+  footerWrap: { position: 'absolute', left: 20, right: 20, bottom: Platform.OS === 'ios' ? 20 : 14, height: 78, borderRadius: 30, shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 18, elevation: 14 },
+  footerGlass: { borderColor: 'rgba(153, 225, 217, 0.55)', backgroundColor: 'rgba(255, 255, 255, 0.68)' },
+  footerContent: { width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12 },
+  footerSummary: { minWidth: 92, maxWidth: 118, paddingLeft: 4 },
+  footerLabel: { fontSize: 10, fontWeight: '700', color: colors.ink500, textTransform: 'uppercase', letterSpacing: 0.25 },
+  footerPrice: { fontSize: 17, fontWeight: '800', color: colors.ink900, marginTop: 2 },
+  bookBtn: { flex: 1, height: 54, borderRadius: 24, backgroundColor: colors.teal700, alignItems: 'center', justifyContent: 'center', shadowColor: '#1a7a73', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5, paddingHorizontal: 14 },
   bookBtnDisabled: { backgroundColor: colors.ink200, shadowOpacity: 0 },
   bookBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 });

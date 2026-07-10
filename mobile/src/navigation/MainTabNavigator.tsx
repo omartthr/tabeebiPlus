@@ -142,11 +142,11 @@ export default function MainTabNavigator() {
                     >
                       <View style={{ height: 28, justifyContent: 'center', alignItems: 'center', marginBottom: 2 }}>
                         {isFocused ? (
-                          <View 
-                            style={{ 
-                              width: 36, 
-                              height: 28, 
-                              borderRadius: 9, 
+                          <View
+                            style={{
+                              width: 36,
+                              height: 28,
+                              borderRadius: 9,
                               borderWidth: 1,
                               borderColor: 'rgba(153, 225, 217, 0.55)',
                               backgroundColor: 'rgba(26, 122, 115, 0.08)',
@@ -230,14 +230,14 @@ export default function MainTabNavigator() {
 
           if (focused) {
             return (
-              <GlassSurface 
-                width={36} 
-                height={28} 
-                borderRadius={9} 
-                intensity={30} 
-                style={{ 
+              <GlassSurface
+                width={36}
+                height={28}
+                borderRadius={9}
+                intensity={30}
+                style={{
                   borderColor: 'rgba(153, 225, 217, 0.55)',
-                  backgroundColor: 'rgba(26, 122, 115, 0.12)' 
+                  backgroundColor: 'rgba(26, 122, 115, 0.12)'
                 }}
               >
                 {iconMap[route.name]}

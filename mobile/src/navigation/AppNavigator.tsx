@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../types/navigation';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
@@ -18,9 +17,17 @@ import { TabeebiAPI } from '../lib/api';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
+const stackScreenOptions: NativeStackNavigationOptions = {
+  headerShown: false,
+  animation: 'fade',
+  animationDuration: 160,
+  gestureEnabled: true,
+  fullScreenGestureEnabled: true,
+};
+
 function MainNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
       <Stack.Screen name="DoctorList" component={DoctorListScreen} />
       <Stack.Screen name="DoctorDetail" component={DoctorDetailScreen} />
