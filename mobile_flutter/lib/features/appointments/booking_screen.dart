@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../app/app_route.dart';
@@ -5,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/tabeebi_date_utils.dart';
 import '../../data/models/tabeebi_models.dart';
 import '../../data/repositories/tabeebi_repository.dart';
+import '../../shared/widgets/doc_avatar.dart';
 import '../../shared/widgets/top_bar.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -29,11 +32,12 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   late Day day = generateDays().first;
-  String? time;
-  String payment = 'Cash';
+  String payment = 'Card';
   bool loadingSlots = false;
-  List<String> availableSlots = [];
+  List<String> hourBlocks = [];
   Set<String> bookedTimes = {};
+  String? selectedHour;
+  String? time;
 
   @override
   void initState() {
@@ -41,355 +45,221 @@ class _BookingScreenState extends State<BookingScreen> {
     _loadSlotsForDay(day);
   }
 
-  /// Replicates the React Native gen10MinSlots function:
-  /// Takes a schedule from the API and generates 10-minute slots
-  List<String> _gen10MinSlots(Map<String, dynamic>? daySched) {
-    if (daySched == null) return [];
-    final isOpen = daySched['isOpen'] == true || daySched['isOpen'] == 1;
-    if (!isOpen) return [];
-    final raw = daySched['slots'];
-    if (raw is! List || raw.isEmpty) return [];
+  List<String> _gen10MinSlots(String hourStart) {
+    final parts = hourStart.split(':');
+    if (parts.length < 2) return const [];
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1].replaceAll(RegExp(r'\D'), ''));
+    if (h == null || m == null) return const [];
 
-    final slots = <String>[];
-    for (final slotStr in raw) {
-      final parts = slotStr.toString().split(':');
-      if (parts.length < 2) continue;
-      final h = int.tryParse(parts[0]);
-      if (h == null) continue;
-      for (int m = 0; m < 60; m += 10) {
-        final mStr = m.toString().padLeft(2, '0');
-        final ampm = h < 12 ? 'AM' : 'PM';
-        final displayH = h == 0 ? 12 : (h > 12 ? h - 12 : h);
-        slots.add('$displayH:$mStr $ampm');
-      }
-    }
-    return slots;
+    return List.generate(6, (index) {
+      final total = m + index * 10;
+      final hh = h + total ~/ 60;
+      final mm = total % 60;
+      return '${hh.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}';
+    });
   }
 
   Future<void> _loadSlotsForDay(Day selectedDay) async {
     setState(() {
       loadingSlots = true;
-      availableSlots = [];
+      hourBlocks = [];
       bookedTimes = {};
+      selectedHour = null;
+      time = null;
     });
 
     try {
-      final schedule = await widget.repository.getDoctorSchedule(widget.doctor.id);
-      final dayKey = selectedDay.key.toLowerCase();
-      // Map day names to schedule keys
+      final schedule = await widget.repository.getDoctorSchedule(
+        widget.doctor.id,
+      );
       final dayMap = {
-        'Mon': 'mon', 'Tue': 'tue', 'Wed': 'wed',
-        'Thu': 'thu', 'Fri': 'fri', 'Sat': 'sat', 'Sun': 'sun',
+        'Mon': 'mon',
+        'Tue': 'tue',
+        'Wed': 'wed',
+        'Thu': 'thu',
+        'Fri': 'fri',
+        'Sat': 'sat',
+        'Sun': 'sun',
       };
-      final schedKey = dayMap[selectedDay.day] ?? dayKey;
+      final schedKey = dayMap[selectedDay.day] ?? selectedDay.key.toLowerCase();
       final daySched = schedule?[schedKey] as Map<String, dynamic>?;
-      final slots = _gen10MinSlots(daySched);
-
-      // Fetch booked times for this specific date
+      final blocks = _hourBlocksFromSchedule(daySched);
       final booked = await widget.repository.getBookedTimes(
         widget.doctor.id,
         selectedDay.key,
       );
 
-      if (mounted) {
-        setState(() {
-          availableSlots = slots;
-          bookedTimes = booked.toSet();
-          loadingSlots = false;
-          // Reset selected time if it's no longer in available slots
-          if (time != null && !slots.contains(time)) {
-            time = null;
-          }
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        hourBlocks = blocks;
+        bookedTimes = booked.map(_normalizeBookedTime).toSet();
+        loadingSlots = false;
+      });
     } catch (_) {
-      if (mounted) {
-        setState(() => loadingSlots = false);
-      }
+      if (mounted) setState(() => loadingSlots = false);
     }
+  }
+
+  List<String> _hourBlocksFromSchedule(Map<String, dynamic>? daySched) {
+    if (daySched == null) return const [];
+    final isOpen = daySched['isOpen'] == true || daySched['isOpen'] == 1;
+    if (!isOpen) return const [];
+    final raw = daySched['slots'];
+    if (raw is! List || raw.isEmpty) return const [];
+
+    return raw
+        .map((slot) => slot.toString().split(' - ').first.trim())
+        .where((slot) => slot.contains(':'))
+        .toList();
+  }
+
+  bool _isHourFull(String hour) {
+    return _gen10MinSlots(hour).every(_isSlotUnavailable);
+  }
+
+  bool _isSlotUnavailable(String slot) {
+    return bookedTimes.contains(_normalizeBookedTime(slot)) ||
+        isAppointmentPast(day.key, slot);
+  }
+
+  String _normalizeBookedTime(String raw) {
+    final trimmed = raw.trim();
+    final match = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(trimmed);
+    if (match == null) return trimmed;
+    final hour = int.tryParse(match.group(1) ?? '') ?? 0;
+    final minute = int.tryParse(match.group(2) ?? '') ?? 0;
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final days = generateDays();
+    final tenMinSlots = selectedHour == null
+        ? const <String>[]
+        : _gen10MinSlots(selectedHour!);
+    final canBook = time != null;
+
     return Scaffold(
-      body: Column(
+      backgroundColor: AppColors.bg,
+      body: Stack(
         children: [
-          TopBar(title: 'Book appointment', onBack: widget.onBack),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                // Doctor info header
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.teal50,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: AppColors.teal200.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    children: [
-                      _AvatarCircle(
-                        initials: widget.doctor.initials,
-                        hue: widget.doctor.hue,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.doctor.name,
-                              style: const TextStyle(
-                                color: AppColors.ink900,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            Text(
-                              widget.doctor.specialty,
-                              style: const TextStyle(
-                                color: AppColors.ink500,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.amber50,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'IQD ${iqd(widget.doctor.price)}',
-                          style: const TextStyle(
-                            color: AppColors.amber700,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                const Text(
-                  'Select day',
-                  style: TextStyle(
-                    color: AppColors.ink900,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 84,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: days.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      final d = days[index];
-                      final active = d.key == day.key;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() => day = d);
-                          _loadSlotsForDay(d);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          width: 64,
-                          decoration: BoxDecoration(
-                            color: active ? AppColors.teal700 : Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: active
-                                  ? AppColors.teal700
-                                  : AppColors.ink200,
-                            ),
-                            boxShadow: active ? AppShadows.button : null,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                d.day,
-                                style: TextStyle(
-                                  color: active
-                                      ? Colors.white.withValues(alpha: 0.8)
-                                      : AppColors.ink500,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${d.num}',
-                                style: TextStyle(
-                                  color: active ? Colors.white : AppColors.ink900,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              Text(
-                                d.month,
-                                style: TextStyle(
-                                  color: active
-                                      ? Colors.white.withValues(alpha: 0.8)
-                                      : AppColors.ink400,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 22),
-                const Text(
-                  'Select time',
-                  style: TextStyle(
-                    color: AppColors.ink900,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (loadingSlots)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(color: AppColors.teal700),
-                    ),
-                  )
-                else if (availableSlots.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.ink100,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'No slots available for this day.',
-                        style: TextStyle(color: AppColors.ink500),
-                      ),
-                    ),
-                  )
-                else
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: availableSlots.map((slot) {
-                      final isBooked = bookedTimes.contains(slot);
-                      final isSelected = time == slot;
-                      return GestureDetector(
-                        onTap: isBooked ? null : () => setState(() => time = slot),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 120),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.teal700
-                                : isBooked
-                                ? AppColors.ink100
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.teal700
-                                  : isBooked
-                                  ? AppColors.ink200
-                                  : AppColors.ink200,
-                            ),
-                          ),
-                          child: Text(
-                            slot,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : isBooked
-                                  ? AppColors.ink400
-                                  : AppColors.ink900,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              decoration: isBooked
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                const SizedBox(height: 22),
-                const Text(
-                  'Payment method',
-                  style: TextStyle(
-                    color: AppColors.ink900,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
+          Column(
+            children: [
+              TopBar(title: 'Book appointment', onBack: widget.onBack),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 128),
                   children: [
-                    _PaymentOption(
-                      label: 'Pay at clinic',
-                      icon: Icons.payments_outlined,
-                      selected: payment == 'Cash',
-                      onTap: () => setState(() => payment = 'Cash'),
+                    _DoctorRecap(doctor: widget.doctor),
+                    const SizedBox(height: 20),
+                    const _SectionLabel('CHOOSE DAY'),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 84,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: days.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final d = days[index];
+                          return _DayButton(
+                            day: d,
+                            active: d.key == day.key,
+                            onTap: () {
+                              setState(() => day = d);
+                              _loadSlotsForDay(d);
+                            },
+                          );
+                        },
+                      ),
                     ),
-                    const SizedBox(width: 10),
-                    _PaymentOption(
-                      label: 'Online payment',
-                      icon: Icons.credit_card_rounded,
-                      selected: payment == 'Card',
-                      onTap: () => setState(() => payment = 'Card'),
+                    const SizedBox(height: 20),
+                    const _SectionLabel('AVAILABLE TIME'),
+                    const SizedBox(height: 10),
+                    if (loadingSlots)
+                      const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.teal700,
+                          ),
+                        ),
+                      )
+                    else if (hourBlocks.isEmpty)
+                      const _EmptyState('No slots available for this day.')
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final hour in hourBlocks)
+                            _HourButton(
+                              hour: hour,
+                              active: selectedHour == hour,
+                              full: _isHourFull(hour),
+                              onTap: () => setState(() {
+                                selectedHour = hour;
+                                time = null;
+                              }),
+                            ),
+                        ],
+                      ),
+                    if (selectedHour != null) ...[
+                      const SizedBox(height: 20),
+                      _SectionLabel('$selectedHour - SELECT TIME'),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final slot in tenMinSlots)
+                            _SlotButton(
+                              slot: slot,
+                              active: time == slot,
+                              disabled: _isSlotUnavailable(slot),
+                              onTap: () => setState(() => time = slot),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const _Legend(),
+                    ],
+                    const SizedBox(height: 20),
+                    const _SectionLabel('PAYMENT METHOD'),
+                    const SizedBox(height: 10),
+                    Column(
+                      children: [
+                        _PaymentOption(
+                          title: 'Pay online',
+                          subtitle: 'Reserve now with card payment',
+                          icon: Icons.credit_card_rounded,
+                          selected: payment == 'Card',
+                          onTap: () => setState(() => payment = 'Card'),
+                        ),
+                        const SizedBox(height: 10),
+                        _PaymentOption(
+                          title: 'Pay at clinic',
+                          subtitle: 'Pay when you arrive',
+                          icon: Icons.payments_outlined,
+                          selected: payment == 'Cash',
+                          onTap: () => setState(() => payment = 'Cash'),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 20),
+                    _SummaryCard(price: widget.doctor.price),
                   ],
                 ),
-                const SizedBox(height: 110),
-              ],
-            ),
-          ),
-          SafeArea(
-            top: false,
-            minimum: const EdgeInsets.all(20),
-            child: GestureDetector(
-              onTap: time == null ? null : _confirm,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                height: 54,
-                decoration: BoxDecoration(
-                  color: time == null ? AppColors.ink200 : AppColors.teal700,
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: time == null ? null : AppShadows.button,
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'Confirm booking',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
               ),
-            ),
+            ],
+          ),
+          _FooterBar(
+            day: day,
+            price: widget.doctor.price,
+            time: time,
+            enabled: canBook,
+            onConfirm: _confirm,
           ),
         ],
       ),
@@ -397,6 +267,7 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _confirm() async {
+    if (time == null) return;
     final result = await widget.repository.createAppointment({
       'doctor_id': widget.doctor.id,
       'patient_id': widget.patientId,
@@ -427,82 +298,601 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 }
 
-class _AvatarCircle extends StatelessWidget {
-  const _AvatarCircle({required this.initials, required this.hue});
-  final String initials;
-  final int hue;
+class _DoctorRecap extends StatelessWidget {
+  const _DoctorRecap({required this.doctor});
+
+  final Doctor doctor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 48,
-      height: 48,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: HSLColor.fromAHSL(1.0, hue.toDouble(), 0.5, 0.82).toColor(),
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.ink100),
       ),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: TextStyle(
-          color: HSLColor.fromAHSL(1.0, hue.toDouble(), 0.55, 0.28).toColor(),
-          fontWeight: FontWeight.w900,
-          fontSize: 16,
+      child: Row(
+        children: [
+          DocAvatar(
+            initials: doctor.initials,
+            hue: doctor.hue,
+            size: 48,
+            rounded: 12,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  doctor.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.ink900,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  doctor.specialty,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.ink500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        color: AppColors.ink500,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.3,
+      ),
+    );
+  }
+}
+
+class _DayButton extends StatelessWidget {
+  const _DayButton({
+    required this.day,
+    required this.active,
+    required this.onTap,
+  });
+
+  final Day day;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 66,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+        decoration: BoxDecoration(
+          color: active ? AppColors.teal700 : AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: active ? null : Border.all(color: AppColors.ink200),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: AppColors.teal700.withValues(alpha: 0.22),
+                    blurRadius: 14,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              day.day.toUpperCase(),
+              style: TextStyle(
+                color: active ? Colors.white : AppColors.ink500,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${day.num}',
+              style: TextStyle(
+                color: active ? Colors.white : AppColors.ink900,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                height: 1.05,
+              ),
+            ),
+            Text(
+              day.month,
+              style: TextStyle(
+                color: active ? Colors.white : AppColors.ink500,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+class _HourButton extends StatelessWidget {
+  const _HourButton({
+    required this.hour,
+    required this.active,
+    required this.full,
+    required this.onTap,
+  });
+
+  final String hour;
+  final bool active;
+  final bool full;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: full ? null : onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.teal700
+              : full
+              ? AppColors.ink100
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(100),
+          border: active || full ? null : Border.all(color: AppColors.ink200),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              hour,
+              style: TextStyle(
+                color: active
+                    ? Colors.white
+                    : full
+                    ? AppColors.ink400
+                    : AppColors.ink900,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                decoration: full ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            if (!full) ...[
+              const SizedBox(width: 6),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: active ? Colors.white : AppColors.ink400,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SlotButton extends StatelessWidget {
+  const _SlotButton({
+    required this.slot,
+    required this.active,
+    required this.disabled,
+    required this.onTap,
+  });
+
+  final String slot;
+  final bool active;
+  final bool disabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: disabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        width: 96,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.teal700
+              : disabled
+              ? AppColors.ink100
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(100),
+          border: active || disabled ? null : Border.all(color: AppColors.ink200),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          slot,
+          style: TextStyle(
+            color: active
+                ? Colors.white
+                : disabled
+                ? AppColors.ink400
+                : AppColors.ink900,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            decoration: disabled ? TextDecoration.lineThrough : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Legend extends StatelessWidget {
+  const _Legend();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        _LegendItem(color: AppColors.teal700, label: 'Selected'),
+        SizedBox(width: 14),
+        _LegendItem(color: AppColors.surface, label: 'Available', bordered: true),
+        SizedBox(width: 14),
+        _LegendItem(color: AppColors.ink200, label: 'Unavailable'),
+      ],
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({
+    required this.color,
+    required this.label,
+    this.bordered = false,
+  });
+
+  final Color color;
+  final String label;
+  final bool bordered;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: bordered ? Border.all(color: AppColors.ink200, width: 1.5) : null,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.ink500,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PaymentOption extends StatelessWidget {
   const _PaymentOption({
-    required this.label,
+    required this.title,
+    required this.subtitle,
     required this.icon,
     required this.selected,
     required this.onTap,
   });
 
-  final String label;
+  final String title;
+  final String subtitle;
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.teal50 : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? AppColors.teal700 : AppColors.ink200,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: selected ? AppColors.teal700 : AppColors.ink400,
-                size: 22,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: selected ? AppColors.teal700 : AppColors.ink700,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.teal50 : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.teal700 : AppColors.ink200,
+            width: selected ? 1.5 : 1,
           ),
         ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.teal700 : AppColors.ink100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: selected ? Colors.white : AppColors.ink700,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.ink900,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppColors.ink500,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.teal700 : AppColors.surface,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? AppColors.teal700 : AppColors.ink300,
+                  width: 2,
+                ),
+              ),
+              child: selected
+                  ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.price});
+
+  final int price;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.ink100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionLabel('SUMMARY'),
+          const SizedBox(height: 10),
+          _SummaryRow(label: 'Consultation', value: 'IQD ${iqd(price)}'),
+          const SizedBox(height: 10),
+          _SummaryRow(
+            label: 'Total',
+            value: 'IQD ${iqd(price)}',
+            strong: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.strong = false,
+  });
+
+  final String label;
+  final String value;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: strong ? AppColors.ink900 : AppColors.ink700,
+            fontSize: strong ? 15 : 13,
+            fontWeight: strong ? FontWeight.w800 : FontWeight.w700,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: AppColors.ink900,
+            fontSize: strong ? 15 : 13,
+            fontWeight: strong ? FontWeight.w800 : FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FooterBar extends StatelessWidget {
+  const _FooterBar({
+    required this.day,
+    required this.price,
+    required this.time,
+    required this.enabled,
+    required this.onConfirm,
+  });
+
+  final Day day;
+  final int price;
+  final String? time;
+  final bool enabled;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: 20,
+      right: 20,
+      bottom: 14,
+      child: SafeArea(
+        top: false,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              height: 78,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.68),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: AppColors.teal200.withValues(alpha: 0.55),
+                ),
+                boxShadow: AppShadows.float,
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'CONSULTATION',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.ink500,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.25,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'IQD ${iqd(price)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.ink900,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: enabled ? onConfirm : null,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        height: 54,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: enabled ? AppColors.teal700 : AppColors.ink200,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: enabled ? AppShadows.button : null,
+                        ),
+                        child: const Text(
+                          'Confirm booking',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.ink100,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        message,
+        style: const TextStyle(color: AppColors.ink500),
       ),
     );
   }

@@ -367,57 +367,76 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
           SafeArea(
             top: false,
             minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'CONSULTATION',
-                        style: TextStyle(
-                          color: AppColors.ink500,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      Text(
-                        'IQD ${iqd(widget.doctor.price)}',
-                        style: const TextStyle(
-                          color: AppColors.ink900,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: Container(
+              height: 78,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: AppColors.teal200.withValues(alpha: 0.55),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: GestureDetector(
-                    onTap: () => widget.onBook(widget.doctor),
-                    child: Container(
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: AppColors.teal700,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: AppShadows.button,
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Book appointment',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
+                boxShadow: AppShadows.float,
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 112,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'CONSULTATION',
+                          maxLines: 1,
+                          style: TextStyle(
+                            color: AppColors.ink500,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'IQD ${iqd(widget.doctor.price)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.ink900,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => widget.onBook(widget.doctor),
+                      child: Container(
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: AppColors.teal700,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: AppShadows.button,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Book appointment',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

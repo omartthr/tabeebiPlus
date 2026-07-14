@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/models/tabeebi_models.dart';
 import '../../data/repositories/demo_data.dart';
 import '../../data/repositories/tabeebi_repository.dart';
-import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/specialty_icon.dart';
 
-class HomeScreen extends StatelessWidget {
+const _aiCardBackground = AssetImage('assets/images/ai_card_bg.png');
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.repository,
@@ -24,10 +27,55 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onAi;
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Timer? _heroTimer;
+  int _heroIndex = 0;
+  Appointment? _nextAppointment;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNextAppointment();
+    _startHeroAutoplay();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheImage(_aiCardBackground, context);
+  }
+
+  @override
+  void dispose() {
+    _heroTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startHeroAutoplay() {
+    _heroTimer?.cancel();
+    _heroTimer = Timer.periodic(const Duration(milliseconds: 5600), (_) {
+      if (!mounted) return;
+      setState(() => _heroIndex = (_heroIndex + 1) % 2);
+    });
+  }
+
+  Future<void> _loadNextAppointment() async {
+    final appointment = await widget.repository.getNextAppointment();
+    if (!mounted) return;
+    setState(() => _nextAppointment = appointment);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final heroHeight = (screenWidth - 40) / 1.79;
+
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 118),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 118),
         children: [
           Row(
             children: [
@@ -44,12 +92,12 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      userName,
+                      widget.userName,
                       style: const TextStyle(
                         color: AppColors.ink900,
-                        fontSize: 30,
-                        height: 1.08,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 28,
+                        height: 1.18,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
@@ -57,16 +105,22 @@ class HomeScreen extends StatelessWidget {
               ),
               _CircleButton(
                 icon: Icons.notifications_none_rounded,
-                onTap: onNotifications,
+                onTap: widget.onNotifications,
                 dot: true,
               ),
               const SizedBox(width: 12),
-              const _LogoCircle(),
+              _AvatarCircle(name: widget.userName),
             ],
           ),
-          const SizedBox(height: 20),
-          _AiHeroCard(onTap: onAi),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _HeroCarousel(
+            height: heroHeight,
+            index: _heroIndex,
+            onIndexChanged: (index) => setState(() => _heroIndex = index),
+            onAi: widget.onAi,
+            nextAppointment: _nextAppointment,
+          ),
+          const SizedBox(height: 28),
           Row(
             children: [
               const Expanded(
@@ -103,18 +157,14 @@ class HomeScreen extends StatelessWidget {
                       child: _SpecialtyCard(
                         specialty: specialty,
                         onTap: () =>
-                            !specialty.disabled ? onSpecialty(specialty) : null,
+                            !specialty.disabled
+                            ? widget.onSpecialty(specialty)
+                            : null,
                       ),
                     ),
                 ],
               );
             },
-          ),
-          const SizedBox(height: 22),
-          FutureBuilder<Appointment?>(
-            future: repository.getNextAppointment(),
-            builder: (context, snapshot) =>
-                _UpcomingCard(appointment: snapshot.data),
           ),
         ],
       ),
@@ -172,115 +222,389 @@ class _CircleButton extends StatelessWidget {
   }
 }
 
-class _LogoCircle extends StatelessWidget {
-  const _LogoCircle();
+class _AvatarCircle extends StatelessWidget {
+  const _AvatarCircle({required this.name});
+
+  final String name;
 
   @override
   Widget build(BuildContext context) {
+    final letter = name.trim().isEmpty ? 'U' : name.trim()[0].toUpperCase();
+
     return Container(
       width: 46,
       height: 46,
-      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: AppColors.teal50,
+        color: AppColors.teal700,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.teal200.withValues(alpha: 0.6)),
-        boxShadow: AppShadows.card,
+        boxShadow: AppShadows.button,
       ),
-      child: const AppLogo(variant: AppLogoVariant.iconLight),
+      alignment: Alignment.center,
+      child: Text(
+        letter,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroCarousel extends StatelessWidget {
+  const _HeroCarousel({
+    required this.height,
+    required this.index,
+    required this.onIndexChanged,
+    required this.onAi,
+    required this.nextAppointment,
+  });
+
+  final double height;
+  final int index;
+  final ValueChanged<int> onIndexChanged;
+  final VoidCallback onAi;
+  final Appointment? nextAppointment;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = index == 0
+        ? RepaintBoundary(
+            key: const ValueKey('ai-card'),
+            child: _AiHeroCard(height: height, onTap: onAi),
+          )
+        : RepaintBoundary(
+            key: const ValueKey('appointment-card'),
+            child: _UpcomingAppointmentCard(
+              height: height,
+              appointment: nextAppointment,
+            ),
+          );
+
+    return Column(
+      children: [
+        GestureDetector(
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity.abs() < 120) return;
+            onIndexChanged(index == 0 ? 1 : 0);
+          },
+          child: Container(
+            height: height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.teal700.withValues(alpha: 0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 980),
+              reverseDuration: const Duration(milliseconds: 820),
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              transitionBuilder: (child, animation) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOutCubic,
+                );
+                final offset = Tween<Offset>(
+                  begin: const Offset(0.018, 0),
+                  end: Offset.zero,
+                ).animate(curved);
+                final scale = Tween<double>(
+                  begin: 0.992,
+                  end: 1,
+                ).animate(curved);
+
+                return FadeTransition(
+                  opacity: curved,
+                  child: SlideTransition(
+                    position: offset,
+                    child: ScaleTransition(
+                      scale: scale,
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+              child: child,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => onIndexChanged(0),
+              child: _HeroDot(active: index == 0),
+            ),
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: () => onIndexChanged(1),
+              child: _HeroDot(active: index == 1),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+class _HeroDot extends StatelessWidget {
+  const _HeroDot({required this.active});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: active ? 20 : 6,
+      height: 6,
+      decoration: BoxDecoration(
+        color: active
+            ? AppColors.teal700
+            : AppColors.teal700.withValues(alpha: 0.30),
+        borderRadius: BorderRadius.circular(3),
+      ),
     );
   }
 }
 
 class _AiHeroCard extends StatelessWidget {
-  const _AiHeroCard({required this.onTap});
+  const _AiHeroCard({required this.height, required this.onTap});
 
+  final double height;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final textTop = height < 185 ? 45.0 : 54.0;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 208,
+        height: height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          boxShadow: AppShadows.float,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset('assets/images/ai_card_bg.png', fit: BoxFit.cover),
-            Container(color: const Color(0x33000000)),
+            Image(
+              image: _aiCardBackground,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
+            ),
             Positioned(
-              left: 22,
-              top: 22,
-              right: 112,
+              left: 52,
+              top: textTop,
+              right: 132,
+              child: const _AiHeroCopy(),
+            ),
+            Positioned(
+              left: 52,
               bottom: 18,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: AppColors.teal700,
+                      size: 15,
+                    ),
+                    SizedBox(width: 7),
+                    Text(
+                      'Ask AI',
+                      style: TextStyle(
+                        color: AppColors.teal700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AiHeroCopy extends StatelessWidget {
+  const _AiHeroCopy();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'AI Health Assistant',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
+            height: 1.12,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Ask about symptoms, appointments, and next steps.',
+          style: TextStyle(
+            color: Color(0xDDFFFFFF),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+            height: 1.26,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UpcomingAppointmentCard extends StatelessWidget {
+  const _UpcomingAppointmentCard({
+    required this.height,
+    required this.appointment,
+  });
+
+  final double height;
+  final Appointment? appointment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.teal900,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: appointment == null
+          ? const _NoUpcomingAppointment()
+          : _AppointmentSummary(appointment: appointment!),
+    );
+  }
+}
+
+class _NoUpcomingAppointment extends StatelessWidget {
+  const _NoUpcomingAppointment();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.calendar_month_rounded,
+          color: AppColors.amber500,
+          size: 30,
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Upcoming appointment',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xA6FFFFFF),
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.6,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'No upcoming appointments yet',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0x80FFFFFF),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AppointmentSummary extends StatelessWidget {
+  const _AppointmentSummary({required this.appointment});
+
+  final Appointment appointment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'UPCOMING APPOINTMENT',
+                style: TextStyle(
+                  color: Color(0xA6FFFFFF),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.amber500.withValues(alpha: 0.20),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
                       color: AppColors.amber500,
-                      size: 22,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'AI Health Assistant',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      height: 1.05,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  const Text(
-                    'Ask about symptoms, appointments, and next steps.',
-                    style: TextStyle(
-                      color: Color(0xDDFFFFFF),
-                      fontSize: 12.5,
-                      height: 1.35,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 9,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          color: AppColors.teal700,
-                          size: 15,
-                        ),
-                        SizedBox(width: 7),
-                        Text(
-                          'Ask AI',
-                          style: TextStyle(
-                            color: AppColors.teal700,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(width: 6),
+                  Text(
+                    appointment.date,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.amber500,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -288,7 +612,125 @@ class _AiHeroCard extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            _MiniDocAvatar(
+              initials: appointment.initials,
+              hue: appointment.hue,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    appointment.doctor,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    appointment.specialty,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xB3FFFFFF),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    children: [
+                      _AppointmentMeta(
+                        icon: Icons.schedule_rounded,
+                        label: appointment.time,
+                      ),
+                      _AppointmentMeta(
+                        icon: Icons.location_on_rounded,
+                        label: appointment.clinic ?? 'Clinic',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0x80FFFFFF),
+              size: 20,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniDocAvatar extends StatelessWidget {
+  const _MiniDocAvatar({required this.initials, required this.hue});
+
+  final String initials;
+  final int hue;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = HSVColor.fromAHSV(1, hue.toDouble(), 0.45, 0.78).toColor();
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(12),
       ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.92),
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _AppointmentMeta extends StatelessWidget {
+  const _AppointmentMeta({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: const Color(0xDDFFFFFF), size: 12),
+        const SizedBox(width: 4),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 118),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xE6FFFFFF),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -305,17 +747,25 @@ class _SpecialtyCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 100,
-        padding: const EdgeInsets.all(11),
+        height: 108,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
         decoration: BoxDecoration(
           color: active ? Colors.white : const Color(0xFFF9FAFA),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: active
-                ? AppColors.teal200.withValues(alpha: 0.35)
-                : const Color(0xFFECEFF2),
+                ? AppColors.teal200.withValues(alpha: 0.30)
+                : Colors.black.withValues(alpha: 0.04),
           ),
-          boxShadow: active ? AppShadows.card : null,
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: AppColors.teal700.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [
@@ -323,12 +773,14 @@ class _SpecialtyCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Color(specialty.tint),
+                color: active ? Color(specialty.tint) : const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 specialtyIcon(specialty.icon),
-                color: Color(specialty.accent),
+                color: active
+                    ? Color(specialty.accent)
+                    : const Color(0xFF999999),
                 size: 22,
               ),
             ),
@@ -351,8 +803,8 @@ class _SpecialtyCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
+                      horizontal: 6,
+                      vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: active
@@ -367,7 +819,7 @@ class _SpecialtyCard extends StatelessWidget {
                             ? AppColors.green500
                             : const Color(0xFFF59E0B),
                         fontSize: 9,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -387,7 +839,9 @@ class _SpecialtyCard extends StatelessWidget {
               width: 23,
               height: 23,
               decoration: BoxDecoration(
-                color: active ? AppColors.teal50 : const Color(0xFFF1F3F5),
+                color: active
+                    ? AppColors.teal200.withValues(alpha: 0.25)
+                    : const Color(0xFFF5F5F5),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -398,55 +852,6 @@ class _SpecialtyCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _UpcomingCard extends StatelessWidget {
-  const _UpcomingCard({this.appointment});
-
-  final Appointment? appointment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.teal900,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.calendar_month_rounded, color: AppColors.amber500),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Upcoming appointment',
-                  style: TextStyle(
-                    color: Color(0xAAFFFFFF),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  appointment == null
-                      ? 'No upcoming appointments yet'
-                      : '${appointment!.doctor} - ${appointment!.time}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

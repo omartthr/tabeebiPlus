@@ -38,38 +38,36 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bg,
       body: Column(
         children: [
           TopBar(
             title: widget.specialty.name,
             onBack: widget.onBack,
-            trailing: IconButton(
-              onPressed: _chooseSort,
-              icon: const Icon(Icons.filter_list_rounded),
-            ),
+            trailing: _SortButton(onTap: _chooseSort),
           ),
           SizedBox(
-            height: 48,
+            height: 54,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               children: [
-                _FilterChip(
+                _FilterPill(
                   label: 'All doctors',
                   active: filter == 'all',
                   onTap: () => setState(() => filter = 'all'),
                 ),
-                _FilterChip(
+                _FilterPill(
                   label: 'Available today',
                   active: filter == 'today',
                   onTap: () => setState(() => filter = 'today'),
                 ),
-                _FilterChip(
+                _FilterPill(
                   label: 'Top rated',
                   active: filter == 'top',
                   onTap: () => setState(() => filter = 'top'),
                 ),
-                _FilterChip(
+                _FilterPill(
                   label: 'Nearby',
                   active: filter == 'near',
                   onTap: () => setState(() => filter = 'near'),
@@ -88,13 +86,14 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                 }
                 final list = _filtered(snapshot.data!);
                 return ListView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
                   children: [
                     Text(
                       '${list.length} doctors available in Kerkuk',
                       style: const TextStyle(
                         color: AppColors.ink500,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -173,8 +172,49 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+class _SortButton extends StatelessWidget {
+  const _SortButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Material(
+        color: AppColors.surface,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.ink100),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.ink900.withValues(alpha: 0.04),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.filter_list_rounded,
+              color: AppColors.ink700,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
     required this.label,
     required this.active,
     required this.onTap,
@@ -186,16 +226,25 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        selected: active,
-        onSelected: (_) => onTap(),
-        label: Text(label),
-        selectedColor: AppColors.teal700,
-        labelStyle: TextStyle(
-          color: active ? Colors.white : AppColors.ink700,
-          fontWeight: FontWeight.w700,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.teal700 : AppColors.surface,
+          borderRadius: BorderRadius.circular(100),
+          border: active ? null : Border.all(color: AppColors.ink200),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          maxLines: 1,
+          style: TextStyle(
+            color: active ? Colors.white : AppColors.ink700,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
