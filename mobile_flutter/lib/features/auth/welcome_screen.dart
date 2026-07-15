@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../shared/widgets/app_logo.dart';
+
+const _welcomeHeroImage = AssetImage('assets/images/welcome_hero.png');
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
@@ -20,109 +23,64 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // For RTL languages like Arabic and Kurdish, standard MaterialApp does it, but we can ensure layout direction if needed.
-    return Scaffold(
-      backgroundColor: AppColors.teal700,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 20, 28, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const AppLogo(
-                    variant: AppLogoVariant.dark,
-                    width: 140,
-                    height: 34,
-                  ),
-                  _LanguagePill(
-                    currentLanguage: currentLanguage,
-                    onLanguageChanged: onLanguageChanged,
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                AppLocalizations.t('welcome_title'),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 34,
-                  height: 1.12,
-                  fontWeight: FontWeight.w800,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: AppColors.teal900,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        backgroundColor: AppColors.teal900,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Image(
+              image: _welcomeHeroImage,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.teal900.withValues(alpha: 0.10),
+                    AppColors.teal900.withValues(alpha: 0.22),
+                    AppColors.teal900.withValues(alpha: 0.96),
+                  ],
+                  stops: const [0, 0.48, 1],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                AppLocalizations.t('welcome_subtitle'),
-                style: const TextStyle(
-                  color: Color(0xC9FFFFFF),
-                  fontSize: 14.5,
-                  height: 1.45,
-                  fontWeight: FontWeight.w500,
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const AppLogo(
+                          variant: AppLogoVariant.dark,
+                          width: 142,
+                          height: 36,
+                        ),
+                        _LanguagePill(
+                          currentLanguage: currentLanguage,
+                          onLanguageChanged: onLanguageChanged,
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    _WelcomeCopyPanel(onRegister: onRegister, onLogin: onLogin),
+                  ],
                 ),
               ),
-              const SizedBox(height: 34),
-              _Feature(
-                icon: Icons.verified_outlined,
-                text: AppLocalizations.t('feature_verified'),
-              ),
-              _Feature(
-                icon: Icons.shield_outlined,
-                text: AppLocalizations.t('feature_private'),
-              ),
-              _Feature(
-                icon: Icons.schedule_rounded,
-                text: AppLocalizations.t('feature_same_day'),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: onRegister,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54),
-                  backgroundColor: AppColors.amber500,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.t('btn_start'),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.teal900,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: onLogin,
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54),
-                ),
-                child: Text(
-                  AppLocalizations.t('btn_login'),
-                  style: const TextStyle(
-                    color: Color(0xDDFFFFFF),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Center(
-                child: Text(
-                  AppLocalizations.t('terms_agree'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0x80FFFFFF),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -224,35 +182,92 @@ class _LanguagePill extends StatelessWidget {
   }
 }
 
-class _Feature extends StatelessWidget {
-  const _Feature({required this.icon, required this.text});
+class _WelcomeCopyPanel extends StatelessWidget {
+  const _WelcomeCopyPanel({required this.onRegister, required this.onLogin});
 
-  final IconData icon;
-  final String text;
+  final VoidCallback onRegister;
+  final VoidCallback onLogin;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: AppColors.amber500, size: 20),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 16),
+      decoration: BoxDecoration(
+        color: AppColors.teal900.withValues(alpha: 0.76),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.24),
+            blurRadius: 26,
+            offset: const Offset(0, 16),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppLocalizations.t('welcome_title'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              height: 1.08,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Text(
+            AppLocalizations.t('welcome_subtitle'),
+            style: const TextStyle(
+              color: Color(0xD9FFFFFF),
+              fontSize: 13.5,
+              height: 1.42,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton(
+            onPressed: onRegister,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              backgroundColor: AppColors.amber500,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
             child: Text(
-              text,
+              AppLocalizations.t('btn_start'),
               style: const TextStyle(
-                color: Color(0xEAFFFFFF),
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: AppColors.teal900,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: TextButton(
+              onPressed: onLogin,
+              child: Text(
+                AppLocalizations.t('btn_login'),
+                style: const TextStyle(
+                  color: Color(0xE6FFFFFF),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          Center(
+            child: Text(
+              AppLocalizations.t('terms_agree'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0x8FFFFFFF),
+                fontSize: 10.5,
+                height: 1.25,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

@@ -32,6 +32,12 @@ class TabeebiRepository {
     return raw.whereType<Map>().map(doctorFromJson).toList();
   }
 
+  Future<Doctor?> getDoctor(String id) async {
+    final result = await api.getDoctor(id);
+    if (result.error != null || result.data is! Map) return null;
+    return doctorFromJson(result.data as Map);
+  }
+
   Future<Appointment?> getNextAppointment() async {
     final result = await api.getNextAppointment();
     if (result.error != null || result.data == null) return null;
@@ -40,6 +46,14 @@ class TabeebiRepository {
         ? data['appointment']
         : data;
     if (raw is! Map) return null;
+    final status = raw['status']?.toString().toLowerCase();
+    final date = raw['date']?.toString() ?? '';
+    final time = raw['time']?.toString() ?? '';
+    if (status == 'completed' ||
+        status == 'cancelled' ||
+        isAppointmentPast(date, time)) {
+      return null;
+    }
     return appointmentFromJson(raw);
   }
 
@@ -65,6 +79,14 @@ class TabeebiRepository {
 
   Future<Map<String, dynamic>?> getDoctorSchedule(String doctorId) async {
     final result = await api.getDoctorSchedule(doctorId);
+    if (result.data is! Map) return null;
+    return Map<String, dynamic>.from(result.data as Map);
+  }
+
+  Future<Map<String, dynamic>?> getDoctorScheduleByRegId(
+    String registrationId,
+  ) async {
+    final result = await api.getDoctorScheduleByRegId(registrationId);
     if (result.data is! Map) return null;
     return Map<String, dynamic>.from(result.data as Map);
   }
@@ -101,7 +123,7 @@ class TabeebiRepository {
   }
 
   Future<List<SupportTicket>> getSupportTickets() async {
-    final result = await api.get('/support_tickets');
+    final result = await api.getSupportTickets();
     final raw = _listFrom(result.data, 'tickets');
     return raw.whereType<Map>().map(ticketFromJson).toList();
   }

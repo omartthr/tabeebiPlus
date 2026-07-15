@@ -58,14 +58,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _heroTimer?.cancel();
     _heroTimer = Timer.periodic(const Duration(milliseconds: 5600), (_) {
       if (!mounted) return;
-      setState(() => _heroIndex = (_heroIndex + 1) % 2);
+      final heroCount = _nextAppointment == null ? 1 : 2;
+      setState(() => _heroIndex = (_heroIndex + 1) % heroCount);
     });
   }
 
   Future<void> _loadNextAppointment() async {
     final appointment = await widget.repository.getNextAppointment();
     if (!mounted) return;
-    setState(() => _nextAppointment = appointment);
+    setState(() {
+      _nextAppointment = appointment;
+      if (appointment == null) _heroIndex = 0;
+    });
   }
 
   @override
@@ -269,7 +273,9 @@ class _HeroCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final child = index == 0
+    final hasAppointment = nextAppointment != null;
+    final selectedIndex = hasAppointment ? index : 0;
+    final child = selectedIndex == 0
         ? RepaintBoundary(
             key: const ValueKey('ai-card'),
             child: _AiHeroCard(height: height, onTap: onAi),
@@ -286,9 +292,10 @@ class _HeroCarousel extends StatelessWidget {
       children: [
         GestureDetector(
           onHorizontalDragEnd: (details) {
+            if (!hasAppointment) return;
             final velocity = details.primaryVelocity ?? 0;
             if (velocity.abs() < 120) return;
-            onIndexChanged(index == 0 ? 1 : 0);
+            onIndexChanged(selectedIndex == 0 ? 1 : 0);
           },
           child: Container(
             height: height,
@@ -346,21 +353,23 @@ class _HeroCarousel extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: () => onIndexChanged(0),
-              child: _HeroDot(active: index == 0),
-            ),
-            const SizedBox(width: 6),
-            GestureDetector(
-              onTap: () => onIndexChanged(1),
-              child: _HeroDot(active: index == 1),
-            ),
-          ],
-        ),
+        if (hasAppointment) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => onIndexChanged(0),
+                child: _HeroDot(active: selectedIndex == 0),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () => onIndexChanged(1),
+                child: _HeroDot(active: selectedIndex == 1),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

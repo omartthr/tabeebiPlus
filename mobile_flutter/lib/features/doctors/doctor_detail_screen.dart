@@ -47,10 +47,6 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   }
 
   Future<void> _loadSchedule() async {
-    if (widget.doctor.registrationId == null) {
-      setState(() => scheduleLoading = false);
-      return;
-    }
     final sched = await widget.repository.getDoctorSchedule(widget.doctor.id);
     if (mounted) {
       setState(() {

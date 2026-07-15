@@ -50,6 +50,14 @@ class TabeebiApiClient {
     return post('/auth/send-otp', {'phone': phone});
   }
 
+  Future<ApiResult<dynamic>> login(String phone) {
+    return post('/auth/login', {'phone': phone});
+  }
+
+  Future<ApiResult<dynamic>> register(String phone, String name) {
+    return post('/auth/register', {'phone': phone, 'name': name});
+  }
+
   Future<ApiResult<dynamic>> verifyOtp(String phone, String code) {
     return post('/auth/verify-otp', {'phone': phone, 'code': code});
   }
@@ -65,8 +73,16 @@ class TabeebiApiClient {
     return get('/doctors', queryAll: queryAll);
   }
 
+  Future<ApiResult<dynamic>> getDoctor(String id) {
+    return get('/doctors/$id');
+  }
+
   Future<ApiResult<dynamic>> getDoctorSchedule(String doctorId) {
     return get('/doctors/$doctorId/schedule');
+  }
+
+  Future<ApiResult<dynamic>> getDoctorScheduleByRegId(String registrationId) {
+    return get('/doctor_schedules/$registrationId');
   }
 
   Future<ApiResult<dynamic>> getBookedTimes(String doctorId, String date) {
@@ -120,6 +136,10 @@ class TabeebiApiClient {
 
   Future<ApiResult<dynamic>> getPatientResults() {
     return get('/results');
+  }
+
+  Future<ApiResult<dynamic>> getSupportTickets() {
+    return get('/support_tickets');
   }
 
   Future<ApiResult<dynamic>> createSupportTicket(Map<String, dynamic> ticket) {
