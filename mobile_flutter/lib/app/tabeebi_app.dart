@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../core/theme/app_colors.dart';
+import '../core/auth/auth_session_store.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/network/tabeebi_api_client.dart';
 import '../data/models/tabeebi_models.dart';
@@ -100,11 +101,51 @@ class _TabeebiRootState extends State<TabeebiRoot> {
   String? pendingPhone;
   bool pendingIsLogin = false;
   String? authToken;
+  bool restoringSession = true;
 
+  final AuthSessionStore _sessionStore = AuthSessionStore();
   late final TabeebiApiClient api = TabeebiApiClient(
     tokenProvider: () async => authToken,
   );
   late final TabeebiRepository repository = TabeebiRepository(api);
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSession();
+  }
+
+  Future<void> _restoreSession() async {
+    AuthSession? session;
+    try {
+      session = await _sessionStore.load();
+    } catch (_) {
+      session = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      user = session?.user;
+      authToken = session?.token;
+      flow = session == null ? RootFlow.welcome : RootFlow.main;
+      restoringSession = false;
+    });
+  }
+
+  Future<void> _saveSession(UserData verifiedUser, String token) async {
+    await _sessionStore.save(verifiedUser, token);
+  }
+
+  Future<void> _clearSession() async {
+    await _sessionStore.clear();
+    if (!mounted) return;
+    setState(() {
+      user = null;
+      authToken = null;
+      flow = RootFlow.welcome;
+      stack = StackScreen.main;
+      tab = MainTab.home;
+    });
+  }
 
   void _goMain({MainTab? nextTab}) {
     setState(() {
@@ -132,6 +173,14 @@ class _TabeebiRootState extends State<TabeebiRoot> {
 
   @override
   Widget build(BuildContext context) {
+    if (restoringSession) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.teal700),
+        ),
+      );
+    }
+
     if (flow == RootFlow.welcome) {
       return WelcomeScreen(
         currentLanguage: widget.currentLanguage,
@@ -174,7 +223,8 @@ class _TabeebiRootState extends State<TabeebiRoot> {
         name: pendingName,
         phone: pendingPhone ?? '',
         isLogin: pendingIsLogin,
-        onVerified: (verifiedUser, token) {
+        onVerified: (verifiedUser, token) async {
+          await _saveSession(verifiedUser, token);
           authToken = token;
           user = verifiedUser;
           _goMain();
@@ -210,11 +260,7 @@ class _TabeebiRootState extends State<TabeebiRoot> {
           onNavigateToTab: (nextTab) => setState(() => tab = nextTab),
           onHelp: () => _openStack(StackScreen.help),
           onPrivacy: () => _openStack(StackScreen.privacy),
-          onSignOut: () => setState(() {
-            user = null;
-            flow = RootFlow.welcome;
-            stack = StackScreen.main;
-          }),
+          onSignOut: _clearSession,
         ),
       ),
       StackScreen.notifications => NotificationsScreen(
@@ -259,11 +305,7 @@ class _TabeebiRootState extends State<TabeebiRoot> {
       ),
       StackScreen.privacy => PrivacyScreen(
         onBack: _backToMain,
-        onDeleteAccount: () => setState(() {
-          user = null;
-          flow = RootFlow.welcome;
-          stack = StackScreen.main;
-        }),
+        onDeleteAccount: _clearSession,
       ),
     };
   }

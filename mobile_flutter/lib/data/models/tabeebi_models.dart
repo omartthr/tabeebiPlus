@@ -191,4 +191,54 @@ class UserData {
   final String? token;
   final int? avatarHue;
   final bool? isRegistered;
+
+  factory UserData.fromJson(Map<String, dynamic> json) {
+    return UserData(
+      id: json['id']?.toString(),
+      phone: json['phone']?.toString() ?? '',
+      name: json['name']?.toString(),
+      isLogin: json['is_login'] == true || json['is_login']?.toString() == '1',
+      patientCode: json['patient_code']?.toString(),
+      token: json['token']?.toString(),
+      avatarHue: int.tryParse(json['avatar_hue']?.toString() ?? ''),
+      isRegistered:
+          json['is_registered'] == true ||
+          json['is_registered']?.toString() == '1',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'phone': phone,
+      'name': name,
+      'is_login': isLogin,
+      'patient_code': patientCode,
+      'token': token,
+      'avatar_hue': avatarHue,
+      'is_registered': isRegistered,
+    };
+  }
+
+  UserData copyWith({
+    String? phone,
+    String? id,
+    String? name,
+    bool? isLogin,
+    String? patientCode,
+    String? token,
+    int? avatarHue,
+    bool? isRegistered,
+  }) {
+    return UserData(
+      phone: phone ?? this.phone,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      isLogin: isLogin ?? this.isLogin,
+      patientCode: patientCode ?? this.patientCode,
+      token: token ?? this.token,
+      avatarHue: avatarHue ?? this.avatarHue,
+      isRegistered: isRegistered ?? this.isRegistered,
+    );
+  }
 }
