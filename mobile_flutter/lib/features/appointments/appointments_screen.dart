@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/tabeebi_models.dart';
 import '../../data/repositories/tabeebi_repository.dart';
-import '../../shared/widgets/doc_avatar.dart';
 import '../../shared/widgets/status_badge.dart';
 
 class AppointmentsScreen extends StatefulWidget {
@@ -65,8 +64,16 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: AppColors.ink100,
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.teal800.withValues(alpha: 0.10)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.teal800.withValues(alpha: 0.045),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
@@ -92,7 +99,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppColors.teal700),
+                    child: CircularProgressIndicator(color: AppColors.teal800),
                   );
                 }
                 final all = snapshot.data!;
@@ -109,7 +116,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 final list = upcoming ? upcomingList : pastList;
 
                 return RefreshIndicator(
-                  color: AppColors.teal700,
+                  color: AppColors.teal800,
                   onRefresh: () async => setState(
                     () => future = widget.repository.getMyAppointments(),
                   ),
@@ -125,12 +132,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                                     width: 72,
                                     height: 72,
                                     decoration: BoxDecoration(
-                                      color: AppColors.teal50,
+                                      color: Colors.white,
                                       borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(color: AppColors.teal800.withValues(alpha: 0.10)),
                                     ),
                                     child: const Icon(
                                       Icons.calendar_month_rounded,
-                                      color: AppColors.teal700,
+                                      color: AppColors.teal800,
                                       size: 32,
                                     ),
                                   ),
@@ -214,7 +222,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         content: Text(
           ok ? 'Appointment cancelled.' : 'Could not cancel appointment.',
         ),
-        backgroundColor: ok ? AppColors.teal700 : AppColors.red500,
+        backgroundColor: ok ? AppColors.teal800 : AppColors.red500,
       ),
     );
   }
@@ -238,7 +246,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(ok ? 'Rating submitted!' : 'Could not submit rating.'),
-              backgroundColor: ok ? AppColors.teal700 : AppColors.red500,
+              backgroundColor: ok ? AppColors.teal800 : AppColors.red500,
             ),
           );
         },
@@ -267,15 +275,30 @@ class _TabButton extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: active ? AppShadows.card : null,
+            color: active
+                ? Colors.white.withValues(alpha: 0.86)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: active
+                  ? AppColors.teal800.withValues(alpha: 0.10)
+                  : Colors.transparent,
+            ),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: AppColors.teal800.withValues(alpha: 0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ]
+                : null,
           ),
           alignment: Alignment.center,
           child: Text(
             label,
             style: TextStyle(
-              color: active ? AppColors.ink900 : AppColors.ink500,
+              color: active ? AppColors.teal800 : AppColors.ink500,
               fontSize: 13,
               fontWeight: FontWeight.w900,
             ),
@@ -312,18 +335,38 @@ class _AppointmentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.ink100),
-        boxShadow: AppShadows.card,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.035),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              DocAvatar(
-                initials: appointment.initials,
-                hue: appointment.hue,
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.ink100),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  appointment.initials,
+                  style: const TextStyle(
+                    color: AppColors.ink500,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -355,15 +398,16 @@ class _AppointmentCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.bg,
+              color: Colors.white.withValues(alpha: 0.62),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.ink100),
             ),
             child: Row(
               children: [
                 const Icon(
                   Icons.calendar_today_rounded,
                   size: 16,
-                  color: AppColors.teal700,
+                  color: AppColors.teal800,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -377,7 +421,7 @@ class _AppointmentCard extends StatelessWidget {
                 const Icon(
                   Icons.schedule_rounded,
                   size: 16,
-                  color: AppColors.teal700,
+                  color: AppColors.teal800,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -420,7 +464,7 @@ class _AppointmentCard extends StatelessWidget {
                 Expanded(
                   child: _ActionBtn(
                     label: 'Reschedule',
-                    color: AppColors.teal700,
+                    color: AppColors.teal800,
                     outline: true,
                     onTap: onCancel,
                   ),
@@ -442,9 +486,9 @@ class _AppointmentCard extends StatelessWidget {
                 if (canRate)
                   Expanded(
                     child: _ActionBtn(
-                      label: '⭐ Rate visit',
-                      color: AppColors.amber600,
-                      outline: false,
+                      label: 'Rate visit',
+                      color: AppColors.teal800,
+                      outline: true,
                       onTap: onRate,
                     ),
                   ),
@@ -452,7 +496,7 @@ class _AppointmentCard extends StatelessWidget {
                 Expanded(
                   child: _ActionBtn(
                     label: 'View result',
-                    color: AppColors.teal700,
+                    color: AppColors.teal800,
                     outline: true,
                     onTap: onResults,
                   ),
@@ -467,21 +511,24 @@ class _AppointmentCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.amber50,
+                  color: Colors.white.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.teal800.withValues(alpha: 0.10),
+                  ),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.star_rounded,
-                      color: AppColors.amber500,
+                      color: AppColors.teal800,
                       size: 16,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'Your rating: ${appointment.rating!.toStringAsFixed(1)}',
                       style: const TextStyle(
-                        color: AppColors.amber700,
+                        color: AppColors.teal800,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -517,11 +564,22 @@ class _ActionBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: outline ? Colors.transparent : color,
-          borderRadius: BorderRadius.circular(10),
+          color: outline
+              ? Colors.white.withValues(alpha: 0.66)
+              : color.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: outline ? color : Colors.transparent,
+            color: outline
+                ? color.withValues(alpha: 0.46)
+                : color.withValues(alpha: 0.10),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: outline ? 0.035 : 0.10),
+              blurRadius: outline ? 8 : 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         alignment: Alignment.center,
         child: Text(
@@ -607,7 +665,7 @@ class _RatingModalState extends State<_RatingModal> {
                     Icons.star_rounded,
                     size: 40,
                     color: star <= _rating
-                        ? AppColors.amber500
+                        ? AppColors.teal800
                         : AppColors.ink200,
                   ),
                 ),
@@ -623,7 +681,7 @@ class _RatingModalState extends State<_RatingModal> {
               hintText: 'Leave a review (optional)',
               hintStyle: const TextStyle(color: AppColors.ink400),
               filled: true,
-              fillColor: AppColors.teal50,
+              fillColor: Colors.white.withValues(alpha: 0.72),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -640,7 +698,7 @@ class _RatingModalState extends State<_RatingModal> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: AppColors.teal700,
+                color: AppColors.teal800,
                 borderRadius: BorderRadius.circular(100),
                 boxShadow: AppShadows.button,
               ),

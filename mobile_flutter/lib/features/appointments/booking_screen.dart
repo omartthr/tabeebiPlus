@@ -7,7 +7,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/tabeebi_date_utils.dart';
 import '../../data/models/tabeebi_models.dart';
 import '../../data/repositories/tabeebi_repository.dart';
-import '../../shared/widgets/doc_avatar.dart';
 import '../../shared/widgets/top_bar.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -233,7 +232,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         _PaymentOption(
                           title: 'Pay online',
                           subtitle: 'Reserve now with card payment',
-                          icon: Icons.credit_card_rounded,
+                          icon: Icons.credit_card_outlined,
                           selected: payment == 'Card',
                           onTap: () => setState(() => payment = 'Card'),
                         ),
@@ -241,7 +240,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         _PaymentOption(
                           title: 'Pay at clinic',
                           subtitle: 'Pay when you arrive',
-                          icon: Icons.payments_outlined,
+                          icon: Icons.account_balance_wallet_outlined,
                           selected: payment == 'Cash',
                           onTap: () => setState(() => payment = 'Cash'),
                         ),
@@ -308,17 +307,36 @@ class _DoctorRecap extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.ink100),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          DocAvatar(
-            initials: doctor.initials,
-            hue: doctor.hue,
-            size: 48,
-            rounded: 12,
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.86),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.ink100),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              doctor.initials,
+              style: const TextStyle(
+                color: AppColors.ink500,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -394,18 +412,19 @@ class _DayButton extends StatelessWidget {
         width: 66,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
         decoration: BoxDecoration(
-          color: active ? AppColors.teal700 : AppColors.surface,
+          color: Colors.white.withValues(alpha: active ? 0.90 : 0.78),
           borderRadius: BorderRadius.circular(18),
-          border: active ? null : Border.all(color: AppColors.ink200),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: AppColors.teal700.withValues(alpha: 0.22),
-                    blurRadius: 14,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : null,
+          border: Border.all(
+            color: active ? AppColors.ink700 : AppColors.ink100,
+            width: active ? 1.4 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink900.withValues(alpha: active ? 0.07 : 0.035),
+              blurRadius: active ? 18 : 12,
+              offset: Offset(0, active ? 8 : 5),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -413,7 +432,7 @@ class _DayButton extends StatelessWidget {
             Text(
               day.day.toUpperCase(),
               style: TextStyle(
-                color: active ? Colors.white : AppColors.ink500,
+                color: active ? AppColors.ink900 : AppColors.ink500,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,
@@ -423,7 +442,7 @@ class _DayButton extends StatelessWidget {
             Text(
               '${day.num}',
               style: TextStyle(
-                color: active ? Colors.white : AppColors.ink900,
+                color: AppColors.ink900,
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 height: 1.05,
@@ -432,7 +451,7 @@ class _DayButton extends StatelessWidget {
             Text(
               day.month,
               style: TextStyle(
-                color: active ? Colors.white : AppColors.ink500,
+                color: active ? AppColors.ink700 : AppColors.ink500,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
@@ -464,13 +483,27 @@ class _HourButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: active
-              ? AppColors.teal700
-              : full
-              ? AppColors.ink100
-              : AppColors.surface,
+          color: full
+              ? AppColors.ink100.withValues(alpha: 0.78)
+              : Colors.white.withValues(alpha: active ? 0.90 : 0.80),
           borderRadius: BorderRadius.circular(100),
-          border: active || full ? null : Border.all(color: AppColors.ink200),
+          border: Border.all(
+            color: full
+                ? AppColors.ink100
+                : active
+                ? AppColors.ink700
+                : AppColors.ink100,
+            width: active ? 1.35 : 1,
+          ),
+          boxShadow: full
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.ink900.withValues(alpha: active ? 0.06 : 0.03),
+                    blurRadius: active ? 16 : 10,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -479,7 +512,7 @@ class _HourButton extends StatelessWidget {
               hour,
               style: TextStyle(
                 color: active
-                    ? Colors.white
+                    ? AppColors.ink900
                     : full
                     ? AppColors.ink400
                     : AppColors.ink900,
@@ -493,7 +526,7 @@ class _HourButton extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 16,
-                color: active ? Colors.white : AppColors.ink400,
+                color: active ? AppColors.ink700 : AppColors.ink400,
               ),
             ],
           ],
@@ -525,20 +558,34 @@ class _SlotButton extends StatelessWidget {
         width: 96,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: active
-              ? AppColors.teal700
-              : disabled
-              ? AppColors.ink100
-              : AppColors.surface,
+          color: disabled
+              ? AppColors.ink100.withValues(alpha: 0.78)
+              : Colors.white.withValues(alpha: active ? 0.90 : 0.80),
           borderRadius: BorderRadius.circular(100),
-          border: active || disabled ? null : Border.all(color: AppColors.ink200),
+          border: Border.all(
+            color: disabled
+                ? AppColors.ink100
+                : active
+                ? AppColors.ink700
+                : AppColors.ink100,
+            width: active ? 1.35 : 1,
+          ),
+          boxShadow: disabled
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.ink900.withValues(alpha: active ? 0.06 : 0.03),
+                    blurRadius: active ? 16 : 10,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
         ),
         alignment: Alignment.center,
         child: Text(
           slot,
           style: TextStyle(
             color: active
-                ? Colors.white
+                ? AppColors.ink900
                 : disabled
                 ? AppColors.ink400
                 : AppColors.ink900,
@@ -559,7 +606,7 @@ class _Legend extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        _LegendItem(color: AppColors.teal700, label: 'Selected'),
+        _LegendItem(color: AppColors.ink700, label: 'Selected'),
         SizedBox(width: 14),
         _LegendItem(color: AppColors.surface, label: 'Available', bordered: true),
         SizedBox(width: 14),
@@ -631,29 +678,28 @@ class _PaymentOption extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.teal50 : AppColors.surface,
+          color: Colors.white.withValues(alpha: selected ? 0.88 : 0.78),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppColors.teal700 : AppColors.ink200,
-            width: selected ? 1.5 : 1,
+            color: selected ? AppColors.ink700 : AppColors.ink100,
+            width: selected ? 1.35 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink900.withValues(alpha: selected ? 0.06 : 0.035),
+              blurRadius: selected ? 18 : 12,
+              offset: const Offset(0, 7),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.teal700 : AppColors.ink100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: selected ? Colors.white : AppColors.ink700,
-                size: 20,
-              ),
+            Icon(
+              icon,
+              color: selected ? AppColors.ink900 : AppColors.ink500,
+              size: 24,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,10 +728,10 @@ class _PaymentOption extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: selected ? AppColors.teal700 : AppColors.surface,
+                color: selected ? AppColors.ink900 : Colors.white.withValues(alpha: 0.80),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? AppColors.teal700 : AppColors.ink300,
+                  color: selected ? AppColors.ink900 : AppColors.ink300,
                   width: 2,
                 ),
               ),
@@ -710,9 +756,16 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.ink100),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,12 +853,16 @@ class _FooterBar extends StatelessWidget {
               height: 78,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.68),
+                color: Colors.white.withValues(alpha: 0.82),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: AppColors.teal200.withValues(alpha: 0.55),
-                ),
-                boxShadow: AppShadows.float,
+                border: Border.all(color: AppColors.ink100),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.ink900.withValues(alpha: 0.07),
+                    blurRadius: 28,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -886,8 +943,16 @@ class _EmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.ink100,
+        color: Colors.white.withValues(alpha: 0.80),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.ink100),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.035),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       alignment: Alignment.center,
       child: Text(

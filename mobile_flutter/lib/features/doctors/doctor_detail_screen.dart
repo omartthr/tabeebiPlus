@@ -5,7 +5,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/tabeebi_date_utils.dart';
 import '../../data/models/tabeebi_models.dart';
 import '../../data/repositories/tabeebi_repository.dart';
-import '../../shared/widgets/doc_avatar.dart';
 import '../../shared/widgets/top_bar.dart';
 
 class DoctorDetailScreen extends StatefulWidget {
@@ -84,11 +83,30 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    DocAvatar(
-                      initials: widget.doctor.initials,
-                      hue: widget.doctor.hue,
-                      size: 88,
-                      rounded: 22,
+                    Container(
+                      width: 92,
+                      height: 92,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppColors.ink100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.ink900.withValues(alpha: 0.05),
+                            blurRadius: 22,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        widget.doctor.initials,
+                        style: const TextStyle(
+                          color: AppColors.ink500,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -138,8 +156,9 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.green100,
+                                    color: Colors.white.withValues(alpha: 0.72),
                                     borderRadius: BorderRadius.circular(100),
+                                    border: Border.all(color: AppColors.ink100),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -147,8 +166,8 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                                       Container(
                                         width: 6,
                                         height: 6,
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.green500,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.ink400.withValues(alpha: 0.70),
                                           shape: BoxShape.circle,
                                         ),
                                       ),
@@ -156,7 +175,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                                       const Text(
                                         'Today',
                                         style: TextStyle(
-                                          color: Color(0xFF0d6b4a),
+                                          color: AppColors.ink700,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -178,16 +197,12 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                   spacing: 8,
                   children: [
                     _InfoChip(
-                      icon: Icons.payments_outlined,
+                      icon: Icons.receipt_long_outlined,
                       label: 'IQD ${iqd(widget.doctor.price)}',
-                      bg: AppColors.amber50,
-                      fg: AppColors.amber700,
                     ),
                     _InfoChip(
-                      icon: Icons.access_time_rounded,
+                      icon: Icons.watch_later_outlined,
                       label: '${widget.doctor.exp} experience',
-                      bg: AppColors.teal50,
-                      fg: AppColors.teal700,
                     ),
                   ],
                 ),
@@ -207,28 +222,25 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.teal50,
-                        borderRadius: BorderRadius.circular(18),
+                        color: Colors.white.withValues(alpha: 0.78),
+                        borderRadius: BorderRadius.circular(22),
                         border: Border.all(color: AppColors.ink100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.ink900.withValues(alpha: 0.05),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: AppShadows.card,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.location_on_rounded,
-                              color: AppColors.teal700,
-                              size: 20,
-                            ),
+                          const Icon(
+                            Icons.location_on_outlined,
+                            color: AppColors.ink500,
+                            size: 24,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +248,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                                 Text(
                                   '${widget.doctor.locationLat!.toStringAsFixed(4)}, ${widget.doctor.locationLng!.toStringAsFixed(4)}',
                                   style: const TextStyle(
-                                    color: AppColors.teal700,
+                                    color: AppColors.ink700,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 13,
                                   ),
@@ -245,7 +257,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                                   widget.doctor.locationAddress ??
                                       'Tap to view on maps',
                                   style: const TextStyle(
-                                    color: AppColors.teal800,
+                                    color: AppColors.ink500,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -257,7 +269,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                           ),
                           const Icon(
                             Icons.open_in_new_rounded,
-                            color: AppColors.teal700,
+                            color: AppColors.ink400,
                             size: 16,
                           ),
                         ],
@@ -269,9 +281,16 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.teal50,
-                      borderRadius: BorderRadius.circular(18),
+                      color: Colors.white.withValues(alpha: 0.78),
+                      borderRadius: BorderRadius.circular(22),
                       border: Border.all(color: AppColors.ink100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.ink900.withValues(alpha: 0.05),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -307,10 +326,16 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white.withValues(alpha: 0.78),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: AppColors.ink100),
-                    boxShadow: AppShadows.card,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.ink900.withValues(alpha: 0.04),
+                        blurRadius: 22,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: _days.map((d) {
@@ -350,7 +375,10 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                             ),
                           ),
                           if (!isLast)
-                            const Divider(height: 1, color: AppColors.ink100),
+                            Divider(
+                              height: 1,
+                              color: AppColors.ink100.withValues(alpha: 0.86),
+                            ),
                         ],
                       );
                     }).toList(),
@@ -367,12 +395,18 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
               height: 78,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: Colors.white.withValues(alpha: 0.82),
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: AppColors.teal200.withValues(alpha: 0.55),
+                  color: AppColors.ink100,
                 ),
-                boxShadow: AppShadows.float,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.ink900.withValues(alpha: 0.07),
+                    blurRadius: 28,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -445,32 +479,36 @@ class _InfoChip extends StatelessWidget {
   const _InfoChip({
     required this.icon,
     required this.label,
-    required this.bg,
-    required this.fg,
   });
 
   final IconData icon;
   final String label;
-  final Color bg;
-  final Color fg;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.ink100),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: fg, size: 14),
-          const SizedBox(width: 6),
+          Icon(icon, color: AppColors.ink500, size: 16),
+          const SizedBox(width: 7),
           Text(
             label,
-            style: TextStyle(
-              color: fg,
+            style: const TextStyle(
+              color: AppColors.ink700,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),

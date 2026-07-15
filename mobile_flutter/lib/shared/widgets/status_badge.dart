@@ -10,24 +10,26 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final normalized = status.toLowerCase();
-    final colors = switch (normalized) {
-      'confirmed' => (AppColors.green100, AppColors.green500),
-      'pending' => (AppColors.amber100, AppColors.amber700),
-      'cancelled' => (AppColors.red100, AppColors.red500),
-      'completed' => (AppColors.teal50, AppColors.teal700),
-      _ => (AppColors.ink100, AppColors.ink500),
+    final textColor = switch (normalized) {
+      'cancelled' => AppColors.red500,
+      _ => AppColors.teal800,
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: colors.$1,
+        color: Colors.white.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: normalized == 'cancelled'
+              ? AppColors.red500.withValues(alpha: 0.18)
+              : AppColors.teal800.withValues(alpha: 0.10),
+        ),
       ),
       child: Text(
         normalized,
         style: TextStyle(
-          color: colors.$2,
+          color: textColor,
           fontSize: 10,
           fontWeight: FontWeight.w900,
         ),

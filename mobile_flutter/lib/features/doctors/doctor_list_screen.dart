@@ -182,7 +182,7 @@ class _SortButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Material(
-        color: AppColors.surface,
+        color: Colors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -192,12 +192,13 @@ class _SortButton extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.82),
               border: Border.all(color: AppColors.ink100),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.ink900.withValues(alpha: 0.04),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -232,16 +233,26 @@ class _FilterPill extends StatelessWidget {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.teal700 : AppColors.surface,
+          color: Colors.white.withValues(alpha: active ? 0.90 : 0.78),
           borderRadius: BorderRadius.circular(100),
-          border: active ? null : Border.all(color: AppColors.ink200),
+          border: Border.all(
+            color: active ? AppColors.ink700 : AppColors.ink100,
+            width: active ? 1.35 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink900.withValues(alpha: active ? 0.06 : 0.035),
+              blurRadius: active ? 16 : 10,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           maxLines: 1,
           style: TextStyle(
-            color: active ? Colors.white : AppColors.ink700,
+            color: active ? AppColors.ink900 : AppColors.ink700,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),

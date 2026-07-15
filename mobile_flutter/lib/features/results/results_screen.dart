@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -39,96 +40,115 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: FutureBuilder<List<PatientResultItem>>(
-        future: future,
-        builder: (context, snapshot) {
-          final results = snapshot.data ?? const <PatientResultItem>[];
-          return RefreshIndicator(
-            color: AppColors.teal700,
-            onRefresh: () async =>
-                setState(() => future = widget.repository.getResults()),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 118),
-              children: [
-                const Text(
-                  'My results',
-                  style: TextStyle(
-                    color: AppColors.ink900,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: SafeArea(
+        child: FutureBuilder<List<PatientResultItem>>(
+          future: future,
+          builder: (context, snapshot) {
+            final results = snapshot.data ?? const <PatientResultItem>[];
+            return RefreshIndicator(
+              color: AppColors.teal800,
+              onRefresh: () async =>
+                  setState(() => future = widget.repository.getResults()),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 118),
+                children: [
+                  const Text(
+                    'My results',
+                    style: TextStyle(
+                      color: AppColors.ink900,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${results.length} reports available',
-                  style: const TextStyle(
-                    color: AppColors.ink500,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 4),
+                  Text(
+                    '${results.length} reports available',
+                    style: const TextStyle(
+                      color: AppColors.ink500,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                if (!snapshot.hasData)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(
-                        color: AppColors.teal700,
+                  const SizedBox(height: 18),
+                  if (!snapshot.hasData)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(
+                          color: AppColors.teal800,
+                        ),
                       ),
                     ),
-                  ),
-                if (snapshot.hasData && results.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: AppColors.teal50,
-                              borderRadius: BorderRadius.circular(24),
+                  if (snapshot.hasData && results.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.88),
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: AppColors.teal800.withValues(alpha: 0.10),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.ink900.withValues(alpha: 0.035),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 7),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.description_outlined,
+                                color: AppColors.teal800,
+                                size: 32,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.description_outlined,
-                              color: AppColors.teal700,
-                              size: 32,
+                            const SizedBox(height: 14),
+                            const Text(
+                              'No reports yet',
+                              style: TextStyle(
+                                color: AppColors.ink900,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 14),
-                          const Text(
-                            'No reports yet',
-                            style: TextStyle(
-                              color: AppColors.ink900,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Your medical reports will appear here after appointments.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppColors.ink400, fontSize: 13),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Your medical reports will appear here after appointments.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.ink400, fontSize: 13),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                for (final result in results)
-                  _ResultCard(
-                    result: result,
-                    open: openId == result.id,
-                    formatDate: _formatDate,
-                    onToggle: () => setState(
-                      () => openId = openId == result.id ? null : result.id,
+                  for (final result in results)
+                    _ResultCard(
+                      result: result,
+                      open: openId == result.id,
+                      formatDate: _formatDate,
+                      onToggle: () => setState(
+                        () => openId = openId == result.id ? null : result.id,
+                      ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -152,16 +172,22 @@ class _ResultCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x08000000)),
-        boxShadow: AppShadows.card,
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.ink100),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         children: [
           InkWell(
             onTap: onToggle,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -170,12 +196,16 @@ class _ResultCard extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.teal50,
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withValues(alpha: 0.72),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                        color: AppColors.teal800.withValues(alpha: 0.10),
+                      ),
                     ),
                     child: const Icon(
                       Icons.description_outlined,
-                      color: AppColors.teal700,
+                      color: AppColors.teal800,
+                      size: 22,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -207,7 +237,7 @@ class _ResultCard extends StatelessWidget {
                     duration: const Duration(milliseconds: 200),
                     child: const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: AppColors.ink400,
+                      color: AppColors.teal800,
                     ),
                   ),
                 ],
@@ -221,7 +251,7 @@ class _ResultCard extends StatelessWidget {
                 const Icon(
                   Icons.calendar_today_rounded,
                   size: 14,
-                  color: AppColors.ink400,
+                  color: AppColors.teal800,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -229,7 +259,7 @@ class _ResultCard extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.ink500,
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
@@ -247,8 +277,11 @@ class _ResultCard extends StatelessWidget {
                       padding: const EdgeInsets.all(14),
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.teal50,
-                        borderRadius: BorderRadius.circular(14),
+                        color: Colors.white.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.teal800.withValues(alpha: 0.10),
+                        ),
                       ),
                       child: Text(
                         result.aiSummary!,
@@ -276,7 +309,7 @@ class _ResultCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: result.pdfUrl != null
-                              ? AppColors.teal700
+                              ? AppColors.teal800
                               : AppColors.ink200,
                           width: 1.5,
                         ),
@@ -288,7 +321,7 @@ class _ResultCard extends StatelessWidget {
                             Icons.open_in_new_rounded,
                             size: 16,
                             color: result.pdfUrl != null
-                                ? AppColors.teal700
+                                ? AppColors.teal800
                                 : AppColors.ink400,
                           ),
                           const SizedBox(width: 8),
@@ -300,7 +333,7 @@ class _ResultCard extends StatelessWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: result.pdfUrl != null
-                                  ? AppColors.teal700
+                                  ? AppColors.teal800
                                   : AppColors.ink400,
                             ),
                           ),

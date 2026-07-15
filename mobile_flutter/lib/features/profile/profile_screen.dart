@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
@@ -63,8 +64,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String get displayName => _editedName ?? widget.user?.name ?? 'User';
+  String get displayPhone {
+    final raw = widget.user?.phone.trim() ?? '';
+    if (raw.isEmpty) return '+964 750 123 4567';
+
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return raw;
+
+    var local = digits;
+    if (local.startsWith('00964')) {
+      local = local.substring(5);
+    }
+    while (local.startsWith('964') && local.length > 10) {
+      local = local.substring(3);
+    }
+    if (local.startsWith('0')) {
+      local = local.substring(1);
+    }
+
+    return '+964 ${_formatLocalPhone(local)}';
+  }
+
+  String _formatLocalPhone(String digits) {
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return '${digits.substring(0, 3)} ${digits.substring(3)}';
+    return '${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}';
+  }
+
   String get initials {
-    final parts = displayName.trim().split(RegExp(r'\s+'));
+    final cleanName = displayName.trim();
+    if (cleanName.isEmpty) return '?';
+    final parts = cleanName.split(RegExp(r'\s+'));
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.characters.first.toUpperCase();
     return '${parts.first.characters.first}${parts.last.characters.first}'.toUpperCase();
@@ -85,10 +115,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: RefreshIndicator(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: SafeArea(
+        child: RefreshIndicator(
         onRefresh: _fetchCounts,
-        color: AppColors.teal700,
+        color: AppColors.teal800,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 118),
           children: [
@@ -101,17 +139,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            // Profile details card
             Container(
+              clipBehavior: Clip.antiAlias,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.teal700, AppColors.teal800],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: AppShadows.float,
+                color: Colors.white.withValues(alpha: 0.88),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: AppColors.ink100),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.ink900.withValues(alpha: 0.035),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -121,17 +162,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Stack(
                       children: [
                         Container(
-                          width: 58,
-                          height: 58,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                          width: 62,
+                          height: 62,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.94),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: AppColors.teal800.withValues(alpha: 0.10),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.teal800.withValues(alpha: 0.045),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             initials,
                             style: const TextStyle(
-                              color: AppColors.teal700,
+                              color: AppColors.teal800,
                               fontSize: 22,
                               fontWeight: FontWeight.w900,
                             ),
@@ -141,41 +192,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            width: 20,
-                            height: 20,
+                            width: 21,
+                            height: 21,
                             decoration: BoxDecoration(
-                              color: AppColors.amber500,
+                              color: Colors.white.withValues(alpha: 0.92),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: AppColors.teal800.withValues(alpha: 0.16),
+                                width: 1.2,
+                              ),
                             ),
                             child: const Icon(
                               Icons.edit_rounded,
                               size: 11,
-                              color: Colors.white,
+                              color: AppColors.teal800,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.ink900,
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         Text(
-                          '+964 ${widget.user?.phone ?? '7501234567'}',
+                          displayPhone,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Color(0xCCFFFFFF),
-                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink500,
+                            fontWeight: FontWeight.w700,
                             fontSize: 13,
                           ),
                         ),
@@ -184,13 +242,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(6),
+                              color: AppColors.teal800.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.teal800.withValues(alpha: 0.10),
+                              ),
                             ),
                             child: Text(
                               '#${widget.user!.patientCode}',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.teal800,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -205,13 +266,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Patient Stats / Visits & Reports
             _MenuCard(
               tiles: [
                 _Tile(
                   icon: Icons.calendar_month_rounded,
-                  iconColor: AppColors.teal700,
-                  tileBg: AppColors.teal50,
                   title: AppLocalizations.t('my_bookings'),
                   subtitle: _loadingCounts
                       ? AppLocalizations.t('loading')
@@ -220,8 +278,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 _Tile(
                   icon: Icons.file_copy_rounded,
-                  iconColor: const Color(0xFFB37D1F),
-                  tileBg: const Color(0xFFFFF8E1),
                   title: AppLocalizations.t('my_results'),
                   subtitle: _loadingCounts
                       ? AppLocalizations.t('loading')
@@ -285,7 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
             Center(
               child: Text(
-                'Tabeebi+ v1.0.0 • Kirkuk, Iraq',
+                'Tabeebi+ v1.0.0 - Kirkuk, Iraq',
                 style: TextStyle(
                   color: AppColors.ink400,
                   fontSize: 11,
@@ -294,6 +350,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -363,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 trailing: Text(
                   lang.$2.toUpperCase(),
                   style: const TextStyle(
-                    color: AppColors.teal700,
+                    color: AppColors.teal800,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -432,10 +489,16 @@ class _MenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.ink100),
-        boxShadow: AppShadows.card,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink900.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -445,7 +508,11 @@ class _MenuCard extends StatelessWidget {
             return Column(
               children: [
                 _TileWidget(tile: tile),
-                if (!isLast) const Divider(height: 1, color: AppColors.ink100),
+                if (!isLast)
+                  Divider(
+                    height: 1,
+                    color: AppColors.ink100.withValues(alpha: 0.86),
+                  ),
               ],
             );
           }).toList(),
@@ -461,8 +528,6 @@ class _Tile {
     required this.title,
     required this.onTap,
     this.subtitle,
-    this.iconColor,
-    this.tileBg,
     this.rightLabel,
     this.danger = false,
   });
@@ -470,8 +535,6 @@ class _Tile {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final Color? iconColor;
-  final Color? tileBg;
   final String? rightLabel;
   final bool danger;
   final VoidCallback onTap;
@@ -483,21 +546,22 @@ class _TileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ArrowIcon = AppLocalizations.isRtl
-        ? const Icon(Icons.chevron_left_rounded)
-        : const Icon(Icons.chevron_right_rounded);
-
     return ListTile(
       onTap: tile.onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
           color: tile.danger
-              ? AppColors.red100
-              : (tile.tileBg ?? AppColors.teal50),
+              ? AppColors.red100.withValues(alpha: 0.62)
+              : Colors.white.withValues(alpha: 0.72),
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: tile.danger
+                ? AppColors.red500.withValues(alpha: 0.16)
+                : AppColors.teal800.withValues(alpha: 0.10),
+          ),
         ),
         alignment: Alignment.center,
         child: Icon(
@@ -505,7 +569,7 @@ class _TileWidget extends StatelessWidget {
           size: 20,
           color: tile.danger
               ? AppColors.red500
-              : (tile.iconColor ?? AppColors.teal700),
+              : AppColors.teal800,
         ),
       ),
       title: Text(
@@ -533,7 +597,7 @@ class _TileWidget extends StatelessWidget {
             Text(
               tile.rightLabel!,
               style: const TextStyle(
-                color: AppColors.teal700,
+                color: AppColors.teal800,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),

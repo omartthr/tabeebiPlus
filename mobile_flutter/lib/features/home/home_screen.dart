@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 '${specialties.length} areas',
                 style: const TextStyle(
-                  color: AppColors.teal700,
+                  color: AppColors.teal900,
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
                 ),
@@ -150,18 +151,17 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final w = (constraints.maxWidth - 12) / 2;
+              final w = (constraints.maxWidth - 10) / 2;
               return Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 10,
+                runSpacing: 10,
                 children: [
                   for (final specialty in specialties)
                     SizedBox(
                       width: w,
                       child: _SpecialtyCard(
                         specialty: specialty,
-                        onTap: () =>
-                            !specialty.disabled
+                        onTap: () => !specialty.disabled
                             ? widget.onSpecialty(specialty)
                             : null,
                       ),
@@ -197,14 +197,21 @@ class _CircleButton extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.82),
               shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.76),
               border: Border.all(
-                color: AppColors.teal200.withValues(alpha: 0.55),
+                color: Colors.white.withValues(alpha: 0.62),
+                width: 1.2,
               ),
-              boxShadow: AppShadows.card,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.teal800.withValues(alpha: 0.07),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            child: Icon(icon, color: AppColors.ink700, size: 21),
+            child: Icon(icon, color: AppColors.teal800, size: 21),
           ),
           if (dot)
             Positioned(
@@ -214,7 +221,7 @@ class _CircleButton extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: AppColors.green500,
+                  color: AppColors.teal800,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 1.5),
                 ),
@@ -239,15 +246,25 @@ class _AvatarCircle extends StatelessWidget {
       width: 46,
       height: 46,
       decoration: BoxDecoration(
-        color: AppColors.teal700,
         shape: BoxShape.circle,
-        boxShadow: AppShadows.button,
+        color: Colors.white.withValues(alpha: 0.56),
+        border: Border.all(
+          color: AppColors.teal800.withValues(alpha: 0.12),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.teal800.withValues(alpha: 0.045),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       alignment: Alignment.center,
       child: Text(
         letter,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.teal800,
           fontSize: 18,
           fontWeight: FontWeight.w800,
         ),
@@ -303,8 +320,8 @@ class _HeroCarousel extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.teal700.withValues(alpha: 0.12),
-                  blurRadius: 16,
+                  color: AppColors.ink900.withValues(alpha: 0.035),
+                  blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -318,10 +335,7 @@ class _HeroCarousel extends StatelessWidget {
               layoutBuilder: (currentChild, previousChildren) {
                 return Stack(
                   fit: StackFit.expand,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
+                  children: [...previousChildren, ?currentChild],
                 );
               },
               transitionBuilder: (child, animation) {
@@ -342,10 +356,7 @@ class _HeroCarousel extends StatelessWidget {
                   opacity: curved,
                   child: SlideTransition(
                     position: offset,
-                    child: ScaleTransition(
-                      scale: scale,
-                      child: child,
-                    ),
+                    child: ScaleTransition(scale: scale, child: child),
                   ),
                 );
               },
@@ -374,6 +385,7 @@ class _HeroCarousel extends StatelessWidget {
     );
   }
 }
+
 class _HeroDot extends StatelessWidget {
   const _HeroDot({required this.active});
 
@@ -387,8 +399,8 @@ class _HeroDot extends StatelessWidget {
       height: 6,
       decoration: BoxDecoration(
         color: active
-            ? AppColors.teal700
-            : AppColors.teal700.withValues(alpha: 0.30),
+            ? AppColors.ink700
+            : AppColors.ink300.withValues(alpha: 0.70),
         borderRadius: BorderRadius.circular(3),
       ),
     );
@@ -409,9 +421,7 @@ class _AiHeroCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(28)),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           fit: StackFit.expand,
@@ -431,33 +441,50 @@ class _AiHeroCard extends StatelessWidget {
             Positioned(
               left: 52,
               bottom: 18,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      color: AppColors.teal700,
-                      size: 15,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
-                    SizedBox(width: 7),
-                    Text(
-                      'Ask AI',
-                      style: TextStyle(
-                        color: AppColors.teal700,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.78),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.60),
+                        width: 1.1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.teal800.withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                  ],
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          color: AppColors.teal800,
+                          size: 15,
+                        ),
+                        SizedBox(width: 7),
+                        Text(
+                          'Ask AI',
+                          style: TextStyle(
+                            color: AppColors.teal800,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -534,11 +561,7 @@ class _NoUpcomingAppointment extends StatelessWidget {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.calendar_month_rounded,
-          color: AppColors.amber500,
-          size: 30,
-        ),
+        Icon(Icons.calendar_month_rounded, color: AppColors.amber500, size: 30),
         SizedBox(height: 10),
         Text(
           'Upcoming appointment',
@@ -756,41 +779,46 @@ class _SpecialtyCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 108,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+        height: 92,
+        padding: const EdgeInsets.fromLTRB(9, 12, 8, 12),
         decoration: BoxDecoration(
-          color: active ? Colors.white : const Color(0xFFF9FAFA),
-          borderRadius: BorderRadius.circular(24),
+          color: active
+              ? Colors.white.withValues(alpha: 0.94)
+              : Colors.white.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: active
-                ? AppColors.teal200.withValues(alpha: 0.30)
-                : Colors.black.withValues(alpha: 0.04),
+                ? AppColors.teal800.withValues(alpha: 0.12)
+                : AppColors.ink100.withValues(alpha: 0.80),
           ),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: AppColors.teal700.withValues(alpha: 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink900.withValues(alpha: active ? 0.035 : 0.018),
+              blurRadius: active ? 14 : 8,
+              offset: Offset(0, active ? 5 : 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
-                color: active ? Color(specialty.tint) : const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(14),
+                color: active
+                    ? AppColors.teal800.withValues(alpha: 0.055)
+                    : Colors.white.withValues(alpha: 0.60),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: active
+                      ? AppColors.teal800.withValues(alpha: 0.12)
+                      : AppColors.ink100.withValues(alpha: 0.54),
+                ),
               ),
               child: Icon(
                 specialtyIcon(specialty.icon),
-                color: active
-                    ? Color(specialty.accent)
-                    : const Color(0xFF999999),
-                size: 22,
+                color: active ? AppColors.teal800 : AppColors.ink300,
+                size: 19,
               ),
             ),
             const SizedBox(width: 8),
@@ -799,64 +827,99 @@ class _SpecialtyCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    specialty.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: active ? AppColors.ink900 : AppColors.ink400,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: active
-                          ? const Color(0xFFE6F9F0)
-                          : const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: Text(
-                      active ? 'Active' : 'Soon',
-                      style: TextStyle(
-                        color: active
-                            ? AppColors.green500
-                            : const Color(0xFFF59E0B),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
+                  SizedBox(
+                    height: 16,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          specialty.name,
+                          maxLines: 1,
+                          softWrap: false,
+                          style: TextStyle(
+                            color: active
+                                ? AppColors.ink900
+                                : AppColors.ink400,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  if (active)
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: active
+                                ? AppColors.teal800.withValues(alpha: 0.045)
+                                : Colors.white.withValues(alpha: 0.58),
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(
+                              color: active
+                                  ? AppColors.teal800.withValues(alpha: 0.08)
+                                  : AppColors.ink100,
+                            ),
+                          ),
+                          child: Text(
+                            active ? 'Active' : 'Soon',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: active
+                                  ? AppColors.teal800
+                                  : AppColors.ink400,
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (active) ...[
+                    const SizedBox(height: 1),
                     const Text(
                       'Kerkuk',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: AppColors.ink400,
-                        fontSize: 11,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
+            const SizedBox(width: 3),
             Container(
-              width: 23,
-              height: 23,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 color: active
-                    ? AppColors.teal200.withValues(alpha: 0.25)
-                    : const Color(0xFFF5F5F5),
+                    ? Colors.white.withValues(alpha: 0.76)
+                    : Colors.white.withValues(alpha: 0.42),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: active
+                      ? AppColors.teal800.withValues(alpha: 0.08)
+                      : AppColors.ink100.withValues(alpha: 0.54),
+                ),
               ),
               child: Icon(
                 Icons.chevron_right_rounded,
-                color: active ? AppColors.ink700 : AppColors.ink300,
-                size: 17,
+                color: active ? AppColors.teal800 : AppColors.ink300,
+                size: 14,
               ),
             ),
           ],

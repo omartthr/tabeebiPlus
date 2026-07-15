@@ -82,7 +82,7 @@ class _GlassTabBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppColors.teal700.withValues(alpha: 0.16),
+            color: AppColors.teal800.withValues(alpha: 0.10),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -91,23 +91,15 @@ class _GlassTabBar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
           child: Container(
             height: 68,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.82),
-                  AppColors.teal50.withValues(alpha: 0.64),
-                  Colors.white.withValues(alpha: 0.70),
-                ],
-              ),
+              color: Colors.white.withValues(alpha: 0.38),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.72),
+                color: Colors.white.withValues(alpha: 0.58),
                 width: 1.2,
               ),
             ),
@@ -161,29 +153,16 @@ class _LiquidActiveBlob extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.58),
-            AppColors.teal50.withValues(alpha: 0.42),
-            Colors.white.withValues(alpha: 0.50),
-          ],
-        ),
+        color: Colors.white.withValues(alpha: 0.34),
         border: Border.all(
-          color: AppColors.teal200.withValues(alpha: 0.34),
+          color: Colors.white.withValues(alpha: 0.62),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.teal700.withValues(alpha: 0.07),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.48),
-            blurRadius: 12,
-            offset: const Offset(-2, -2),
+            color: AppColors.teal800.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -206,7 +185,7 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppColors.teal700;
+    final activeColor = AppColors.teal800;
     final inactiveColor = AppColors.ink300;
 
     return AnimatedScale(

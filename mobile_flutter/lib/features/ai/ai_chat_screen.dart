@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -75,66 +77,79 @@ class _AiChatScreenState extends State<AiChatScreen> {
     return SafeArea(
       child: Column(
         children: [
-          // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.ink100)),
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.ink100),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.ink900.withValues(alpha: 0.035),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: AppColors.teal700,
+                    color: Colors.white.withValues(alpha: 0.76),
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.teal800.withValues(alpha: 0.10),
+                    ),
                   ),
                   alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: Colors.white,
-                    size: 20,
+                  child: const _TabeebiIconMark(
+                    size: 28,
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'AI Health Assistant',
-                      style: TextStyle(
-                        color: AppColors.ink900,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.3,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'AI Health Assistant',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.ink900,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.3,
+                        ),
                       ),
-                    ),
-                    Text(
-                      _sending ? 'Typing...' : 'Powered by Tabeebi AI',
-                      style: const TextStyle(
-                        color: AppColors.ink400,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 2),
+                      Text(
+                        _sending ? 'Typing...' : 'Powered by Tabeebi AI',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.ink400,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          // Messages
           Expanded(
             child: ListView(
               controller: _scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
               children: [
                 if (messages.isEmpty)
                   _EmptyState(
-                    onSuggestion: (s) {
-                      _inputCtrl.text = s;
-                      setState(() {});
-                    },
+                    onSuggestion: _send,
                   ),
                 for (final msg in messages)
                   _Bubble(message: msg),
@@ -143,69 +158,95 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ],
             ),
           ),
-          // Input row
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.ink100)),
-              color: AppColors.bg,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Container(
-                    constraints: const BoxConstraints(maxHeight: 100),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.ink100),
-                    ),
-                    child: TextField(
-                      controller: _inputCtrl,
-                      maxLines: null,
-                      onChanged: (_) => setState(() {}),
-                      onSubmitted: _send,
-                      style: const TextStyle(
-                        color: AppColors.ink900,
-                        fontSize: 14,
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(26),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.76),
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.62)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.teal800.withValues(alpha: 0.055),
+                        blurRadius: 18,
+                        offset: const Offset(0, 7),
                       ),
-                      decoration: const InputDecoration(
-                        hintText: 'Ask about symptoms, medications...',
-                        hintStyle: TextStyle(color: AppColors.ink400),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          constraints: const BoxConstraints(maxHeight: 100),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.78),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.ink100),
+                          ),
+                          child: TextField(
+                            controller: _inputCtrl,
+                            maxLines: null,
+                            onChanged: (_) => setState(() {}),
+                            onSubmitted: _send,
+                            style: const TextStyle(
+                              color: AppColors.ink900,
+                              fontSize: 14,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Ask about symptoms, medications...',
+                              hintStyle: TextStyle(color: AppColors.ink400),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              border: InputBorder.none,
+                            ),
+                          ),
                         ),
-                        border: InputBorder.none,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _inputCtrl.text.trim().isEmpty
+                            ? null
+                            : () => _send(_inputCtrl.text),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: _inputCtrl.text.trim().isEmpty
+                                ? AppColors.ink200
+                                : AppColors.teal800,
+                            shape: BoxShape.circle,
+                            boxShadow: _inputCtrl.text.trim().isEmpty
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: AppColors.teal800.withValues(alpha: 0.18),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: _inputCtrl.text.trim().isEmpty
-                      ? null
-                      : () => _send(_inputCtrl.text),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: _inputCtrl.text.trim().isEmpty
-                          ? AppColors.ink200
-                          : AppColors.teal700,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -221,21 +262,27 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.fromLTRB(4, 28, 4, 0),
       child: Column(
         children: [
           Container(
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.teal50,
+              color: Colors.white.withValues(alpha: 0.78),
               borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.teal800.withValues(alpha: 0.10)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.teal800.withValues(alpha: 0.045),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
+                ),
+              ],
             ),
             alignment: Alignment.center,
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              color: AppColors.teal700,
-              size: 32,
+            child: const _TabeebiIconMark(
+              size: 42,
             ),
           ),
           const SizedBox(height: 14),
@@ -269,17 +316,36 @@ class _EmptyState extends StatelessWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withValues(alpha: 0.86),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.ink100),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.ink900.withValues(alpha: 0.025),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  s,
-                  style: const TextStyle(
-                    color: AppColors.ink700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        s,
+                        style: const TextStyle(
+                          color: AppColors.ink700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.teal800,
+                      size: 18,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -305,7 +371,9 @@ class _Bubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.teal700 : Colors.white,
+          color: isUser
+              ? AppColors.teal800
+              : Colors.white.withValues(alpha: 0.86),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -313,7 +381,14 @@ class _Bubble extends StatelessWidget {
             bottomRight: Radius.circular(isUser ? 4 : 18),
           ),
           border: isUser ? null : Border.all(color: AppColors.ink100),
-          boxShadow: isUser ? null : AppShadows.card,
+          boxShadow: [
+            BoxShadow(
+              color: (isUser ? AppColors.teal800 : AppColors.ink900)
+                  .withValues(alpha: isUser ? 0.12 : 0.03),
+              blurRadius: isUser ? 14 : 12,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Text(
           message.text,
@@ -340,7 +415,7 @@ class _TypingBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.86),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
@@ -348,7 +423,13 @@ class _TypingBubble extends StatelessWidget {
             bottomRight: Radius.circular(18),
           ),
           border: Border.all(color: AppColors.ink100),
-          boxShadow: AppShadows.card,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink900.withValues(alpha: 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -406,6 +487,41 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
         decoration: BoxDecoration(
           color: AppColors.ink400.withValues(alpha: 0.4 + 0.6 * _anim.value),
           shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+class _TabeebiIconMark extends StatelessWidget {
+  const _TabeebiIconMark({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Center(
+        child: ClipRect(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            widthFactor: 0.82,
+            child: Image.asset(
+              'assets/images/logo_icon_dark.png',
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              color: AppColors.teal800,
+              colorBlendMode: BlendMode.srcIn,
+              errorBuilder: (_, _, _) => Icon(
+                Icons.medical_services_outlined,
+                color: AppColors.teal800,
+                size: size * 0.72,
+              ),
+            ),
+          ),
         ),
       ),
     );
