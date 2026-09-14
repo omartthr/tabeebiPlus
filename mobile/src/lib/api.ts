@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Fiziksel cihaz kullanıyorsan buraya bilgisayarının yerel IP adresini (örn: 192.168.1.x) yazmalısın.
 // iOS Simülatör için: 'http://127.0.0.1:8000/api'
 // Gerçek Cihaz (Expo Go) için Yerel Ağ IP Adresi veya Canlı Sunucu
-const BASE_URL = 'https://tabeebiplus-production.up.railway.app/api'; 
+const BASE_URL = 'https://tabeebiplus.onrender.com/api'; 
 
 export const api = axios.create({
   baseURL: BASE_URL,

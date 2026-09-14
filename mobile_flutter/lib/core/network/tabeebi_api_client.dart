@@ -15,7 +15,7 @@ class TabeebiApiClient {
     String? baseUrl,
     HttpClient? httpClient,
     this.tokenProvider,
-  }) : baseUrl = baseUrl ?? 'https://tabeebiplus-production.up.railway.app/api',
+  }) : baseUrl = baseUrl ?? 'https://tabeebiplus.onrender.com/api',
        _httpClient = httpClient ?? HttpClient();
 
   final String baseUrl;

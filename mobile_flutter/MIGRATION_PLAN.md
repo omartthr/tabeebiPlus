@@ -12,7 +12,7 @@ Rule: do not edit or delete the React Native `mobile/` app while migrating.
 - Main tabs: Home, Appointments, AI Chat, Results, Profile.
 - Extra stack screens: DoctorList, DoctorDetail, Booking, Confirmed, Help, Privacy.
 - Shared layers: theme tokens, static demo data, API client, auth context, RTL/i18n context, common cards and badges.
-- Live API base URL: `https://tabeebiplus-production.up.railway.app/api`.
+- Live API base URL: `https://tabeebiplus.onrender.com/api`.
 
 ## Migration Order
 
