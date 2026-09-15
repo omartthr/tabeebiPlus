@@ -42,10 +42,9 @@ class AuthController extends Controller
             $phone = '964' . $phone;
         }
 
-        // 4 haneli rastgele kod üret
-        $code = (string) rand(1000, 9999); 
-        // Test için konsola veya loga yazalım:
-        \Log::info("OTP for $phone is $code");
+        // 4 haneli sabit test kodu
+        $code = '1234'; // TEST MODU: Normalde -> (string) rand(1000, 9999); 
+        \Log::info("TEST OTP for $phone is $code");
 
         PhoneOtp::updateOrCreate(
             ['phone' => $phone],
@@ -56,7 +55,8 @@ class AuthController extends Controller
             ]
         );
 
-        // Twilio WhatsApp (veya SMS) Entegrasyonu
+        // TEST İÇİN GEÇİCİ OLARAK KAPATILDI
+        /*
         try {
             $sid = env('TWILIO_SID');
             $token = env('TWILIO_AUTH_TOKEN');
@@ -65,7 +65,6 @@ class AuthController extends Controller
             if ($sid && $token && $twilioWhatsapp) {
                 $twilio = new \Twilio\Rest\Client($sid, $token);
                 
-                // Telefon numarasının başına whatsapp:+ ekliyoruz (Zaten 964 formatında)
                 $to = 'whatsapp:+' . $phone;
                 
                 $twilio->messages->create($to, [
@@ -73,16 +72,16 @@ class AuthController extends Controller
                     'body' => "Tabeebi+ doğrulama kodunuz: *" . $code . "*\n\nBu kod 10 dakika geçerlidir."
                 ]);
                 \Log::info("WhatsApp OTP sent via Twilio to $to");
-            } else {
-                \Log::warning('Twilio bilgileri .env dosyasinda eksik. SMS gonderilmedi, sadece loglandi.');
             }
         } catch (\Exception $e) {
             \Log::error('Twilio SMS Hatasi: ' . $e->getMessage());
         }
+        */
 
         return response()->json([
-            'message'    => 'OTP sent successfully',
+            'message'    => 'OTP sent successfully (Test Mode)',
             'expires_in' => '10 minutes',
+            'test_otp'   => $code
         ]);
     }
 

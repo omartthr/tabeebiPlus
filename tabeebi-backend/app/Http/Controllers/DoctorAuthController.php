@@ -24,15 +24,16 @@ class DoctorAuthController extends Controller
         $request->validate(['phone' => 'required|string']);
 
         $phone = $this->normalizePhone($request->phone);
-        $code  = (string) rand(1000, 9999);
+        $code  = '1234'; // TEST MODU: Normalde -> (string) rand(1000, 9999);
 
-        \Log::info("Doctor OTP for $phone: $code");
+        \Log::info("Doctor TEST OTP for $phone: $code");
 
         PhoneOtp::updateOrCreate(
             ['phone' => $phone],
             ['otp' => $code, 'expires_at' => now()->addMinutes(10), 'created_at' => now()]
         );
 
+        /* TEST İÇİN GEÇİCİ OLARAK KAPATILDI
         try {
             $sid   = env('TWILIO_SID');
             $token = env('TWILIO_AUTH_TOKEN');
@@ -48,9 +49,11 @@ class DoctorAuthController extends Controller
         } catch (\Exception $e) {
             \Log::error('Doctor OTP Twilio Error: ' . $e->getMessage());
         }
+        */
 
         return response()->json([
-            'message' => 'OTP gönderildi',
+            'message' => 'OTP gönderildi (Test Mode)',
+            'test_otp' => $code
         ]);
     }
 
