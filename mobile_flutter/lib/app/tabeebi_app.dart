@@ -171,15 +171,7 @@ class _TabeebiRootState extends State<TabeebiRoot> {
 
   void _backToMain() => setState(() => stack = StackScreen.main);
 
-  @override
-  Widget build(BuildContext context) {
-    if (restoringSession) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.teal700),
-        ),
-      );
-    }
+  Widget _buildScreen() {
 
     if (flow == RootFlow.welcome) {
       return WelcomeScreen(
@@ -308,5 +300,38 @@ class _TabeebiRootState extends State<TabeebiRoot> {
         onDeleteAccount: _clearSession,
       ),
     };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (restoringSession) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.teal700),
+        ),
+      );
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey('${flow.name}_${stack.name}'),
+        child: _buildScreen(),
+      ),
+    );
   }
 }
