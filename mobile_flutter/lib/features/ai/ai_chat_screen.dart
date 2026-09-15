@@ -61,12 +61,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     setState(() {
-      messages.add(const _Message(
-        role: 'assistant',
-        text:
-            'Thank you for your question. Our AI assistant is currently being set up. '
-            'For medical advice, please consult a qualified doctor through the booking screen.',
-      ));
+      messages.add(
+        const _Message(
+          role: 'assistant',
+          text:
+              'Thank you for your question. Our AI assistant is currently being set up. '
+              'For medical advice, please consult a qualified doctor through the booking screen.',
+        ),
+      );
       _sending = false;
     });
     _scrollToBottom();
@@ -105,9 +107,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: const _TabeebiIconMark(
-                    size: 28,
-                  ),
+                  child: const _TabeebiIconMark(size: 28),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -147,14 +147,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
               controller: _scrollCtrl,
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
               children: [
-                if (messages.isEmpty)
-                  _EmptyState(
-                    onSuggestion: _send,
-                  ),
-                for (final msg in messages)
-                  _Bubble(message: msg),
-                if (_sending)
-                  const _TypingBubble(),
+                if (messages.isEmpty) _EmptyState(onSuggestion: _send),
+                for (final msg in messages) _Bubble(message: msg),
+                if (_sending) const _TypingBubble(),
               ],
             ),
           ),
@@ -170,7 +165,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.76),
                     borderRadius: BorderRadius.circular(26),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.62)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.62),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.teal800.withValues(alpha: 0.055),
@@ -229,7 +226,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                 ? null
                                 : [
                                     BoxShadow(
-                                      color: AppColors.teal800.withValues(alpha: 0.18),
+                                      color: AppColors.teal800.withValues(
+                                        alpha: 0.18,
+                                      ),
                                       blurRadius: 12,
                                       offset: const Offset(0, 5),
                                     ),
@@ -271,7 +270,9 @@ class _EmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.78),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.teal800.withValues(alpha: 0.10)),
+              border: Border.all(
+                color: AppColors.teal800.withValues(alpha: 0.10),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.teal800.withValues(alpha: 0.045),
@@ -281,9 +282,7 @@ class _EmptyState extends StatelessWidget {
               ],
             ),
             alignment: Alignment.center,
-            child: const _TabeebiIconMark(
-              size: 42,
-            ),
+            child: const _TabeebiIconMark(size: 42),
           ),
           const SizedBox(height: 14),
           const Text(
@@ -383,8 +382,9 @@ class _Bubble extends StatelessWidget {
           border: isUser ? null : Border.all(color: AppColors.ink100),
           boxShadow: [
             BoxShadow(
-              color: (isUser ? AppColors.teal800 : AppColors.ink900)
-                  .withValues(alpha: isUser ? 0.12 : 0.03),
+              color: (isUser ? AppColors.teal800 : AppColors.ink900).withValues(
+                alpha: isUser ? 0.12 : 0.03,
+              ),
               blurRadius: isUser ? 14 : 12,
               offset: const Offset(0, 5),
             ),
@@ -434,8 +434,7 @@ class _TypingBubble extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final delay in [0, 150, 300])
-              _Dot(delay: delay),
+            for (final delay in [0, 150, 300]) _Dot(delay: delay),
           ],
         ),
       ),
@@ -462,9 +461,10 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _anim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _ctrl.repeat(reverse: true);
     });
@@ -480,7 +480,7 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, __) => Container(
+      builder: (_, _) => Container(
         width: 7,
         height: 7,
         margin: const EdgeInsets.symmetric(horizontal: 2),

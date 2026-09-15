@@ -303,8 +303,9 @@ String _initials(String name) {
   if (parts.isEmpty) {
     return '??';
   }
-  if (parts.length == 1)
+  if (parts.length == 1) {
     return parts.first.characters.take(2).join().toUpperCase();
+  }
   return '${parts.first.characters.first}${parts.last.characters.first}'
       .toUpperCase();
 }

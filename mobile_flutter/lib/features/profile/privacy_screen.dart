@@ -236,9 +236,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(AppLocalizations.t('delete_account')),
-        content: Text(
-          '${AppLocalizations.t('delete_warning')} Are you sure?',
-        ),
+        content: Text('${AppLocalizations.t('delete_warning')} Are you sure?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -299,7 +297,7 @@ class _PermissionRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.teal700,
+            activeThumbColor: AppColors.teal700,
             activeTrackColor: AppColors.teal100,
             inactiveThumbColor: AppColors.ink400,
             inactiveTrackColor: AppColors.ink200,

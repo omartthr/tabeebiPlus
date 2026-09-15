@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class AppLocalizations {
   AppLocalizations._();
 
@@ -16,7 +14,8 @@ class AppLocalizations {
       'no_available_slots': 'No available slots for this day.',
       'location_map': 'CLINIC LOCATION',
       'welcome_title': 'Your trusted\ndoctor, one tap away.',
-      'welcome_subtitle': 'Book specialists across Kirkuk — see verified doctors, transparent prices, same-day slots.',
+      'welcome_subtitle':
+          'Book specialists across Kirkuk — see verified doctors, transparent prices, same-day slots.',
       'feature_verified': 'Verified specialists only',
       'feature_private': 'Your records stay private',
       'feature_same_day': 'Same-day bookings available',
@@ -28,14 +27,17 @@ class AppLocalizations {
       'no_account': "Don't have an account? ",
       'register_link': 'Register',
       'account_not_found': 'Account Not Found',
-      'account_not_found_desc': 'No account found with this number. Please register first.',
+      'account_not_found_desc':
+          'No account found with this number. Please register first.',
       'create_account': 'Create account',
       'lets_know_you': "Let's get to know you",
-      'register_subtitle': 'We use your number to verify and remind you about appointments.',
+      'register_subtitle':
+          'We use your number to verify and remind you about appointments.',
       'full_name': 'Full name',
       'name_placeholder': 'e.g. Mustafa Ali',
       'phone_number': 'Phone number',
-      'privacy_notice': 'Your number is only used for verification and appointment reminders. We never share it.',
+      'privacy_notice':
+          'Your number is only used for verification and appointment reminders. We never share it.',
       'continue_btn': 'Continue',
       'verify_number': 'Verify number',
       'check_messages': 'Check your messages',
@@ -61,10 +63,13 @@ class AppLocalizations {
       'reschedule': 'Reschedule',
       'cancel': 'Cancel',
       'cancel_confirm_title': 'Cancel Appointment',
-      'cancel_confirm_message': 'Are you sure you want to cancel this appointment?',
-      'cancel_confirmed_warning': 'WARNING: You are cancelling a confirmed appointment. Frequent cancellations may lead to account restrictions. Proceed anyway?',
+      'cancel_confirm_message':
+          'Are you sure you want to cancel this appointment?',
+      'cancel_confirmed_warning':
+          'WARNING: You are cancelling a confirmed appointment. Frequent cancellations may lead to account restrictions. Proceed anyway?',
       'reschedule_denied_title': 'Cannot Reschedule',
-      'reschedule_denied_message': 'Since your appointment is confirmed, you can no longer make changes. Please contact the clinic if needed.',
+      'reschedule_denied_message':
+          'Since your appointment is confirmed, you can no longer make changes. Please contact the clinic if needed.',
       'view_result': 'View result',
       'book_again': 'Book again',
       'yes': 'Yes',
@@ -89,7 +94,8 @@ class AppLocalizations {
       'confirm_booking': 'Confirm booking',
       'processing': 'Processing...',
       'youre_booked': "You're booked!",
-      'booking_confirmed_sub': 'We sent a confirmation to your phone. Please arrive 10 minutes early.',
+      'booking_confirmed_sub':
+          'We sent a confirmation to your phone. Please arrive 10 minutes early.',
       'ticket_date': 'DATE',
       'ticket_time': 'TIME',
       'ticket_location': 'LOCATION',
@@ -122,7 +128,8 @@ class AppLocalizations {
       'new_alerts': '{{count}} new alerts',
       'mark_all_read': 'Mark all read',
       'no_notifications': 'No Notifications',
-      'no_notifications_sub': 'You have no new updates or appointment reminders.',
+      'no_notifications_sub':
+          'You have no new updates or appointment reminders.',
       'my_results_title': 'My results',
       'results_subtitle': 'Your full medical history in one place',
       'clinical_notes': 'CLINICAL NOTES',
@@ -136,7 +143,8 @@ class AppLocalizations {
       'doctor_title': 'Doctor',
       'experience_suffix': 'experience',
       'about': 'ABOUT',
-      'about_text': 'Specialist with over {{exp}} of clinical practice. Member of the Iraqi Dental Association. Focus on modern, pain-minimizing approaches and patient education.',
+      'about_text':
+          'Specialist with over {{exp}} of clinical practice. Member of the Iraqi Dental Association. Focus on modern, pain-minimizing approaches and patient education.',
       'working_hours': 'WORKING HOURS',
       'hours_sat_thu': 'Sat – Thu',
       'hours_fri': 'Friday',
@@ -166,11 +174,13 @@ class AppLocalizations {
       'status_resolved': 'Resolved',
       'privacy_title': 'Privacy & security',
       'data_protection': 'DATA PROTECTION',
-      'data_protection_desc': 'Your medical records and personal data are encrypted and stored securely in compliance with healthcare standards.',
+      'data_protection_desc':
+          'Your medical records and personal data are encrypted and stored securely in compliance with healthcare standards.',
       'account_security': 'ACCOUNT SECURITY',
       'change_phone': 'Change phone number',
       'delete_account': 'Delete account',
-      'delete_warning': 'This action is permanent and will delete all your medical history.',
+      'delete_warning':
+          'This action is permanent and will delete all your medical history.',
       'permissions': 'PERMISSIONS',
       'notif_perms': 'Notification permissions',
       'loc_perms': 'Location permissions',
@@ -182,7 +192,8 @@ class AppLocalizations {
       'unknown_doctor': 'Unknown Doctor',
       'rate_doctor_title': 'Rate Doctor',
       'rate_doctor_sub': 'Rate your appointment with {{doctor}}.',
-      'rate_doctor_placeholder': 'Write your comments about the doctor and examination (optional)...',
+      'rate_doctor_placeholder':
+          'Write your comments about the doctor and examination (optional)...',
       'cancel_btn_text': 'Cancel',
       'submit_btn_text': 'Submit',
       'saving': 'Saving...',
@@ -205,23 +216,30 @@ class AppLocalizations {
       'downloading': 'Downloading...',
       'sharing_not_available': 'Sharing is not available on this device.',
       'pdf_download_error': 'Could not download PDF. Please try again.',
-      'no_report_available': 'Medical examination completed. No report available.',
+      'no_report_available':
+          'Medical examination completed. No report available.',
       'complaint_failed': 'Failed to submit complaint.',
       'no_complaints_yet': 'You have no complaints yet.',
       'faq_q1': 'How can I book an appointment?',
-      'faq_a1': 'You can easily book an appointment by selecting the desired specialty from the home page, choosing your doctor, and setting an available time.',
+      'faq_a1':
+          'You can easily book an appointment by selecting the desired specialty from the home page, choosing your doctor, and setting an available time.',
       'faq_q2:': 'Can I cancel my appointment?',
-      'faq_a2': 'You can freely cancel unconfirmed appointments. However, frequent cancellations of confirmed appointments may result in a temporary block of your account.',
+      'faq_a2':
+          'You can freely cancel unconfirmed appointments. However, frequent cancellations of confirmed appointments may result in a temporary block of your account.',
       'faq_q3': 'Where can I see my results?',
-      'faq_a3': 'You can access all your past medical reports and AI summaries from the "My Results" tab.',
+      'faq_a3':
+          'You can access all your past medical reports and AI summaries from the "My Results" tab.',
       'faq_q4': 'How is the payment made?',
-      'faq_a4': 'We offer both online (card or Zain Cash) and in-clinic cash payment options.',
+      'faq_a4':
+          'We offer both online (card or Zain Cash) and in-clinic cash payment options.',
       'submit_complaint_title': 'Contact Us / Submit Complaint',
       'submit_complaint_sub': 'Send your issues directly to us.',
       'faqs': 'FREQUENTLY ASKED QUESTIONS',
       'about_us_label': 'ABOUT US',
-      'about_us_text': 'Tabeebi+ is a modern health platform that provides easy access to specialist doctors across Kirkuk. Our goal is to accelerate healthcare processes by digitizing communication between patients and doctors.',
-      'complaint_success_msg': 'Your complaint has been submitted successfully. We will review it and get back to you as soon as possible.',
+      'about_us_text':
+          'Tabeebi+ is a modern health platform that provides easy access to specialist doctors across Kirkuk. Our goal is to accelerate healthcare processes by digitizing communication between patients and doctors.',
+      'complaint_success_msg':
+          'Your complaint has been submitted successfully. We will review it and get back to you as soon as possible.',
       'ai_health_assistant': 'AI Health Assistant',
       'ai_companion': 'Your personal health companion. Ask anything, anytime.',
       'ask_ai_btn': 'Ask AI',
@@ -229,12 +247,14 @@ class AppLocalizations {
       'ai_chat_title': 'AI Health Assistant',
       'ai_chat_sub': 'Powered by Tabeebi+',
       'ai_empty_title': 'How can I help you?',
-      'ai_empty_sub': 'Ask me anything about your health, symptoms or medications.',
+      'ai_empty_sub':
+          'Ask me anything about your health, symptoms or medications.',
       'ai_suggestion_1': 'What are common symptoms of flu?',
       'ai_suggestion_2': 'When should I see a doctor for a headache?',
       'ai_suggestion_3': 'How can I lower my blood pressure naturally?',
       'ai_input_placeholder': 'Ask a health question...',
-      'ai_placeholder_response': 'This is a demo response. Full AI integration coming soon!',
+      'ai_placeholder_response':
+          'This is a demo response. Full AI integration coming soon!',
     },
     'tr': {
       'home': 'Ana Sayfa',
@@ -246,26 +266,32 @@ class AppLocalizations {
       'no_available_slots': 'Bu gün için müsait randevu saati bulunmuyor.',
       'location_map': 'KLİNİK KONUMU',
       'welcome_title': 'Güvenilir doktorunuz\nbir tık uzağınızda.',
-      'welcome_subtitle': 'Kerkük genelindeki uzmanlardan randevu alın — onaylı doktorlar, şeffaf fiyatlar, aynı gün randevu.',
+      'welcome_subtitle':
+          'Kerkük genelindeki uzmanlardan randevu alın — onaylı doktorlar, şeffaf fiyatlar, aynı gün randevu.',
       'feature_verified': 'Sadece onaylı uzmanlar',
       'feature_private': 'Kayıtlarınız gizli tutulur',
       'feature_same_day': 'Aynı gün randevu imkânı',
       'btn_start': 'Hemen başla',
       'btn_login': 'Zaten hesabım var',
-      'terms_agree': 'Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul etmiş olursunuz',
+      'terms_agree':
+          'Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul etmiş olursunuz',
       'login_title': 'Giriş Yap',
-      'login_subtitle': 'Kliniğinize ve randevularınıza ulaşmak için giriş yapın.',
+      'login_subtitle':
+          'Kliniğinize ve randevularınıza ulaşmak için giriş yapın.',
       'no_account': 'Hesabınız yok mu? ',
       'register_link': 'Kayıt Ol',
       'account_not_found': 'Hesap Bulunamadı',
-      'account_not_found_desc': 'Bu numara ile kayıtlı hesap bulunamadı. Lütfen önce kayıt olun.',
+      'account_not_found_desc':
+          'Bu numara ile kayıtlı hesap bulunamadı. Lütfen önce kayıt olun.',
       'create_account': 'Hesap oluştur',
       'lets_know_you': 'Sizi tanıyalım',
-      'register_subtitle': 'Numaranızı doğrulama ve randevu hatırlatmaları için kullanıyoruz.',
+      'register_subtitle':
+          'Numaranızı doğrulama ve randevu hatırlatmaları için kullanıyoruz.',
       'full_name': 'Ad Soyad',
       'name_placeholder': 'örn. Mustafa Ali',
       'phone_number': 'Telefon numarası',
-      'privacy_notice': 'Numaranız yalnızca doğrulama ve randevu hatırlatmaları için kullanılır. Asla paylaşmayız.',
+      'privacy_notice':
+          'Numaranız yalnızca doğrulama ve randevu hatırlatmaları için kullanılır. Asla paylaşmayız.',
       'continue_btn': 'Devam et',
       'verify_number': 'Numarayı doğrula',
       'check_messages': 'Mesajlarınızı kontrol edin',
@@ -281,7 +307,8 @@ class AppLocalizations {
       'browse_specialty': 'Uzmanlığa göre ara',
       'areas_count': '10 alan',
       'recommended_doctors': 'Sizin İçin Önerilen Hekimler',
-      'recommended_subtitle': 'Muayene geçmişinize ve en yüksek puanlı uzmanlara göre',
+      'recommended_subtitle':
+          'Muayene geçmişinize ve en yüksek puanlı uzmanlara göre',
       'trust_title': 'Her doktor onaylıdır',
       'trust_sub': 'Lisanslar ekibimiz tarafından üç ayda bir kontrol edilir',
       'my_bookings': 'Randevularım',
@@ -291,10 +318,13 @@ class AppLocalizations {
       'reschedule': 'Yeniden planla',
       'cancel': 'İptal et',
       'cancel_confirm_title': 'Randevuyu İptal Et',
-      'cancel_confirm_message': 'Bu randevuyu iptal etmek istediğinize emin misiniz?',
-      'cancel_confirmed_warning': 'UYARI: Onaylanmış bir randevuyu iptal ediyorsunuz. Sık yapılan iptaller hesabınızın kısıtlanmasına neden olabilir. Yine de iptal edilsin mi?',
+      'cancel_confirm_message':
+          'Bu randevuyu iptal etmek istediğinize emin misiniz?',
+      'cancel_confirmed_warning':
+          'UYARI: Onaylanmış bir randevuyu iptal ediyorsunuz. Sık yapılan iptaller hesabınızın kısıtlanmasına neden olabilir. Yine de iptal edilsin mi?',
       'reschedule_denied_title': 'Değişiklik Yapılamaz',
-      'reschedule_denied_message': 'Randevunuz onaylandığı için artık üzerinde değişiklik yapamazsınız. Lütfen gerekirse klinikle iletişime geçin.',
+      'reschedule_denied_message':
+          'Randevunuz onaylandığı için artık üzerinde değişiklik yapamazsınız. Lütfen gerekirse klinikle iletişime geçin.',
       'view_result': 'Sonucu gör',
       'book_again': 'Tekrar randevu al',
       'yes': 'Evet',
@@ -319,7 +349,8 @@ class AppLocalizations {
       'confirm_booking': 'Randevuyu onayla',
       'processing': 'İşleniyor...',
       'youre_booked': 'Randevunuz alındı!',
-      'booking_confirmed_sub': 'Telefonunuza onay gönderdik. Lütfen 10 dakika erken gelin.',
+      'booking_confirmed_sub':
+          'Telefonunuza onay gönderdik. Lütfen 10 dakika erken gelin.',
       'ticket_date': 'TARİH',
       'ticket_time': 'SAAT',
       'ticket_location': 'KONUM',
@@ -352,7 +383,8 @@ class AppLocalizations {
       'new_alerts': '{{count}} yeni bildirim',
       'mark_all_read': 'Tümünü okundu işaretle',
       'no_notifications': 'Bildirim Bulunmuyor',
-      'no_notifications_sub': 'Herhangi bir yeni güncelleme veya randevu uyarınız yok.',
+      'no_notifications_sub':
+          'Herhangi bir yeni güncelleme veya randevu uyarınız yok.',
       'my_results_title': 'Sonuçlarım',
       'results_subtitle': 'Tüm tıbbi geçmişiniz tek bir yerde',
       'clinical_notes': 'KLİNİK NOTLAR',
@@ -366,7 +398,8 @@ class AppLocalizations {
       'doctor_title': 'Doktor',
       'experience_suffix': 'deneyim',
       'about': 'HAKKINDA',
-      'about_text': '{{exp}} klinik deneyime sahip uzman. Irak Diş Hekimleri Birliği üyesi. Modern, ağrı minimize eden yaklaşımlar ve hasta eğitimine odaklanır.',
+      'about_text':
+          '{{exp}} klinik deneyime sahip uzman. Irak Diş Hekimleri Birliği üyesi. Modern, ağrı minimize eden yaklaşımlar ve hasta eğitimine odaklanır.',
       'working_hours': 'ÇALIŞMA SAATLERİ',
       'hours_sat_thu': 'Cmt – Per',
       'hours_fri': 'Cuma',
@@ -396,11 +429,13 @@ class AppLocalizations {
       'status_resolved': 'Çözüldü',
       'privacy_title': 'Gizlilik ve güvenlik',
       'data_protection': 'VERİ KORUMASI',
-      'data_protection_desc': 'Tıbbi kayıtlarınız ve kişisel verileriniz şifrelenir ve sağlık standartlarına uygun olarak güvenli bir şekilde saklanır.',
+      'data_protection_desc':
+          'Tıbbi kayıtlarınız ve kişisel verileriniz şifrelenir ve sağlık standartlarına uygun olarak güvenli bir şekilde saklanır.',
       'account_security': 'HESAP GÜVENLİĞİ',
       'change_phone': 'Telefon numarasını değiştir',
       'delete_account': 'Hesabı sil',
-      'delete_warning': 'Bu işlem kalıcıdır ve tüm tıbbi geçmişinizi silecektir.',
+      'delete_warning':
+          'Bu işlem kalıcıdır ve tüm tıbbi geçmişinizi silecektir.',
       'permissions': 'İZİNLER',
       'notif_perms': 'Bildirim izinleri',
       'loc_perms': 'Konum izinleri',
@@ -412,7 +447,8 @@ class AppLocalizations {
       'unknown_doctor': 'Bilinmeyen Doktor',
       'rate_doctor_title': 'Doktoru Değerlendir',
       'rate_doctor_sub': '{{doctor}} ile olan randevunuzu puanlayın.',
-      'rate_doctor_placeholder': 'Doktor ve muayene hakkında yorumunuzu yazın (isteğe bağlı)...',
+      'rate_doctor_placeholder':
+          'Doktor ve muayene hakkında yorumunuzu yazın (isteğe bağlı)...',
       'cancel_btn_text': 'Vazgeç',
       'submit_btn_text': 'Gönder',
       'saving': 'Kaydediliyor...',
@@ -439,19 +475,25 @@ class AppLocalizations {
       'complaint_failed': 'Şikayet gönderilemedi.',
       'no_complaints_yet': 'Henüz bir şikayetiniz yok.',
       'faq_q1': 'Nasıl randevu alabilirim?',
-      'faq_a1': 'Ana sayfadan istediğiniz uzmanlık alanını seçip, doktorunuzu ve uygun saati belirleyerek randevunuzu kolayca oluşturabilirsiniz.',
+      'faq_a1':
+          'Ana sayfadan istediğiniz uzmanlık alanını seçip, doktorunuzu ve uygun saati belirleyerek randevunuzu kolayca oluşturabilirsiniz.',
       'faq_q2': 'Randevumu iptal edebilir miyim?',
-      'faq_a2': 'Onaylanmamış randevuları serbestçe iptal edebilirsiniz. Ancak onaylanmış randevuların sık iptal edilmesi durumunda hesabınız geçici olarak bloklanabilir.',
+      'faq_a2':
+          'Onaylanmamış randevuları serbestçe iptal edebilirsiniz. Ancak onaylanmış randevuların sık iptal edilmesi durumunda hesabınız geçici olarak bloklanabilir.',
       'faq_q3': 'Sonuçlarımı nerede görebilirim?',
-      'faq_a3': '"Sonuçlarım" sekmesinden tüm geçmiş tıbbi raporlarınıza ve AI özetlerinize ulaşabilirsiniz.',
+      'faq_a3':
+          '"Sonuçlarım" sekmesinden tüm geçmiş tıbbi raporlarınıza ve AI özetlerinize ulaşabilirsiniz.',
       'faq_q4': 'Ödeme nasıl yapılır?',
-      'faq_a4': 'Hem online (kart veya Zain Cash) hem de klinikte nakit ödeme seçeneklerimiz mevcuttur.',
+      'faq_a4':
+          'Hem online (kart veya Zain Cash) hem de klinikte nakit ödeme seçeneklerimiz mevcuttur.',
       'submit_complaint_title': 'Bize Ulaşın / Şikayet Bildir',
       'submit_complaint_sub': 'Sorunlarınızı doğrudan bize iletin.',
       'faqs': 'SIKÇA SORULAN SORULAR',
       'about_us_label': 'BİZ KİMİZ',
-      'about_us_text': 'Tabeebi+, Kerkük genelinde uzman doktorlara kolayca ulaşmanızı sağlayan modern bir sağlık platformudur. Amacımız, hasta ve doktor arasındaki iletişimi dijitalleştirerek sağlık süreçlerini hızlandırmaktır.',
-      'complaint_success_msg': 'Şikayetiniz başarıyla iletildi. En kısa sürede inceleyip size dönüş yapacağız.',
+      'about_us_text':
+          'Tabeebi+, Kerkük genelinde uzman doktorlara kolayca ulaşmanızı sağlayan modern bir sağlık platformudur. Amacımız, hasta ve doktor arasındaki iletişimi dijitalleştirerek sağlık süreçlerini hızlandırmaktır.',
+      'complaint_success_msg':
+          'Şikayetiniz başarıyla iletildi. En kısa sürede inceleyip size dönüş yapacağız.',
       'ai_health_assistant': 'AI Sağlık Asistanı',
       'ai_companion': 'Kişisel sağlık yardımcınız. İstediğiniz zaman sorun.',
       'ask_ai_btn': "AI'a Sor",
@@ -459,12 +501,14 @@ class AppLocalizations {
       'ai_chat_title': 'AI Sağlık Asistanı',
       'ai_chat_sub': 'Tabeebi+ tarafından desteklenmektedir',
       'ai_empty_title': 'Size nasıl yardımcı olabilirim?',
-      'ai_empty_sub': 'Sağlığınız, belirtileriniz veya ilaçlar hakkında her şeyi sorabilirsiniz.',
+      'ai_empty_sub':
+          'Sağlığınız, belirtileriniz veya ilaçlar hakkında her şeyi sorabilirsiniz.',
       'ai_suggestion_1': 'Grip belirtileri nelerdir?',
       'ai_suggestion_2': 'Baş ağrısında doktora ne zaman gitmeliyim?',
       'ai_suggestion_3': 'Tanşiyonımu doğal yollarla nasıl düşürebilirim?',
       'ai_input_placeholder': 'Sağlık sorusu sorun...',
-      'ai_placeholder_response': 'Bu bir demo yanıtıdır. Tam AI entegrasyonu yakında geliyor!',
+      'ai_placeholder_response':
+          'Bu bir demo yanıtıdır. Tam AI entegrasyonu yakında geliyor!',
     },
     'ar': {
       'home': 'الرئيسية',
@@ -476,7 +520,8 @@ class AppLocalizations {
       'no_available_slots': 'لا توجد مواعيد متاحة لهذا اليوم.',
       'location_map': 'موقع العيادة',
       'welcome_title': 'طبيبك الموثوق،\nبضغطة واحدة.',
-      'welcome_subtitle': 'احجز مع أفضل الأطباء في كركوك — أطباء معتمدون، أسعار شفافة، مواعيد في نفس اليوم.',
+      'welcome_subtitle':
+          'احجز مع أفضل الأطباء في كركوك — أطباء معتمدون، أسعار شفافة، مواعيد في نفس اليوم.',
       'feature_verified': 'أطباء معتمدون فقط',
       'feature_private': 'سجلاتك تبقى خاصة',
       'feature_same_day': 'مواعيد متاحة في نفس اليوم',
@@ -488,14 +533,16 @@ class AppLocalizations {
       'no_account': 'ليس لديك حساب؟ ',
       'register_link': 'تسجيل',
       'account_not_found': 'الحساب غير موجود',
-      'account_not_found_desc': 'لم يتم العثور على حساب بهذا الرقم. يرجى التسجيل أولاً.',
+      'account_not_found_desc':
+          'لم يتم العثور على حساب بهذا الرقم. يرجى التسجيل أولاً.',
       'create_account': 'إنشاء حساب',
       'lets_know_you': 'دعنا نتعرف عليك',
       'register_subtitle': 'نستخدم رقمك للتحقق وتذكيرك بمواعيدك.',
       'full_name': 'الاسم الكامل',
       'name_placeholder': 'مثال: مصطفى علي',
       'phone_number': 'رقم الهاتف',
-      'privacy_notice': 'يُستخدم رقمك فقط للتحقق وتذكيرات المواعيد. لن نشاركه مطلقاً.',
+      'privacy_notice':
+          'يُستخدم رقمك فقط للتحقق وتذكيرات المواعيد. لن نشاركه مطلقاً.',
       'continue_btn': 'متابعة',
       'verify_number': 'تحقّق من الرقم',
       'check_messages': 'تحقق من رسائلك',
@@ -522,9 +569,11 @@ class AppLocalizations {
       'cancel': 'إلغاء',
       'cancel_confirm_title': 'إلغاء الموعد',
       'cancel_confirm_message': 'هل أنت متأكد من إلغاء هذا الموعد؟',
-      'cancel_confirmed_warning': 'تحذير: أنت تلغي موعداً مؤكداً. قد تؤدي الإلغاءات المتكررة إلى تقييد حسابك. هل تريد المتابعة؟',
+      'cancel_confirmed_warning':
+          'تحذير: أنت تلغي موعداً مؤكداً. قد تؤدي الإلغاءات المتكررة إلى تقييد حسابك. هل تريد المتابعة؟',
       'reschedule_denied_title': 'لا يمكن إعادة الجدولة',
-      'reschedule_denied_message': 'بما أن موعدك مؤكد، لم يعد بإمكانك إجراء تغييرات. يرجى التواصل مع العيادة إذا لزم الأمر.',
+      'reschedule_denied_message':
+          'بما أن موعدك مؤكد، لم يعد بإمكانك إجراء تغييرات. يرجى التواصل مع العيادة إذا لزم الأمر.',
       'view_result': 'عرض النتيجة',
       'book_again': 'حجز مرة أخرى',
       'yes': 'نعم',
@@ -549,7 +598,8 @@ class AppLocalizations {
       'confirm_booking': 'تأكيد الحجز',
       'processing': 'جارٍ المعالجة...',
       'youre_booked': 'تم الحجز!',
-      'booking_confirmed_sub': 'أرسلنا تأكيداً إلى هاتفك. يرجى الحضور قبل ١٠ دقائق.',
+      'booking_confirmed_sub':
+          'أرسلنا تأكيداً إلى هاتفك. يرجى الحضور قبل ١٠ دقائق.',
       'ticket_date': 'التاريخ',
       'ticket_time': 'الوقت',
       'ticket_location': 'الموقع',
@@ -596,7 +646,8 @@ class AppLocalizations {
       'doctor_title': 'طبيب',
       'experience_suffix': 'خبرة',
       'about': 'نبذة عن الطبيب',
-      'about_text': 'متخصص بأكثر من {{exp}} من الممارسة السريرية. عضو في نقابة أطباء الأسنان العراقية. يركز على الأساليب الحديثة وتقليل الألم وتثقيف المريض.',
+      'about_text':
+          'متخصص بأكثر من {{exp}} من الممارسة السريرية. عضو في نقابة أطباء الأسنان العراقية. يركز على الأساليب الحديثة وتقليل الألم وتثقيف المريض.',
       'working_hours': 'ساعات العمل',
       'hours_sat_thu': 'السبت – الخميس',
       'hours_fri': 'الجمعة',
@@ -626,7 +677,8 @@ class AppLocalizations {
       'status_resolved': 'تم الحل',
       'privacy_title': 'الخصوصية والأمان',
       'data_protection': 'حماية البيانات',
-      'data_protection_desc': 'سجلاتك الطبية وبياناتك الشخصية مشفرة ومخزنة بشكل آمن وفقاً لمعايير الرعاية الصحية.',
+      'data_protection_desc':
+          'سجلاتك الطبية وبياناتك الشخصية مشفرة ومخزنة بشكل آمن وفقاً لمعايير الرعاية الصحية.',
       'account_security': 'أمان الحساب',
       'change_phone': 'تغيير رقم الهاتف',
       'delete_account': 'حذف الحساب',
@@ -669,19 +721,25 @@ class AppLocalizations {
       'complaint_failed': 'فشل في إرسال الشكوى.',
       'no_complaints_yet': 'ليس لديك أي شكاوى حتى الآن.',
       'faq_q1': 'كيف يمكنني حجز موعد؟',
-      'faq_a1': 'يمكنك بسهولة حجز موعد عن طريق اختيار التخصص المطلوب من الصفحة الرئيسية، واختيار طبيبك، وتحديد الوقت المتاح.',
+      'faq_a1':
+          'يمكنك بسهولة حجز موعد عن طريق اختيار التخصص المطلوب من الصفحة الرئيسية، واختيار طبيبك، وتحديد الوقت المتاح.',
       'faq_q2': 'هل يمكنني إلغاء موعدي؟',
-      'faq_a2': 'يمكنك إلغاء المواعيد غير المؤكدة بحرية. ومع ذلك، فإن الإلغاء المتكرر للمواعيد المؤكدة قد يؤدي إلى حظر مؤقت لحسابك.',
+      'faq_a2':
+          'يمكنك إلغاء المواعيد غير المؤكدة بحرية. ومع ذلك، فإن الإلغاء المتكرر للمواعيد المؤكدة قد يؤدي إلى حظر مؤقت لحسابك.',
       'faq_q3': 'أين يمكنني رؤية نتائجي؟',
-      'faq_a3': 'يمكنك الوصول إلى جميع تقاريرك الطبية السابقة وملخصات الذكاء الاصطناعي من علامة التبويب "نتائجي".',
+      'faq_a3':
+          'يمكنك الوصول إلى جميع تقاريرك الطبية السابقة وملخصات الذكاء الاصطناعي من علامة التبويب "نتائجي".',
       'faq_q4': 'كيف يتم الدفع؟',
-      'faq_a4': 'نقدم خيارات الدفع عبر الإنترنت (البطاقة أو زين كاش) والدفع النقدي في العيادة.',
+      'faq_a4':
+          'نقدم خيارات الدفع عبر الإنترنت (البطاقة أو زين كاش) والدفع النقدي في العيادة.',
       'submit_complaint_title': 'اتصل بنا / تقديم شكوى',
       'submit_complaint_sub': 'أرسل مشاكلك إلينا مباشرة.',
       'faqs': 'الأسئلة الشائعة',
       'about_us_label': 'معلومات عنها',
-      'about_us_text': 'Tabeebi+ هي منصة صحية حديثة توفر سهولة الوصول إلى الأطباء المتخصصين في جميع أنحاء كركوك. هدفنا هو تسريع عمليات الرعاية الصحية من خلال رقمنة التواصل بين المرضى والأطباء.',
-      'complaint_success_msg': 'تم إرسال شكواك بنجاح. سنقوم بمراجعتها والرد عليك في أقرب وقت ممكن.',
+      'about_us_text':
+          'Tabeebi+ هي منصة صحية حديثة توفر سهولة الوصول إلى الأطباء المتخصصين في جميع أنحاء كركوك. هدفنا هو تسريع عمليات الرعاية الصحية من خلال رقمنة التواصل بين المرضى والأطباء.',
+      'complaint_success_msg':
+          'تم إرسال شكواك بنجاح. سنقوم بمراجعتها والرد عليك في أقرب وقت ممكن.',
       'ai_health_assistant': 'مساعد الصحة الذكي',
       'ai_companion': 'رفيقك الصحي الشخصي. اسأل أي شيء في أي وقت.',
       'ask_ai_btn': 'اسأل الذكاء الاصطناعي',
@@ -694,7 +752,8 @@ class AppLocalizations {
       'ai_suggestion_2': 'متى يجب مراجعة الطبيب لصداع الرأس؟',
       'ai_suggestion_3': 'كيف أخفض ضغط الدم بشكل طبيعي؟',
       'ai_input_placeholder': 'اطرح سؤالاً صحياً...',
-      'ai_placeholder_response': 'هذا رد تجريبي. تكامل الذكاء الاصطناعي الكامل قادم قريباً!',
+      'ai_placeholder_response':
+          'هذا رد تجريبي. تكامل الذكاء الاصطناعي الكامل قادم قريباً!',
     },
     'ku': {
       'home': 'سەرەکی',
@@ -706,7 +765,8 @@ class AppLocalizations {
       'no_available_slots': 'هیچ کاتێکی بەردەستی بۆ ئەمڕۆ نییە.',
       'location_map': 'شوێنی کلینیک',
       'welcome_title': 'پزیشکی متمانەپێکراوت،\nبە یەک کرتەیەک.',
-      'welcome_subtitle': 'نۆبەت لەگەڵ پزیشکانی بازاڕی کەرکووک وەربگرە — پزیشکانی پشتڕاستکراو، نرخی ئاشکرا، نۆبەتی هەمان ڕۆژ.',
+      'welcome_subtitle':
+          'نۆبەت لەگەڵ پزیشکانی بازاڕی کەرکووک وەربگرە — پزیشکانی پشتڕاستکراو، نرخی ئاشکرا، نۆبەتی هەمان ڕۆژ.',
       'feature_verified': 'پسپۆڕانی پشتڕاستکراو تەنها',
       'feature_private': 'تۆمارەکانت نهێنی دەمێنێتەوە',
       'feature_same_day': 'نۆبەتی هەمان ڕۆژ بەردەستە',
@@ -718,14 +778,17 @@ class AppLocalizations {
       'no_account': 'هەژمارت نییە؟ ',
       'register_link': 'خۆتۆمارکردن',
       'account_not_found': 'هەژمار نەدۆزرایەوە',
-      'account_not_found_desc': 'هیچ هەژمارێک بەم ژمارەیە نەدۆزرایەوە. تکایە سەرەتا خۆت تۆمار بکە.',
+      'account_not_found_desc':
+          'هیچ هەژمارێک بەم ژمارەیە نەدۆزرایەوە. تکایە سەرەتا خۆت تۆمار بکە.',
       'create_account': 'دروستکردنی هەژمار',
       'lets_know_you': 'با ئازات بناسینەوە',
-      'register_subtitle': 'ژمارەکەت بۆ دڵنیاکردنەوە و یادکردنەوەی نۆبەتەکانت بەکاردێنین.',
+      'register_subtitle':
+          'ژمارەکەت بۆ دڵنیاکردنەوە و یادکردنەوەی نۆبەتەکانت بەکاردێنین.',
       'full_name': 'ناوی تەواو',
       'name_placeholder': 'نموونە: مستەفا علی',
       'phone_number': 'ژمارەی تەلەفۆن',
-      'privacy_notice': 'ژمارەکەت تەنها بۆ دڵنیاکردنەوە و یادکردنەوەی نۆبەتەکان بەکاردێت. هەرگیز بەشداریی ناکەین.',
+      'privacy_notice':
+          'ژمارەکەت تەنها بۆ دڵنیاکردنەوە و یادکردنەوەی نۆبەتەکان بەکاردێت. هەرگیز بەشداریی ناکەین.',
       'continue_btn': 'بەردەوامبوون',
       'verify_number': 'ژمارەکە دڵنیابکەرەوە',
       'check_messages': 'نامەکانت بپشکنە',
@@ -743,7 +806,8 @@ class AppLocalizations {
       'recommended_doctors': 'پزیشکانی پێشنیارکراو بۆ تۆ',
       'recommended_subtitle': 'بەپێی مێژووی نۆبەتەکانت و باشترین پزیشکان',
       'trust_title': 'هەر پزیشکێک پشتڕاستکراوە',
-      'trust_sub': 'مۆڵەتەکان هەر سێ مانگێک لەلایەن تیمەکەمانەوە پشکنراودەبێتەوە',
+      'trust_sub':
+          'مۆڵەتەکان هەر سێ مانگێک لەلایەن تیمەکەمانەوە پشکنراودەبێتەوە',
       'my_bookings': 'نۆبەتەکانم',
       'tab_upcoming': 'داهاتووەکان',
       'tab_past': 'ئەوەی تێپەڕیوون',
@@ -752,9 +816,11 @@ class AppLocalizations {
       'cancel': 'هەڵوەشاندنەوە',
       'cancel_confirm_title': 'هەڵوەشاندنەوەی نۆبەت',
       'cancel_confirm_message': 'دڵنیایت کە دەتەوێت ئەم نۆبەتە هەڵبوەشێنیتەوە؟',
-      'cancel_confirmed_warning': 'ئاگادارکردنەوە: نۆبەتێکی پشتڕاستکراو هەڵدەوەشێنیتەوە. هەڵوەشاندنەوەی زۆر لەوانەیە هەژمارەکەت سنووردار بکات. بەردەوامبوون؟',
+      'cancel_confirmed_warning':
+          'ئاگادارکردنەوە: نۆبەتێکی پشتڕاستکراو هەڵدەوەشێنیتەوە. هەڵوەشاندنەوەی زۆر لەوانەیە هەژمارەکەت سنووردار بکات. بەردەوامبوون؟',
       'reschedule_denied_title': 'ناتوانرێت دووبارە کاتێک بدرێتێ',
-      'reschedule_denied_message': 'چونکە نۆبەتەکەت پشتڕاستکراوە، دەستکاریی ناتوانیت. تکایە پەیوەندی بە کلینیکەکەوە بکە ئەگەر پێویستە.',
+      'reschedule_denied_message':
+          'چونکە نۆبەتەکەت پشتڕاستکراوە، دەستکاریی ناتوانیت. تکایە پەیوەندی بە کلینیکەکەوە بکە ئەگەر پێویستە.',
       'view_result': 'بینینی ئەنجام',
       'book_again': 'دووبارە نۆبەت وەرگرە',
       'yes': 'بەڵێ',
@@ -779,7 +845,8 @@ class AppLocalizations {
       'confirm_booking': 'پشتڕاستکردنەوەی نۆبەت',
       'processing': 'جێبەجێدەکرێت...',
       'youre_booked': 'نۆبەتەکەت وەرگیرا!',
-      'booking_confirmed_sub': 'پشتڕاستکردنەوەیەکمان ناردە تەلەفۆنەکەت. تکایە ١٠ خولەک زووتر بگەیتە کلینیک.',
+      'booking_confirmed_sub':
+          'پشتڕاستکردنەوەیەکمان ناردە تەلەفۆنەکەت. تکایە ١٠ خولەک زووتر بگەیتە کلینیک.',
       'ticket_date': 'بەروار',
       'ticket_time': 'کات',
       'ticket_location': 'شوێن',
@@ -812,7 +879,8 @@ class AppLocalizations {
       'new_alerts': '{{count}} ئاگاداری نوێ',
       'mark_all_read': 'هەمووی وەک خوێندراوەوە نیشانبکە',
       'no_notifications': 'هیچ ئاگادارییەک نییە',
-      'no_notifications_sub': 'هیچ نوێکردنەوەیەک یان یادکردنەوەی نۆبەتەکانت نییە.',
+      'no_notifications_sub':
+          'هیچ نوێکردنەوەیەک یان یادکردنەوەی نۆبەتەکانت نییە.',
       'my_results_title': 'ئەنجامەکانم',
       'results_subtitle': 'تەواوی مێژووی پزیشکیت لە یەک شوێندا',
       'clinical_notes': 'تێبینییە کلینیکییەکان',
@@ -826,7 +894,8 @@ class AppLocalizations {
       'doctor_title': 'پزیشک',
       'experience_suffix': 'ئەزموون',
       'about': 'دەربارەی پزیشک',
-      'about_text': 'پسپۆڕ لەگەڵ زیاتر لە {{exp}} کارکردنی کلینیکی. ئەندامی کۆمەڵەی پزیشکانی دەندانی عێراق. تەرکیز لەسەر شێوازە نوێیەکان، کەمکردنەوەی ئێش و پەروەردەی نەخۆش.',
+      'about_text':
+          'پسپۆڕ لەگەڵ زیاتر لە {{exp}} کارکردنی کلینیکی. ئەندامی کۆمەڵەی پزیشکانی دەندانی عێراق. تەرکیز لەسەر شێوازە نوێیەکان، کەمکردنەوەی ئێش و پەروەردەی نەخۆش.',
       'working_hours': 'کاتەکانی کار',
       'hours_sat_thu': 'شەممە – پێنج شەممە',
       'hours_fri': 'جومعە',
@@ -856,7 +925,8 @@ class AppLocalizations {
       'status_resolved': 'چارەسەرکرا',
       'privacy_title': 'نهێنی و ئەمنیت',
       'data_protection': 'پاراستنی داتا',
-      'data_protection_desc': 'تۆمارە پزیشکییەکانت و داتا کەسیەکانت شفرکراوە و بە شێوەیەکی ئەمن بەپێی ستانداردەکانی تەندروستی پاراستراون.',
+      'data_protection_desc':
+          'تۆمارە پزیشکییەکانت و داتا کەسیەکانت شفرکراوە و بە شێوەیەکی ئەمن بەپێی ستانداردەکانی تەندروستی پاراستراون.',
       'account_security': 'ئەمنیتی هەژمار',
       'change_phone': 'گۆڕینی ژمارەی تەلەفۆن',
       'delete_account': 'سڕینەوەی هەژمار',
@@ -872,7 +942,8 @@ class AppLocalizations {
       'unknown_doctor': 'پزیشکی نەناسراو',
       'rate_doctor_title': 'هەڵسەنگاندنی پزیشک',
       'rate_doctor_sub': 'چاوپێکەوتنەکەت لەگەڵ {{doctor}} هەڵسەنگێنە.',
-      'rate_doctor_placeholder': 'لێدوانەکانت سەبارەت بە پزیشک و پشکنینەکە بنووسە (ئارەزوومەندانە)...',
+      'rate_doctor_placeholder':
+          'لێدوانەکانت سەبارەت بە پزیشک و پشکنینەکە بنووسە (ئارەزوومەندانە)...',
       'cancel_btn_text': 'پاشگەزبوونەوە',
       'submit_btn_text': 'ناردن',
       'saving': 'پاشەکەوت دەکرێت...',
@@ -894,24 +965,32 @@ class AppLocalizations {
       'view_report_pdf': 'بینینی ڕاپۆرت (PDF)',
       'downloading': 'دادەبەزێت...',
       'sharing_not_available': 'هاوبەشکردن لەم ئامێرەدا بەردەست نییە.',
-      'pdf_download_error': 'نەتوانرا PDF دابەزێنرێت. تکایە دووبارە هەوڵ بدەوە.',
-      'no_report_available': 'پشکنینی پزیشکی ئەنجامدرا. هیچ ڕاپۆرتێک بەردەست نییە.',
+      'pdf_download_error':
+          'نەتوانرا PDF دابەزێنرێت. تکایە دووبارە هەوڵ بدەوە.',
+      'no_report_available':
+          'پشکنینی پزیشکی ئەنجامدرا. هیچ ڕاپۆرتێک بەردەست نییە.',
       'complaint_failed': 'ناردنی سکاڵاکە سەرکەوتوو نەبوو.',
       'no_complaints_yet': 'تا ئێستا هیچ سکاڵایەکت نییە.',
       'faq_q1': 'چۆن دەتوانم چاوپێکەوتنێک دیاری بکەم؟',
-      'faq_a1': 'دەتوانیت بە ئاسانی چاوپێکەوتنێک دیاری بکەیت بە هەڵبژاردنی پسپۆڕیی مەبەست لە پەڕەی سەرەکی، هەڵبژاردنی پزیشکەکەت، و دیاریکردنی کاتێکی گونجاو.',
+      'faq_a1':
+          'دەتوانیت بە ئاسانی چاوپێکەوتنێک دیاری بکەیت بە هەڵبژاردنی پسپۆڕیی مەبەست لە پەڕەی سەرەکی، هەڵبژاردنی پزیشکەکەت، و دیاریکردنی کاتێکی گونجاو.',
       'faq_q2': 'ئایا دەتوانم چاوپێکەوتنەکەم هەڵبوەشێنمەوە؟',
-      'faq_a2': 'دەتوانیت بە ئازادی چاوپێکەوتنە پەسەندنەکراوەکان هەڵبوەشێنیتەوە. بەڵام هەڵوەشاندنەوەی زۆری چاوپێکەوتنە پەسەندکراوەکان لەوانەیە ببێتە هۆی بلۆککردنی کاتی هەژمارەکەت.',
+      'faq_a2':
+          'دەتوانیت بە ئازادی چاوپێکەوتنە پەسەندنەکراوەکان هەڵبوەشێنیتەوە. بەڵام هەڵوەشاندنەوەی زۆری چاوپێکەوتنە پەسەندکراوەکان لەوانەیە ببێتە هۆی بلۆککردنی کاتی هەژمارەکەت.',
       'faq_q3': 'لە کوێ دەتوانم ئەنجامەکانم ببینم؟',
-      'faq_a3': 'دەتوانیت دەستت بگات بە هەموو ڕاپۆرتە پزیشکییەکانی ڕابردووت و پوختەکانی زیرەکی دەستکرد لە تابی "ئەنجامەکانم".',
+      'faq_a3':
+          'دەتوانیت دەستت بگات بە هەموو ڕاپۆرتە پزیشکییەکانی ڕابردووت و پوختەکانی زیرەکی دەستکرد لە تابی "ئەنجامەکانم".',
       'faq_q4': 'پارەدان چۆن دەکرێت؟',
-      'faq_a4': 'هەردوو هەڵبژاردەی پارەدانی سەرهێڵ (کارت یان زەین کاش) و پارەدانی نەختینەیی لە نۆرینگەدا بەردەستن.',
+      'faq_a4':
+          'هەردوو هەڵبژاردەی پارەدانی سەرهێڵ (کارت یان زەین کاش) و پارەدانی نەختینەیی لە نۆرینگەدا بەردەستن.',
       'submit_complaint_title': 'پەیوەندیمان پێوە بکە / سکاڵا پێشکەش بکە',
       'submit_complaint_sub': 'کێشەکانت ڕاستەوخۆ بنێرە بۆ ئێمە.',
       'faqs': 'پرسیارە باوەکان',
       'about_us_label': 'دەربارەی ئێمە',
-      'about_us_text': 'Tabeebi+ سەکۆیەکی تەندروستیی مۆدێرنە کە گەیشتن بە پزیشکە پسپۆڕەکان لە سەرتاسەری کەرکوک ئاسان دەکات. ئامانجمان خێراکردنی پڕۆسەکانی چاودێری تەندروستییە لە ڕێگەی بەدیجیتاڵکردنی پەیوەندی نێوان نەخۆش و پزیشک.',
-      'complaint_success_msg': 'سکاڵاکەت بە سەرکەوتوویی نێردرا. پێداچوونەوەی بۆ دەکەین و بە زووترین کات وەڵامت دەدەینەوە.',
+      'about_us_text':
+          'Tabeebi+ سەکۆیەکی تەندروستیی مۆدێرنە کە گەیشتن بە پزیشکە پسپۆڕەکان لە سەرتاسەری کەرکوک ئاسان دەکات. ئامانجمان خێراکردنی پڕۆسەکانی چاودێری تەندروستییە لە ڕێگەی بەدیجیتاڵکردنی پەیوەندی نێوان نەخۆش و پزیشک.',
+      'complaint_success_msg':
+          'سکاڵاکەت بە سەرکەوتوویی نێردرا. پێداچوونەوەی بۆ دەکەین و بە زووترین کات وەڵامت دەدەینەوە.',
       'ai_health_assistant': 'يارمەتیدەری تەندروستی AI',
       'ai_companion': 'هاوەڵی تەندروستی تایبەتی تۆ. هەرکاتێک بێت بپرسە.',
       'ask_ai_btn': 'لە زیرەکی دەستکرد بپرسە',
@@ -924,7 +1003,8 @@ class AppLocalizations {
       'ai_suggestion_2': 'کەکەی بەردەوستی بۆنی بۆکانەوە داکتۆر ببینم؟',
       'ai_suggestion_3': 'چۆن بە شێوازی سڕوشت کەینی خەوی خۆین دەخەم؟',
       'ai_input_placeholder': 'پرسیارێکی تەندروستیی بکە...',
-      'ai_placeholder_response': 'ئەمە وەڵامێکی دەستەبێرە. یەکسودەیی AI بە زووترین کاتێک دێتێ!',
+      'ai_placeholder_response':
+          'ئەمە وەڵامێکی دەستەبێرە. یەکسودەیی AI بە زووترین کاتێک دێتێ!',
     },
   };
 
@@ -932,7 +1012,7 @@ class AppLocalizations {
     final lang = currentLanguage;
     final dict = _translations[lang] ?? _translations['en']!;
     var val = dict[key] ?? _translations['en']?[key] ?? key;
-    
+
     if (params != null && params.isNotEmpty) {
       params.forEach((k, v) {
         val = val.replaceAll('{{$k}}', v.toString());

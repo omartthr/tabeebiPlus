@@ -26,7 +26,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final phone = TextEditingController();
 
   bool get valid =>
-      name.text.trim().length >= 2 &&
       phone.text.replaceAll(RegExp(r'\D'), '').length >= 10;
 
   @override
@@ -77,24 +76,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 28),
-                    _FieldLabel(AppLocalizations.t('full_name')),
-                    const SizedBox(height: 8),
-                    _InputWrap(
-                      leading: const Icon(
-                        Icons.person_outline_rounded,
-                        color: AppColors.ink400,
-                        size: 20,
-                      ),
-                      child: TextField(
-                        controller: name,
-                        onChanged: (_) => setState(() {}),
-                        textInputAction: TextInputAction.next,
-                        decoration: _plainInputDecoration(
-                          AppLocalizations.t('name_placeholder'),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     _FieldLabel(AppLocalizations.t('phone_number')),
                     const SizedBox(height: 8),
                     _InputWrap(
@@ -119,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: FilledButton(
                         onPressed: valid
                             ? () => widget.onOtp(
-                                name.text.trim(),
+                                "",
                                 phone.text.replaceAll(RegExp(r'\D'), ''),
                               )
                             : null,

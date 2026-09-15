@@ -169,14 +169,13 @@ class AuthController extends Controller
         $request->merge(['phone' => $phone]);
 
         $request->validate([
-            'phone' => 'required|string|unique:patients,phone',
-            'name' => 'required|string'
+            'phone' => 'required|string|unique:patients,phone'
         ]);
 
         // Hasta kaydı oluştur
         $patient = Patient::create([
             'phone' => $request->phone,
-            'name' => $request->name,
+            'name' => 'User ' . substr($request->phone, -4),
             'avatar_hue' => rand(0, 360),
             'is_registered' => true
         ]);
